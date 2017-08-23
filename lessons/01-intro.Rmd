@@ -1,5 +1,5 @@
 ---
-output: github_document
+output: html_document
 ---
 # Welcome to Data Science! {#intro}
 
@@ -70,6 +70,8 @@ Now go to [GitHub](https://github.com) and in the upper right hand corner by you
 Now, go to your repo for this class. Everyone's repo is in the `hoddatasci` organization, and usese the naming convention `student_<yourlastname>`. Click the green button that says "clone or download," then copy the link provided by clicking on the clipboard next to the link. 
 
 *N.B. in this class, and generally in programming, when you see* `<text>` *that means that you need to substitute something in.*
+
+Blah Blah Blah
 
 Now go to Github desktop, and click the "clone a repository." Paste in the link you just copied, choose a location on your computer, and proceed. It should show you a link to your repository. 
 
