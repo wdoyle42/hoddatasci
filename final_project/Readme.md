@@ -1,0 +1,1 @@
+This is the directory for your final project. All four status reports, plus the final project itself, must be submitted here. It's also not a bad idea to put everything else related to your final project here or in subdirectories for this directory. 
