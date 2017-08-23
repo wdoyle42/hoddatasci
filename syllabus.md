@@ -1,4 +1,4 @@
-HOD 3200: Introduction to Data Science
+Introduction to Data Science
 ================
 
 Vanderbilt University
@@ -65,7 +65,7 @@ Students will be evaluated based in two areas: weekly assignments and the final 
 
 -   Problem sets: 65% Each week I will assign a problem set for students to complete. These problem sets will be assigned on Monday, and will be due the next Sunday night at 11:59:59 pm. No late assignments will be accepted. Each assignment will be graded on a 100 point scale. Your lowest grade will be dropped.
 
--   Final Project 35%: During the course of the semester you will work on a final assignment utilizing your skills as a data analyst. We will discuss this assignment and my expectations in detail during the course of the semester. There will be four progress reports due for the final project, each of which will be worth 12.5% of the final grade for the project. The final product will account for the remaining 50%.
+-   Final Project 35%: During the course of the semester you will work on a final assignment utilizing your skills as a data analyst. We will discuss this assignment and my expectations in detail during the course of the semester. There will be four progress reports due for the final project, each of which will be worth 12.5% of the final grade for the project. No late progress reports will be accepted. The final product will account for the remaining 50%. No late final products will be accepted.
 
 Texts
 =====
@@ -99,7 +99,7 @@ Tufte, E. R.(2001). The visual display of quantitative information (2nd Edition)
 Lecture Notes
 =============
 
-My lecture notes are available at: [willdoyle.us/data\_step](http://willdoyle.us/data_step). These include both code and notes for the week. They will also be available in your private github repo.
+My lecture notes are available at: [willdoyle.us/data\_step](http://willdoyle.us/data_step). These include both code and notes for the week. They will also be available in your private github repository.
 
 Web Resources
 =============
@@ -119,6 +119,15 @@ Communication
 =============
 
 My office is in 207D Payne, and my phone number is (615) 322-2904. Please always feel free to stop by during office hours (Mondays and Wednesdays 12:30-3, right after class) or to call. If my office hours don't work for you, please make an appointment. Student communications, including emails are my priority. However, due to the volume of email I receive, I may miss your message. To help with this problem, please place the phrase \`\`HOD 3200'' in your subject line. I will search for these messages every time I access my email. You can also use Brightspace's email function, which will automatically do this for you. If you have a general question that I can answer for the whole class, send me a message on twitter at [@wdoyle42](https://twitter.com/wdoyle42), tagged \#hoddatasci, or you can send a direct message.
+
+The Tedious Stuff
+=================
+
+I don't take attendance. This class will be impossible if you don't show up. It's reasonable to contact me if for some reason you can't make it for a given class session.
+
+We must use laptops in this class, despite the [substantial](http://journals.sagepub.com/doi/abs/10.1177/0956797614524581) [body](http://www.sciencedirect.com/science/article/pii/S0360131512002254?via%3Dihub) of [evidence](http://www.sciencedirect.com/science/article/pii/S0272775716303454) that laptop use in classrooms hinders learning. To mitigate this problem, the following standards will ALWAYS apply in class. You may have RStudio open. You may also have a web browser open to a web page that is relevant to course content. You MUST turn off all notifications and messaging programs. If your web browser is open to Facebook, Instagram or other purely social sites, I will ask you to leave class for the day.
+
+Mobile phone use is never appropriate in class. I will ask you to leave if you are using your mobile phone at any time. Exceptions are to be arranged BEFORE class, not when I observe you using your mobile phone.
 
 Honor Code Statement
 ====================
