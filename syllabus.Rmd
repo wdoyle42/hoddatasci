@@ -271,7 +271,7 @@ Chapter 2, Condtional Means: `02-conditional_means.Rmd`.
 
 *Assignments*
 
-Assignment `r i-1` Due Midnight, `r nice_date(hw_days[i-1])`
+Assignment `r i-1` Due Midnight, `r nice_date(hw_days[i])`
 
 ## `r nice_date(second_week_days[i])` Conditional Means, continued
 
@@ -304,7 +304,7 @@ Chapter 3, Plotting Distributions and Condtional Means: `03-plot_means.Rmd`.
 
 *Assignments*
 
-Assignment `r i-1` Due Midnight `r nice_date(hw_days[i-1])`
+Assignment `r i-1` Due Midnight `r nice_date(hw_days[i])`
 
 ## `r nice_date(second_week_days[i])` Descriptive Graphics, Continued
 
@@ -329,7 +329,7 @@ Chapter 4, Flat Data `04-flat_data.Rmd`
 
 *Assignments*
 
-Assignment `r i-1` Due Midnight `r nice_date(hw_days[i-1])`
+Assignment `r i-1` Due Midnight `r nice_date(hw_days[i])`
 
 ## `r nice_date(second_week_days[i])`  Pre-processed data, continued
 
@@ -353,7 +353,7 @@ Chapter 5, Linear Regression `05-regression.Rmd`
 
 *Assignments*
 
-Assignment `r i-1` Due Midnight `r nice_date(hw_days[i-1])`
+Assignment `r i-1` Due Midnight `r nice_date(hw_days[i])`
 
 ## September `r nice_date(second_week_days[i])` Linear Regression, continued
 
@@ -381,7 +381,7 @@ Chapter 6, Scatterplots `06-scatterplots.Rmd`
 
 *Assignments*
 
-Assignment `r i-1` Due Midnight `r nice_date(hw_days[i-1])`
+Assignment `r i-1` Due Midnight `r nice_date(hw_days[i])`
 
 ## `r nice_date(second_week_days[i])` Scatterplots, continued
 
@@ -410,7 +410,7 @@ Chapter 7, Web Scraping and APIs, `07-webscrape.Rmd`
 
 *Assignments*
 
-Assignment `r i-1` Due Midnight `r nice_date(hw_days[i-1])`
+Assignment `r i-1` Due Midnight `r nice_date(hw_days[i])`
 
 ## `r nice_date(second_week_days[i])` Web data, continued
 
@@ -437,7 +437,7 @@ Chapter 8, Classification, `08-classification.Rmd`
 
 *Assignments*
 
-Assignment `r i-1` Due Midnight `r nice_date(hw_days[i-1])`
+Assignment `r i-1` Due Midnight `r nice_date(hw_days[i])`
 
 ##`r nice_date(second_week_days[i])` Classification, continued
 
@@ -463,7 +463,7 @@ Chapter 9, Small Multiples `09-small_multiples.Rmd`
 
 *Assignments*
 
-Assignment `r i-1` Due Midnight `r nice_date(hw_days[i-1])`
+Assignment `r i-1` Due Midnight `r nice_date(hw_days[i])`
 
 ## `r nice_date(second_week_days[i])` Lattice Plots and Small Multiples, continued.
 
@@ -490,7 +490,7 @@ Chapter 10, Databases `databases.Rmd`
 
 *Assignments*
 
-Assignment `r i-1` Due Midnight `r nice_date(hw_days[i-1])`
+Assignment `r i-1` Due Midnight `r nice_date(hw_days[i])`
 
 ## `r nice_date(second_week_days[i])` Databases, continued
 
@@ -513,7 +513,7 @@ Chapter 13, Multiple Models `multiple_models.Rmd`
 
 *Assignments*
 
-Assignment `r i-1` Due Midnight `r nice_date(hw_days[i-1])`
+Assignment `r i-1` Due Midnight `r nice_date(hw_days[i])`
 
 ## `r nice_date(second_week_days[i])` Training and testing, continued
 
@@ -537,7 +537,7 @@ Chapter 12, Mapping: `12-mapping.Rmd`
 
 *Assignments*
 
-Assignment `r i-1` Due Midnight `r nice_date(hw_days[i-1])`
+Assignment `r i-1` Due Midnight `r nice_date(hw_days[i])`
 
 ## `r nice_date(second_week_days[i])` Mapping, continued
 

@@ -200,7 +200,7 @@ Chapter 2, Condtional Means: `02-conditional_means.Rmd`.
 
 *Assignments*
 
-Assignment 1 Due Midnight, Sunday, August 27
+Assignment 1 Due Midnight, Sunday, September 3
 
 Wednesday, September 6 Conditional Means, continued
 ---------------------------------------------------
@@ -230,7 +230,7 @@ Chapter 3, Plotting Distributions and Condtional Means: `03-plot_means.Rmd`.
 
 *Assignments*
 
-Assignment 2 Due Midnight Sunday, September 3
+Assignment 2 Due Midnight Sunday, September 10
 
 Wednesday, September 13 Descriptive Graphics, Continued
 -------------------------------------------------------
@@ -252,7 +252,7 @@ Chapter 4, Flat Data `04-flat_data.Rmd`
 
 *Assignments*
 
-Assignment 3 Due Midnight Sunday, September 10
+Assignment 3 Due Midnight Sunday, September 17
 
 Wednesday, September 20 Pre-processed data, continued
 -----------------------------------------------------
@@ -274,7 +274,7 @@ Chapter 5, Linear Regression `05-regression.Rmd`
 
 *Assignments*
 
-Assignment 4 Due Midnight Sunday, September 17
+Assignment 4 Due Midnight Sunday, September 24
 
 September Wednesday, September 27 Linear Regression, continued
 --------------------------------------------------------------
@@ -300,7 +300,7 @@ Chapter 6, Scatterplots `06-scatterplots.Rmd`
 
 *Assignments*
 
-Assignment 5 Due Midnight Sunday, September 24
+Assignment 5 Due Midnight Sunday, October 1
 
 Wednesday, October 4 Scatterplots, continued
 --------------------------------------------
@@ -326,7 +326,7 @@ Chapter 7, Web Scraping and APIs, `07-webscrape.Rmd`
 
 *Assignments*
 
-Assignment 6 Due Midnight Sunday, October 1
+Assignment 6 Due Midnight Sunday, October 8
 
 Wednesday, October 11 Web data, continued
 -----------------------------------------
@@ -350,7 +350,7 @@ Chapter 8, Classification, `08-classification.Rmd`
 
 *Assignments*
 
-Assignment 7 Due Midnight Sunday, October 8
+Assignment 7 Due Midnight Sunday, October 15
 
 Wednesday, October 18 Classification, continued
 -----------------------------------------------
@@ -374,7 +374,7 @@ Chapter 9, Small Multiples `09-small_multiples.Rmd`
 
 *Assignments*
 
-Assignment 8 Due Midnight Sunday, October 15
+Assignment 8 Due Midnight Sunday, October 22
 
 Wednesday, October 25 Lattice Plots and Small Multiples, continued.
 -------------------------------------------------------------------
@@ -398,7 +398,7 @@ Chapter 10, Databases `databases.Rmd`
 
 *Assignments*
 
-Assignment 9 Due Midnight Sunday, October 22
+Assignment 9 Due Midnight Sunday, October 29
 
 Wednesday, November 1 Databases, continued
 ------------------------------------------
@@ -420,7 +420,7 @@ Chapter 13, Multiple Models `multiple_models.Rmd`
 
 *Assignments*
 
-Assignment 10 Due Midnight Sunday, October 29
+Assignment 10 Due Midnight Sunday, November 5
 
 Wednesday, November 8 Training and testing, continued
 -----------------------------------------------------
@@ -442,7 +442,7 @@ Chapter 12, Mapping: `12-mapping.Rmd`
 
 *Assignments*
 
-Assignment 11 Due Midnight Sunday, November 5
+Assignment 11 Due Midnight Sunday, November 12
 
 Wednesday, November 15 Mapping, continued
 -----------------------------------------
