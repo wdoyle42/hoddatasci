@@ -221,13 +221,10 @@ sc%>%filter(adm_rate>.3)%>%summarize(mean_debt=mean(debt_mdn,na.rm=TRUE))
 Another powerful tool is being able to calculate characteristics for various groups. For example, what are the average earnings for the three different types of colleges (public, private non-profit, private for-profit) in the dataset?
 
 ```{r grouping}
-# 
-# sc%>%group_by(control)
-# %>%
-#   summarize(mean_earnings=mean(md_earn_wne_p6))
-# 
-# sc%>%group_by(control)%>%
-#   summarize(mean_debt=mean(debt_mdn))
+
+sc%>%group_by(control)%>%summarize(mean_earnings=mean(md_earn_wne_p6,na.rm=TRUE))
+ 
+sc%>%group_by(control)%>%summarize(mean_debt=mean(debt_mdn,na.rm=TRUE))
 
 ```
 
