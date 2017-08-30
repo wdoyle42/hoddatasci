@@ -1,0 +1,23 @@
+---
+title: "Table Assignments"
+output: github_document
+---
+
+
+```{r}
+# R script to randomize class and place them at tables
+library(tidyverse)
+
+class<-read_csv("../../classlist.csv")
+
+class["random"]<-runif(dim(class)[1])
+
+class<-class%>%arrange(random)
+
+class["index"]<-seq(1:dim(class)[1])
+
+class<-class%>%mutate(table=cut(index,6,(1:6)))
+
+print(select(class,first_name,last_name,table),n=100)
+names(class)
+```
