@@ -1,4 +1,4 @@
-Progress Report 3
+Progress Report 1
 ====================
 
 For this progress report, I need the following in an .Rmd file:
