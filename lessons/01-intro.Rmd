@@ -226,6 +226,10 @@ sc%>%group_by(control)%>%summarize(mean_earnings=mean(md_earn_wne_p6,na.rm=TRUE)
  
 sc%>%group_by(control)%>%summarize(mean_debt=mean(debt_mdn,na.rm=TRUE))
 
+
+sc%>%group_by(control)%>%summarize(mean(debt_mdn,na.rm=TRUE))
+
+
 ```
 
 *Plotting Data*

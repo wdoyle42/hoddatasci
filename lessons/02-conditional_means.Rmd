@@ -1,0 +1,247 @@
+# Analyzing Data, Part 1: Conditional Means
+
+The conditional mean will be our first predictive algorithm. Conditional means answer the question: "Given what we know about a certain case, what can expect to see, on average?" The conditional mean is a powerful tool that is typically quite easy to explain to decision-makers. 
+
+We'll go through the following steps:
+
+1. Computing and plotting unconditional means
+2. Computing and plotting conditional means using a single predictor.
+3. Computing and plotting conditional means using multiple predictors. 
+
+
+```{r  include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(plotly)
+library(gridExtra)
+library(ModelMetrics)
+```
+
+## Dataset for this week
+
+We will be working with a dataset put together by the census bureau that summarizes the characteristics of the 3,088 counties in the United States. 
+
+```{r data}
+load("pd.Rdata")
+
+pd
+```
+
+The codebook for this dataset is stored as another dataset, `labels_explain`. The first column in this dataset is variable names, the second column is a full explanation of that variable. 
+
+```{r explain_date}
+
+## Full explanation of data
+load("lab_explain.Rdata")
+
+lab_explain
+
+#or use View
+#View(lab_explain)
+```
+
+*Quick Exercise: Find the per capita income and the percent of the population with a bachelor's degree for the county you're from.*
+
+## Dependent Variable
+
+Our working example will be based on predicting income in a given county. Suppose we want to know what income level we can expect for a geographic area based on observed characteristics, such as the proportion of the population with a bachelor's degree. How would we predict the income based on what we know about the geographic area? 
+
+Let's begin by plotting the data to see what it looks like. To do this I need to first rank the counties by income. To create a rank variable that will be stored in the `pd` dataset, I use the `mutate` command. This creates a variable based on some calculation then stores it in the same dataset. I'm then going to plot incomes for each county in descending rank order. Using the `plotly` library I can make this interactive so we know which counties we're talking about. 
+
+```{r simple_plots}
+## Create a rank variable for income 
+pd<-pd%>%mutate(percapinc_rank=rank(percapinc.2010))
+
+## Plot by rank
+
+gg<-ggplot(data=pd , aes(x=percapinc_rank,
+                         y=percapinc.2010,
+                         text=county))
+##Add Axis Labels
+gg<-gg+xlab("Rank")+ylab("Per Capita Income, 2010")
+
+## Add Points
+gg<-gg+geom_point(alpha=.5,size=.5)
+
+gg
+
+## Save for later
+gg1<-gg
+
+# Make Interactive plot
+gg_p<-ggplotly(gg)
+
+gg_p
+```
+
+## Unconditional Means
+
+If you were asked to predict the income for a given area without any additional information, the likely best guess is the overall average. We're going to begin with the unconditional mean, or simple average, as our first prediction. We'll again use the `mutate` command to plug in a variable that will be the average for every county, and we'll plot this as a predictor.  
+
+Our notation for the unconditional mean as a predictor is:
+
+$$\hat{Y}=\bar{Y} $$
+
+```{r}
+
+##Unconditional Average
+pd%>%summarize(mean_percapinc.2010=mean(percapinc.2010,na.rm=TRUE))
+
+##Unconditional Average as a Predictor
+pd<-pd%>%mutate(mean_percapinc.2010=mean(percapinc.2010,na.rm=TRUE))
+
+##Plotting
+gg<-ggplot(data=pd,aes(y=percapinc.2010,x=percapinc_rank,color="Actual"))
+gg<-gg+geom_point(alpha=.5,size=.5)
+gg<-gg+geom_point(aes(y=mean_percapinc.2010,x=percapinc_rank,
+                  color="Predicted: Unconditional Mean"),
+                  size=.5)
+gg<-gg+xlab("Rank of Per Capita Income")+ylab("Per Capita Income")
+gg<-gg+scale_color_manual(name="Type",
+                          values=c("Actual"="black",
+                          "Predicted: Unconditional Mean"="blue")
+                          )
+gg<-gg+theme(legend.position="bottom")
+
+gg
+
+##Save for later
+
+gg2<-gg
+
+```
+
+This is of course a terrible prediction. In the absence of any other information, it's many times the best we can do, but we really ought to be able to do better. 
+
+To understand how far off we are, we need to summarize our errors. We will use different ways of doing this this semester, but let's start with a very standard one, Root Mean Squared Error, or RMSE. An error term is the vertical distance between each point and its prediction. The RMSE is the square root of the sum of squared errors. (Q:why do we square them?). 
+
+$$RMSE(\hat{Y})=\sqrt{ 1/n \sum_{i=1}^n(Y_i-\hat{Y_i})^2} $$
+
+```{r error_terms}
+
+pd<-pd%>%mutate(e1=percapinc.2010-mean_percapinc.2010)
+
+## RMSE
+
+rmse_uncond_mean<-rmse(pd$percapinc.2010,pd$mean_percapinc.2010)
+
+rmse_uncond_mean
+```
+
+##Conditional Means With One Predictor Variable
+
+To incorporate additional information into the mean, we need to calculate averages at levels of other predictors. Let's calculate the average per capita income at different levels of college education. The code below will calculate average income across counties at four different levels of college education-- the four quantiles of college education in the dataset. 
+
+```{r condtl_mean_single}
+##Condtional Average across a single variable
+
+## Create a variable for quartiles of college education
+pd<-pd%>%mutate(coll_grad_level=ntile(coll_grad_pc,4))
+
+table(pd$coll_grad_level)
+
+pd<-pd%>%group_by(coll_grad_level)%>% ## Group by predictor
+  ##Calculate mean at each level of predictor
+  mutate(pred_income_college=mean(percapinc.2010))%>% 
+  ## Ungroup
+  ungroup()%>% 
+  #Rank by prediction, with ties sorted randomly
+  mutate(pred_income_college_rank=rank(pred_income_college,ties.method="random"))
+
+
+gg<-ggplot(data=pd,aes(x=pred_income_college_rank,y=percapinc.2010,color="Actual"))
+gg<-gg+geom_point(alpha=.5,size=.5)
+gg<-gg+geom_point(aes(x=pred_income_college_rank,y=pred_income_college,color="Predicted:Conditional Mean, 1 var"))
+gg<-gg+ scale_color_manual("Type",values=c("Predicted:Conditional Mean, 1 var"="red","Actual"="black"))
+gg<-gg+theme(legend.position="bottom")
+gg<-gg+xlab("Rank")+ylab("Per Capita Income, 2010")
+gg
+
+##Save for later
+gg3<-gg
+
+```
+
+Our notation for this predictor will be:
+
+$$\hat{Y}=(\bar{Y}|X=x) $$
+
+That is, the predicted value of y, $\bar{Y}$ is equal to the mean value of $Y$ given our predictor $X$ (college graduate levels in this case) is equal to a given value of $X$, denoted by $x$. 
+
+*Quick Exercise: Calculate per capita income as a function of the proportion of the county with a high school education*
+
+Let's see what happened to our RMSE when we did a conditional as opposed to an unconditional mean. 
+```{r}
+rmse_cond_mean_one<-rmse(pd$percapinc.2010,pd$pred_income_college)
+rmse_cond_mean_one
+```
+
+## Conditional Means with Multiple Predictors
+
+The next step is to then incorporate more information from additional variables. Let's calculate the average income by both quartiles of both the population with a bachelor's degree and median home values.  
+
+```{r condtl_mean_multiple}
+
+##Condtional average across multiple variables
+
+## Calculate quartiles of home value
+pd<-pd%>%mutate(median_home_level=ntile(median_home_val,4))
+
+table(pd$median_home_level)
+
+##Make prediction: income by quartiles of education and home values
+
+pd<-pd%>%group_by(coll_grad_level,median_home_level)%>% ## Grouping at multiple levels
+  mutate(pred_income_college_home=mean(percapinc.2010))%>%
+  ungroup()%>%
+  mutate(pred_income_college_home_rank=rank(pred_income_college_home,ties.method="random"))
+
+## Showing the various levels
+gg<-ggplot(data=pd,aes(x=pred_income_college_home_rank,y=percapinc.2010,color="Actual"))
+gg<-gg+geom_point(alpha=.5,size=.5)
+gg<-gg+geom_point(aes(x=pred_income_college_home_rank,
+                      y=pred_income_college_home,
+                      color="Predicted:Conditional Mean, 2 vars")
+)
+
+gg<-gg+scale_color_manual("Type",values=c("Actual"="black",
+                                  "Predicted:Conditional Mean, 2 vars"="orange"
+))
+
+gg<-gg+theme(legend.position="bottom")
+gg<-gg+xlab("Rank")+ylab("Per Capita Income")
+
+gg
+
+## Save for later
+
+gg4<-gg
+```
+
+This is clearly much better: our predictions appear to be much closer to the actual data points more of the time. 
+
+And what happened to RMSE?
+
+```{r}
+rmse_cond_mean_two<-rmse(pd$percapinc.2010,pd$pred_income_college_home)
+rmse_cond_mean_two
+```
+
+## Final Comparison
+
+Let's put all of the plots together to compare.
+```{r grid_combine}
+gg5<-grid.arrange(gg1,gg2,gg3,gg4,nrow=2)
+
+gg5
+```
+
+*Quick Exercise: Predict income using two other variables*
+
+## Applications of the Conditional Mean
+
+When might we use the conditional mean?
+
+- Caluclating average sales for a retail location by day of the week and month
+- Calculating yield rate (proportion of admitted students who attend) by geographic region and income level for a college. 
+- Calculating average employee turnover by level of education and gender
