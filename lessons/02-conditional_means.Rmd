@@ -37,7 +37,7 @@ The codebook for this dataset is stored as another dataset, `labels_explain`. Th
 ```{r explain_date}
 
 ## Full explanation of data
-load("lab_explain.Rdata")
+load("pd_lab_explain.Rdata")
 
 lab_explain
 
@@ -74,9 +74,9 @@ gg
 gg1<-gg
 
 # Make Interactive plot
-gg_p<-ggplotly(gg)
+#gg_p<-ggplotly(gg)
 
-gg_p
+#gg_p
 ```
 
 ## Unconditional Means
