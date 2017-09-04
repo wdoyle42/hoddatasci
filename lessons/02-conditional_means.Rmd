@@ -1,3 +1,8 @@
+---
+title: "Conditional Means"
+output: github_document
+---
+
 # Analyzing Data, Part 1: Conditional Means
 
 The conditional mean will be our first predictive algorithm. Conditional means answer the question: "Given what we know about a certain case, what can expect to see, on average?" The conditional mean is a powerful tool that is typically quite easy to explain to decision-makers. 
