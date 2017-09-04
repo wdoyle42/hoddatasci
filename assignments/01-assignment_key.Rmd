@@ -10,7 +10,6 @@ output: github_document
 Hello, world!
 
 
-
 *2. R output that summarizes one of the variables in the `colllege.Rdata` dataset*
 
 ```{r}
