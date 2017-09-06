@@ -47,6 +47,10 @@ lab_explain
 
 *Quick Exercise: Find the per capita income and the percent of the population with a bachelor's degree for the county you're from.*
 
+```{r}
+pd%>%filter(fips=="06085")%>%select(per_capita_inc,coll_grad_pc)
+```
+
 ## Dependent Variable
 
 Our working example will be based on predicting income in a given county. Suppose we want to know what income level we can expect for a geographic area based on observed characteristics, such as the proportion of the population with a bachelor's degree. How would we predict the income based on what we know about the geographic area? 
@@ -74,9 +78,9 @@ gg
 gg1<-gg
 
 # Make Interactive plot
-#gg_p<-ggplotly(gg)
+gg_p<-ggplotly(gg)
 
-#gg_p
+gg_p
 ```
 
 ## Unconditional Means
