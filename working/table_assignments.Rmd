@@ -18,6 +18,39 @@ class["index"]<-seq(1:dim(class)[1])
 
 class<-class%>%mutate(table=cut(index,6,(1:6)))
 
+class$rmse<-NA
+
 print(select(class,first_name,last_name,table),n=100)
+
 names(class)
 ```
+
+## Kaggle Style Results
+
+## Bar Graph
+
+```{r}
+
+add_result<-function(df,group_number,rmse){
+  df$rmse[df$table==group_number]<-rmse
+  df
+  }
+
+new_rmse<-10000
+
+class<-add_result(class,1,new_rmse)
+class<-add_result(class,2,new_rmse)
+class<-add_result(class,3,new_rmse)
+class<-add_result(class,4,new_rmse)
+class<-add_result(class,5,new_rmse)
+class<-add_result(class,6,new_rmse)
+
+class_summary<-class%>%group_by(table)%>%
+  summarize(current_rmse=mean(rmse))
+
+gg<-ggplot(class_summary,aes(x=table,y=current_rmse,fill=table))
+gg<-gg+geom_bar(stat="identity",position=position_dodge())
+gg
+
+```
+
