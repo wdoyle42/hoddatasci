@@ -13,6 +13,6 @@ For today's class, I'd like for you to continue using the county-level dataset. 
 
 * Create predictions for each county based on conditional means within each grouping of the predictor variable. 
 
-* Generate summary measures of the error terms: the difference between actual retail sales and your predicted retail sales, using `rmse` or `mae`
+* Generate summary measures of the error terms: the difference between actual retail sales and your predicted retail sales, using `rmse` 
 
 * You should also create some graphics. 
