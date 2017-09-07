@@ -1,6 +1,6 @@
 ---
 title: "Conditional Means"
-output: github_document
+output: html_document
 ---
 
 # Analyzing Data, Part 1: Conditional Means
@@ -157,6 +157,10 @@ pd<-pd%>%group_by(coll_grad_level)%>% ## Group by predictor
   #Rank by prediction, with ties sorted randomly
   mutate(pred_income_college_rank=rank(pred_income_college,ties.method="random"))
 
+
+pd%>%group_by(coll_grad_level)%>% ## Group by predictor
+  ##Calculate mean at each level of predictor
+  summarise(pred_income_college=mean(percapinc.2010))
 
 gg<-ggplot(data=pd,aes(x=pred_income_college_rank,y=percapinc.2010,color="Actual"))
 gg<-gg+geom_point(alpha=.5,size=.5)
