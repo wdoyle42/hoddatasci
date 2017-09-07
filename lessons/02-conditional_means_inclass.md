@@ -7,12 +7,12 @@ For today's class, I'd like for you to continue using the county-level dataset. 
 
 * Calculate the mean of the outcome variable of retail sales: `pd%>%summarize(mean_retail=mean(retail,na.rm=TRUE))`
 
-* Create new variables that indicate the quantiles of another variable, using `cut` and `quantile`.
+* Create new variables that indicate the quantiles of another variable, using `ntile`.
 
-* Generate some tables of the conditional mean of the outcome variable by levels of the predictor variable. 
+* Generate some tables of the conditional mean of the outcome variable by levels of the predictor variable. (hint: `group_by`, then `summarize`).
 
 * Create predictions for each county based on conditional means within each grouping of the predictor variable. 
 
-* Generate summary measures of the error terms: the difference between actual retail sales and your predicted retail sales, using `rmse` or `mae`
+* Generate summary measures of the error terms: the difference between actual retail sales and your predicted retail sales, using `rmse`.
 
 * You should also create some graphics. 
