@@ -446,45 +446,6 @@ gg
 
 The other solution is to use facets, or lots of little graphs, which show how the pattern varies across different groups. In this case, our groups will be defined by gender and work/life balance.
 
-``` r
-## Using Facets
-
-at_sum<-at%>%
-  group_by(BusinessTravel,Gender,MaritalStatus,WorkLifeBalance)%>%
-  summarize(attr_avg=mean(attrit))%>%
-  ungroup()%>%
-  arrange(attr_avg)
-
-at_sum
-```
-
-    ## # A tibble: 70 × 5
-    ##    BusinessTravel Gender MaritalStatus WorkLifeBalance attr_avg
-    ##             <chr>  <chr>         <chr>           <int>    <dbl>
-    ## 1      Non-Travel Female      Divorced               2        0
-    ## 2      Non-Travel Female      Divorced               3        0
-    ## 3      Non-Travel Female      Divorced               4        0
-    ## 4      Non-Travel Female       Married               1        0
-    ## 5      Non-Travel Female       Married               2        0
-    ## 6      Non-Travel Female       Married               3        0
-    ## 7      Non-Travel Female       Married               4        0
-    ## 8      Non-Travel Female        Single               1        0
-    ## 9      Non-Travel Female        Single               3        0
-    ## 10     Non-Travel   Male      Divorced               2        0
-    ## # ... with 60 more rows
-
-``` r
-gg<-ggplot(at_sum,aes(x=fct_reorder(BusinessTravel,attr_avg),y=attr_avg))
-gg<-gg+geom_bar(stat="identity",aes(fill=MaritalStatus),position="dodge")
-gg<-gg+facet_wrap(~Gender+WorkLifeBalance,ncol=4)
-
-
-gg<-gg+ylab("Proportion of Employees Who Departed")+xlab("Category")
-gg<-gg+theme(axis.text.x = element_text(angle = 60, hjust = 1))
-gg<-gg+ggtitle("Departure by Gender and Level of Work/Life Satisfaction")
-gg
-```
-
 ![](03-plot_means_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-17-1.png)
 
 *Sort of Quick Exercise: Try and Replicate one of the above plots using performance review, department, education field and overtime. *

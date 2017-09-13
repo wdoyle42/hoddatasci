@@ -1,8 +1,5 @@
 ---
-output:
-  word_document: default
-  pdf_document: default
-  html_document: default
+output: github_document
 ---
 #Presenting Data 1: Plotting Conditional Means {#plot_means}
 
@@ -295,7 +292,7 @@ gg
 
 The other solution is to use facets, or lots of little graphs, which show how the pattern varies across different groups. In this case, our groups will be defined by gender and work/life balance. 
 
-```{r}
+```{r, echo=FALSE, results='hide', warning=FALSE, message=FALSE}
 ## Using Facets
 
 at_sum<-at%>%
