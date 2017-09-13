@@ -422,6 +422,7 @@ at_sum%>%select(grouping,attr_avg)
     ## # ... with 60 more rows
 
 ``` r
+## Drop the groups with 0 or very low attrition. 
 at_sum<-at_sum%>%filter(attr_avg>.01)
 
 gg<-ggplot(at_sum,aes(x=fct_reorder(grouping,attr_avg),y=attr_avg))
