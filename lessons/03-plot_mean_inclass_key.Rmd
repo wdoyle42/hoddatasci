@@ -1,0 +1,211 @@
+---
+title: Plotting Conditional Means
+output: github_document
+---
+
+
+In Class Work: Plotting Conditional Means
+----------------------------
+
+Today we're going to work again with attrition as our outcome. Your company would like to know which groups are most likely to leave this year. Your supervisor has asked you to wtrie a one-page memo, detailing how attrition varies as a function of different employee characteristics. Since your supervisor is a visual learner, the memo should include two graphics, with accompanying brief text. No R code should be visible in the memo, just graphics and normal text. Your supervisor has said that the following areas are of key interest as possible predictors of attrition.
+
+1. Commute distance 
+2. Marital Status
+3. Gender
+4. Work/Life Balance
+5. Education level
+6. Salary
+
+
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+library(forcats)
+library(RColorBrewer)
+
+## Load the saved version
+load("at.Rdata")
+
+## Crate a new variable named attrit and define it as 0
+at<-at%>%mutate(attrit=ifelse(Attrition=="Yes",1,0))
+
+```
+
+# To: My Boss
+
+# From: Will Doyle
+
+# RE: Attrition Rates Among Employees
+
+# 2017-09-16
+
+You recently asked for an analysis regarding predictors of employee attrition. Below, please find some preliminary results. 
+
+
+## Commute distance 
+```{r, echo=FALSE, results='hide', warning=FALSE, message=FALSE}
+ # Code copied from 02-condtional_means.Rmd
+## Create a variable for quartiles of commute distance
+at<-at%>%mutate(commute_quartile=ntile(DistanceFromHome,4))
+
+## Calculate conditional mean
+at_sum<-at%>%group_by(commute_quartile)%>% ## Group by predictor
+  ##Calculate mean at each level of predictor
+  summarize(attr_avg=mean(attrit))
+
+## Plot Result
+gg<-ggplot(at_sum,
+           aes(x=as.factor(commute_quartile),
+               y=attr_avg,fill=as.factor(commute_quartile)))
+## Use bar plot geometry, height of bars set by level observed in dataset
+gg<-gg+geom_bar(stat="Identity")+xlab("Commute Distance")+ylab("Attrition")+theme(legend.position = "none")
+## Print
+gg
+
+```
+
+Employees with the longest commute distance have the highest levels of attrition. 
+
+
+
+## Marital Status
+
+```{r, echo=FALSE, results='hide', warning=FALSE, message=FALSE}
+ # Code copied from 02-condtional_means.Rmd
+
+## Calculate conditional mean
+at_sum<-at%>%group_by(MaritalStatus)%>% ## Group by predictor
+  ##Calculate mean at each level of predictor
+  summarize(attr_avg=mean(attrit))
+
+## Plot Result
+gg<-ggplot(at_sum,
+           aes(x=as.factor(MaritalStatus),
+               y=attr_avg,fill=as.factor(MaritalStatus)))
+## Use bar plot geometry, height of bars set by level observed in dataset
+gg<-gg+geom_bar(stat="Identity")+xlab("Marital Status")+ylab("Attrition")+theme(legend.position = "none")
+## Print
+gg
+
+```
+
+Our single employees are most likely to leave the company. 
+
+## Gender
+
+```{r, echo=FALSE, results='hide', warning=FALSE, message=FALSE}
+ # Code copied from 02-condtional_means.Rmd
+
+## Calculate conditional mean
+at_sum<-at%>%group_by(MaritalStatus,Gender)%>% ## Group by predictor
+  ##Calculate mean at each level of predictor
+  summarize(attr_avg=mean(attrit))
+
+## Plot Result
+gg<-ggplot(at_sum,
+           aes(x=as.factor(MaritalStatus),
+               y=attr_avg,fill=as.factor(Gender)))
+## Use bar plot geometry, height of bars set by level observed in dataset
+gg<-gg+geom_bar(stat="Identity",position="dodge")+xlab("Marital Status")+ylab("Attrition")+theme(legend.title =element_text("Gender"))
+## Print
+gg
+
+```
+Males are slightly more likely to leave the company than women, regardless of marital status. 
+
+##  Work/Life Balance
+
+```{r, echo=FALSE, results='hide', warning=FALSE, message=FALSE}
+ # Code copied from 02-condtional_means.Rmd
+
+## Calculate conditional mean
+at_sum<-at%>%group_by(WorkLifeBalance)%>% ## Group by predictor
+  ##Calculate mean at each level of predictor
+  summarize(attr_avg=mean(attrit))
+
+## Plot Result
+gg<-ggplot(at_sum,
+           aes(x=as.factor(WorkLifeBalance),
+               y=attr_avg,fill=as.factor(WorkLifeBalance)))
+## Use bar plot geometry, height of bars set by level observed in dataset
+gg<-gg+geom_bar(stat="Identity")+xlab("Work Life Balance Scale")+ylab("Attrition")+theme(legend.position = "none")
+## Print
+gg
+
+```
+Employees who score a "1" on the work/life balance score are much less likely to stay at the company. 
+
+## Education level
+
+```{r, echo=FALSE, results='hide', warning=FALSE, message=FALSE}
+ # Code copied from 02-condtional_means.Rmd
+
+## Calculate conditional mean
+at_sum<-at%>%group_by(Education)%>% ## Group by predictor
+  ##Calculate mean at each level of predictor
+  summarize(attr_avg=mean(attrit))
+
+## Plot Result
+gg<-ggplot(at_sum,
+           aes(x=as.factor(Education),
+               y=attr_avg,fill=as.factor(Education)))
+## Use bar plot geometry, height of bars set by level observed in dataset
+gg<-gg+geom_bar(stat="Identity")+xlab("Education Level")+ylab("Attrition")+theme(legend.position = "none")
+## Print
+gg
+
+```
+
+Our most educated employees are least likely to leave the company.
+
+## Salary
+```{r, echo=FALSE, results='hide', warning=FALSE, message=FALSE}
+ # Code copied from 02-condtional_means.Rmd
+## Create a variable for quartiles of commute distance
+at<-at%>%mutate(salary_quartile=ntile(MonthlyIncome,4))
+
+## Calculate conditional mean
+at_sum<-at%>%group_by(salary_quartile)%>% ## Group by predictor
+  ##Calculate mean at each level of predictor
+  summarize(attr_avg=mean(attrit))
+
+## Plot Result
+gg<-ggplot(at_sum,
+           aes(x=as.factor(salary_quartile),
+               y=attr_avg,fill=as.factor(salary_quartile)))
+## Use bar plot geometry, height of bars set by level observed in dataset
+gg<-gg+geom_bar(stat="Identity")+xlab("Salary Level")+ylab("Attrition")+theme(legend.position = "none")
+## Print
+gg
+
+
+```
+
+Our lowest-paid employees are most likely to leave.
+
+##  Combined factors
+
+Based on the above, it appears that salary, marital status and work/life balance are key factors in predicting attrtion. Below I plot all three factors combined. 
+
+```{r,echo=FALSE, results='hide', warning=FALSE, message=FALSE}
+
+## Calculate conditional mean
+at_sum<-at%>%group_by(salary_quartile,MaritalStatus,WorkLifeBalance)%>% ## Group by predictor
+  ##Calculate mean at each level of predictor
+  summarize(attr_avg=mean(attrit))%>%
+  arrange(-attr_avg)
+
+## Plot Result
+gg<-ggplot(at_sum,
+           aes(x=as.factor(salary_quartile),
+               y=attr_avg,fill=as.factor(MaritalStatus)))
+## Use bar plot geometry, height of bars set by level observed in dataset
+gg<-gg+geom_bar(stat="Identity",position="dodge")+xlab("Salary Level")+ylab("Attrition")+theme(legend.title=element_text("Marital Status"))
+gg<-gg+facet_wrap(~WorkLifeBalance)
+## Print
+gg
+
+```
+
+As the figure shows, our low-paid employees who also have low work/life satisfaction are quite likely to leave the company. 

@@ -206,6 +206,10 @@ at_sum<-at%>%
 
 at_sum
 
+pd<-pd%>%
+  group_by(college_ed_level,)%>%
+  mutate(avg_homeown_by_college=mean(homeown))
+
 
 gg<-ggplot(at_sum,aes(x=reorder(BusinessTravel,attr_avg),
                       y=attr_avg,
