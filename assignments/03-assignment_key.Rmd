@@ -1,0 +1,120 @@
+---
+title: "Assignment 3 Key"
+output: github_document
+---
+
+Use the attrition dataset to answer the following questions. As always, your assignment must be turned in as a .Rmd file. 
+
+```{r}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+library(forcats)
+library(RColorBrewer)
+
+load("../lessons/at.Rdata")
+```
+
+
+1. Create a graph that shows the distribution of monthly income.
+```{r}
+gg<-ggplot(data=at,aes(MonthlyIncome))
+gg<-gg+geom_histogram(bins=50)
+gg
+```
+
+
+
+2. Create a graph that shows the average level of monthly income by field of education.
+
+```{r}
+at_sum=at%>%
+  group_by(Education)%>%
+  summarize(mean_salary=mean(MonthlyIncome))
+
+gg<-ggplot(data=at_sum, aes(x=as.factor(Education),y=mean_salary,fill=as.factor(Education)))
+gg<-gg+geom_bar(stat="identity",position="dodge")
+gg<-gg+xlab("Education Level")+ylab("Average Salary")
+gg<-gg+theme(legend.position="none")
+gg
+```
+3. Create another graph that shows average level of monthly income by field of education and gender.
+
+```{r}
+at_sum=at%>%
+  group_by(Education,Gender)%>%
+  summarize(mean_salary=mean(MonthlyIncome))
+
+gg<-ggplot(data=at_sum, aes(x=as.factor(Education),y=mean_salary,fill=as.factor(Gender)))
+gg<-gg+geom_bar(stat="identity",position="dodge")
+gg<-gg+xlab("Education Level")+ylab("Average Salary")
+gg<-gg+theme(legend.title=element_blank())
+gg
+```
+
+
+
+4. Create a graph that shows average levels of monthly income by field of education, gender and job level (scale of 1-5, highest ranked employees are 5)
+
+
+
+```{r}
+at_sum=at%>%
+  group_by(Education,Gender,JobLevel)%>%
+  summarize(mean_salary=mean(MonthlyIncome))
+
+gg<-ggplot(data=at_sum, aes(x=as.factor(Education),y=mean_salary,fill=as.factor(Gender)))
+gg<-gg+geom_bar(stat="identity",position="dodge")
+gg<-gg+xlab("Education Level")+ylab("Average Salary")
+gg<-gg+facet_wrap(~JobLevel)
+gg<-gg+theme(legend.title=element_blank())
+gg
+```
+
+5. Create a graph that shows average levels of monthly income by field of education, gender, job level and department. 
+
+```{r,fig.height=9}
+
+at_sum<-at%>%
+  group_by(Education,Gender,JobLevel,Department)%>%
+  summarize(salary_avg=mean(MonthlyIncome))%>%
+  ungroup()%>%
+  arrange(salary_avg)
+
+at_sum
+
+## One Solution: a new variable for every type of employee defined by travel, gender, marital status, and happiness with work/life
+
+at_sum$grouping<-paste0("Ed Level: ",
+                       at_sum$Education,
+                       ", ",
+                       at_sum$Gender,
+                       ", ",
+                       "Job Level: ",
+                       at_sum$JobLevel,
+                       ", ",
+                       at_sum$Department)
+
+at_sum$grouping<-as.factor(at_sum$grouping)
+
+## Showing only highly paid employees
+at_sum<-filter(at_sum, salary_avg>4000)
+
+at_sum%>%select(grouping,salary_avg)
+
+gg<-ggplot(at_sum,aes(x=fct_reorder(grouping,salary_avg),y=salary_avg))
+gg<-gg+geom_bar(stat="identity",aes(fill=Department))
+gg<-gg+coord_flip()
+gg<-gg+xlab("")+ylab("Salary")
+gg
+
+#OR#
+
+gg<-ggplot(at_sum,aes(x=as.factor(Education),y=salary_avg))
+gg<-gg+geom_bar(stat="identity",position="dodge",aes(fill=Department))
+gg<-gg+facet_wrap(~Gender+JobLevel)
+gg<-gg+xlab("")+ylab("Salary")
+gg
+
+
+```
+

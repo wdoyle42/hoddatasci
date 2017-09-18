@@ -1,0 +1,237 @@
+---
+title: Working With Flat Data Files
+output: github_document
+---
+
+Flat data is data that is arranged with one case per row, with one column per variable-- more or less. It's stored in a variety of formats, with different conventions. Our goal is to get it into the most useful format for analysis: what's known as tidy data. 
+
+```{r} 
+library(tidyverse)
+library(haven)
+library(readxl)
+```
+
+
+## CSV or other delimited files
+
+We'll start with a csv file which is among the most common formats for datasets. CSV stands for _Comma _Separated _Value, meaning that each row is divided into cells by commas. An end of line completes the row. 
+
+
+```{r}
+#Delimited files
+
+#Load in the HSB dataset from the UCLA statistical computing site
+
+hsb<-read_csv(file="https://stats.idre.ucla.edu/wp-content/uploads/2016/02/hsb2-2.csv")
+
+write_csv(hsb,path="hsb.csv")
+
+#Check it out
+head(hsb)
+
+##Need these for later
+my.names<-names(hsb)
+
+#Write this in a variety of formats to be used later
+write_delim(hsb, path="hsb.txt",delim="\t")
+
+write_delim(hsb, path="hsb_semicolon.txt",delim=";")
+gdata::write.fwf(data.frame(hsb),file="hsb.dat",sep="",colnames=FALSE)
+```
+
+*Quick exercise: write out the HSB file with a semicolon delimiter*
+
+
+## Fixed width files
+
+fixed width files are an older file format that you don't see as much of any more. To read these in, you need a file that tells you the locations of the different variables, known as column positions or locations. 
+
+```{r}
+## ------------------------------------------------------------------------
+
+#Fixed width files
+
+#You need to get the "widths" somehere, usually a data dictionary
+
+my.widths=c(3,#id
+            1, #female
+            1, #race
+            1, #ses
+            1, #schtyp
+            1, #prog
+            2, #read
+            2, #write
+            2, #math 
+            2, #science
+            2 #socst
+            )
+            
+my_positions<-fwf_widths(my.widths)
+
+hsb3<-read_fwf("hsb.dat",
+         col_positions  =my_positions)
+
+head(hsb3)
+
+names(hsb3)<-my.names
+
+head(hsb3)
+
+```
+
+## Excel (sigh)
+
+In most business applications you'll work with excel files the most often. To get these into shape you'll have to do some wrangling. Below I show how this is done with data in a common reporting format. 
+
+```{r}
+## ------------------------------------------------------------------------
+
+#Excel files
+
+##http://nces.ed.gov/programs/digest/d14/tables/dt14_204.10.asp
+
+download.file("http://nces.ed.gov/programs/digest/d14/tables/xls/tabn204.10.xls",destfile="free.xls")
+
+free<-read_excel("free.xls",skip=4,col_names=FALSE)
+            
+head(free)
+
+# Now need to clean up 
+#Get rid of unwanted columns
+
+free2<-free[ ,-(c(3,6,9,12,15,18))]
+
+#Get rid of unwanted rows
+free2<-free2%>%filter(is.na(X1)==FALSE)
+
+##50 states plus dc only
+free2<-free2[2:52,]
+
+
+head(free2)
+tail(free2)
+
+names(free2)<-c("state",
+                "total.2000",
+                "total.2010",
+                "total.2011",
+                "total.2012",
+                "frl.2000",
+                "frl.2010",
+                "frl.2011",
+                "frl.2012",
+                "pc.frl.2000",
+                "pc.frl.2010",
+                "pc.frl.2011",
+                "pc.frl.2012")
+```
+
+*Quick Exercise: Read in this file: http://nces.ed.gov/programs/digest/d14/tables/xls/tabn302.10.xls*
+
+```{r}
+
+download.file("http://nces.ed.gov/programs/digest/d14/tables/xls/tabn302.10.xls",destfile="grad.xls")
+
+grad<-read_excel("grad.xls",skip=6,col_names=FALSE)
+
+#Get rid of unwanted rows
+grad<-grad%>%filter(is.na(X1)==FALSE)
+
+
+```
+
+
+## Tidy data
+
+Tidy data follows two key principles: each column is one variable and one variable only, while each row is a case. Below, I show how to make the data from the above spreadsheet tidy, and why we would do this. 
+
+```{r}
+
+free_total<-free2%>%select(state,
+                           total.2000,
+                           total.2010,
+                           total.2011,
+                           total.2012)
+names(free_total)<-c("state","2000","2010","2011","2012")
+
+free_total<-free_total%>%gather(`2000`,`2010`,`2011`,`2012`,key=year,value=total_students)
+
+
+frl_total<-free2%>%select(state,
+                           frl.2000,
+                           frl.2010,
+                           frl.2011,
+                           frl.2012)
+
+names(frl_total)<-c("state","2000","2010","2011","2012")
+
+frl_total<-frl_total%>%gather(`2000`,`2010`,`2011`,`2012`,key=year,value=frl_students)
+
+
+
+free_tidy<-left_join(free_total,frl_total,by=c("state","year"))
+
+free_tidy
+
+## Total by year
+
+free_tidy%>%group_by(year)%>%summarize(sum(frl_students))
+
+
+
+pc.frl_total<-free2%>%select(state,
+                           pc.frl.2000,
+                           pc.frl.2010,
+                           pc.frl.2011,
+                           pc.frl.2012)
+
+names(pc.frl_total)<-c("state","2000","2010","2011","2012")
+
+pc_frl_total<-pc.frl_total%>%gather(`2000`,`2010`,`2011`,`2012`,key=year,value=pc_frl_students)
+
+## ------------------------------------------------------------------------
+```
+
+*Quick Exericse: now add in percent of students eligible by state*
+
+## Other programming languages
+
+Other statistical programs have their own file formats. These are easy for these programs to read in. R can udnerstand all of them, if the `haven` packages is used. 
+
+```{r}
+#Other data files from stat programming language
+
+
+# Stata
+
+hsb_stata<-read_dta("https://stats.idre.ucla.edu/stat/stata/notes/hsb2.dta")
+
+head(hsb_stata)
+
+
+#SPSS
+example_spss<-read_spss("https://stats.idre.ucla.edu/stat/data/binary.sav")
+
+head(example_spss)
+
+#SAS
+hsb_sas<-read_sas("https://stats.idre.ucla.edu/wp-content/uploads/2016/02/hsb2.sas7bdat")
+
+head(hsb_sas)
+
+```
+
+## Output
+
+Most of the time, you should store your data as a csv file. This will ensure that pretty much anyone can take a look at it. If you're sure that the only users will be other R users (why would you be sure of this?), then feel free to save it as an `.Rdata` file. 
+
+```{r}
+## ------------------------------------------------------------------------
+#Saving as an R file
+
+save(free2,file="frl.Rdata")
+
+#Outputting delimited
+
+write_csv(free2,"frl.csv")
+```
