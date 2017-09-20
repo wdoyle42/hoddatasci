@@ -16,7 +16,7 @@ class<-class%>%arrange(random)
 
 class["index"]<-seq(1:dim(class)[1])
 
-class<-class%>%mutate(table=cut(index,6,(1:6)))
+class<-class%>%mutate(table=cut(index,9,(1:9)))
 
 class$rmse<-NA
 
