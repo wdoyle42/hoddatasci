@@ -1,0 +1,28 @@
+---
+title: "Final Project"
+author: "Will Doyle"
+date: "September 20, 2017"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+
+## Three Questions
+
+- What did you work on last week?
+- What are you going to work on this week? 
+- Is there anything that's keeping you from completing your goal? 
+
+## Progress Reports
+
+- *Progress Report 1: 2017-09-13*
+- Progress Report 2: 2017-10-04
+- Progress Report 3: 2017-10-25
+- Progress Report 4: 2017-11-03
+
+### Final Project Due: 2017-12-11
+
