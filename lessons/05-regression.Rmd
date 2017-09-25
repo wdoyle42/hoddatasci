@@ -1,0 +1,316 @@
+---
+title: "Using Regression for Prediction"
+output: github_document
+---
+
+## Overview
+
+So far, we've been using just the simple mean to make predictions. Today, we'll continue using the simple mean to make predictions, but now in a complicated way. Before, when we calculated conditional means, we did so in certain "groupings" of variables. When we run linear regression, we no longer need to do so. Instead, linear regression allows us to calculate the conditional mean of the outcome at _every_ value of the predictor. If the predictor takes on just a few values, then that's the number of conditional means that will be calculated. If the predictor is continuous and takes on a large number of values, we'll still be able to calculate the conditional mean at every one of those values. 
+
+The model we posit for regression is as follows:
+
+$$Y=\beta_0+\beta_1 x_1 +\beta_2 x_2+ ... \beta_k x_k + \epsilon$$
+
+It's just a linear, additive model. Y increases or decreases as a function of x, with multiple x's included. $\epsilon$ is the extent to which an individual value is above or below the line created. 
+
+Let's say that you've got some consumer data and you want to target those families that are likely to spend between  \$100and \$500 a month on dining out. We would need to be able to predict which families would spend in that range based on observable characteristics like family size, income and family type. 
+
+We're going to be working with expenditure data from the 2012 administration of the consumer expenditure survey. The first bit of code gets the libraries we need, the data we need, and opens up a codebook for the data. 
+
+```{r,echo=FALSE}
+
+library(tidyverse)
+library(forcats)
+library(ModelMetrics)
+
+load("cex.RData")
+
+## Create training and testing datasets
+
+##---------------------------------------
+
+## This code defines a testing and training dataset
+## You don't need it right now, but I want to show you
+## how it's done
+
+# Get half of the data via random sample
+#cex_train<-sample_frac(cex,.5)
+
+#save(cex_train,file="cex_train.Rdata")
+
+## Testing data is the other half of the data--- the half of cex not in the 
+##training dataset
+
+#cex_test<-setdiff(cex,cex_train)
+
+#save(cex_test,file="cex_test.Rdata")
+##---------------------------------------
+
+
+##redefine cex as cex training dataset
+load("cex_train.Rdata")
+cex<-cex_train
+
+my.vals<-names(cex)
+explanation<-c("id",
+               "education: 10 8th grade, 11 9-12, 12 hs grad,13 some college, 14 assoc, 15 bach 16 masters, 17 prof",
+"education of second person",
+"urban: 1=urban, 2=not",
+"race: 1 white, 2 black, 3 native american, 4 asian 5 pi 6 multi",
+"race of other person",
+"income class: 1: 0-10k, 2 5-10k, 3 10-15k 4 15 to 20k 5 20-30k 6 30-40k 7 40-50k 8 50-70k 9 70k+",
+"inc_rank: percentile rank of income",
+"sex of reference: 1 male 2 female",
+"sex of other person",
+"reference person hispanic? 1 hispanic 2 non",
+"other person hispanice? 1 hispanic 2 non",
+"poverty: 1 below poverty, 2 not",
+"region 1 Ne 2 MW 3 South 4 West",
+"family size: ",
+"family type 1 hw, 2 hw own children, oldest under 6, 3 hw own children oldest 6-17, 4 hw own children oldest over 17, 5 all other hws, 6 one parent male, kids under 18, 7 one parent female, kids under 18, 8 single, 9 other ",
+"Children's ages: 0 no kids, 1 all less 6 2 oldest bt 6 and 11, 3 All children between 6 and 11
+ 4 Oldest child between 12 and 17 and at least one child less than 12
+ 5 All children between 12 and 17
+ 6 Oldest child greater than 17 and at least one child less than 17
+ 7 All children greater than 17 one under 6",
+"quarter and year",
+"Dining out",
+"Grocery",
+"Grocery non-food",
+"Grocery food",
+"Alcohol at home",
+"Alcohol out",
+"Other store expenditures",
+"Cigarrettes",
+"Transportation to work"
+)
+
+
+codebook<-data.frame(my.vals, explanation)
+
+
+
+## A bit of wrangling
+
+cex<-cex%>%mutate(pov_cym=ifelse(pov_cym=="",NA,pov_cym))
+cex<-cex%>%mutate(pov_cym=fct_recode(as.factor(pov_cym),
+                                     "In Poverty"="2",
+                                     "Not in Poverty"="3"))
+cex<-filter(cex,is.na(pov_cym)==FALSE)
+
+```
+
+## Bivariate regression
+
+Our first dependent variable will be dining out. Let's take a look at that variable: 
+
+```{r}
+
+summary(cex$dine_out)
+
+gg<-ggplot(cex,aes(x=dine_out))
+gg<-gg+geom_histogram()
+gg
+
+gg<-ggplot(cex,aes(x=dine_out))
+gg<-gg+geom_density()
+gg
+
+
+```
+
+
+Because this variable is pretty non-normally distributed, we may want to think about transforming it. For now, let's just work with it as-is. Let's see if people with bigger families spend more on dining out more than those with smaller families. Before, we would have calculated the conditional mean at every level of family size, or in certain groupings of family size. With regression, we simply specify the relationship. 
+
+```{r}
+
+#Model 1: simple bivariate regression
+
+mod1<-lm(dine_out~fam_size,data=cex) #outcome on left, predictor on right 
+
+summary(mod1)
+confint(mod1)
+
+g1<-ggplot(cex, aes(x=fam_size,y=dine_out))+ #specify data and x and y
+           geom_point(shape=1)+ #specify points
+           geom_smooth(method=lm) #ask for lm line
+g1
+
+cex<-cex%>%mutate(pred1=predict(mod1)) #predict using data in memory
+ 
+rmse_1<-with(cex,rmse(dine_out,pred1)); rmse_1
+
+```
+
+What this shows is that as family size increases, the amount spent on dining out increases. For every additional family member, an additional \$`r prettyNum(mod1$coefficients[2],digits=0)` is predicted to be spent on dining out. The rmse of `r  prettyNum(rmse_1,digits=2)` gives us a sense of how wrong the model tends to be when using just this one predictor. 
+
+_Quick Exercise_ Run a regression using a different predictor. Calculate rmse and see if you can beat my score. 
+
+## Multiple Regression. 
+
+Okay, so we can see that this is somewhat predictive, but we can do better. Let's add in a second variable: whether or not the family is below the poverty line. 
+
+```{r}
+#Part 2: Multiple regression
+
+mod2<-lm(dine_out~fam_size+
+           pov_cym, #can only take on two values
+          data=cex)
+
+summary(mod2) 
+
+cex<-cex%>%mutate(pred2=predict(mod2))
+
+rmse_2<-with(cex,rmse(dine_out,pred2));rmse_2
+
+```
+
+So, those who are in poverty spend less on dining out. Alert the media!
+
+_Quick Exercise_ Add another variable to your model from above and see what difference it makes. How is your RMSE? 
+
+Maybe it's the case that those who spend more on groceries dine out less. Let's find out:
+
+```{r}
+#Model 3: predicting dining out using other variables and grocery spending
+
+mod3<-lm(dine_out~
+           fam_size+
+           pov_cym+
+           grocery,
+           data=cex)
+
+summary(mod3)
+
+g2<-ggplot(cex, aes(x=grocery,y=dine_out))+
+           geom_point(shape=1)+ 
+           geom_smooth(method=lm)
+g2
+
+
+cex<-cex%>%mutate(pred3=predict(mod3))
+
+rmse_3<-with(cex,rmse(dine_out,pred3));rmse_3
+
+```
+
+Hmm, what happened here?
+
+_Quick Exercise_ Use a subset of the cex data with reasonable bounds on both dining out and grocery expenditures. See if the results hold. 
+
+## Transformations
+
+The big issue as you can see with this data is that the outcome variable isn't normally distributed: most people spend very little on dining out, while some people spend quite a lot. In situations like this, which are VERY common when dealing with monetary values, we want to take the natural log of the outcome variable. A natural log is the power by which we would have to raise $e$, Euler's constant, to be that value: $e^{ln(x)}=x$, or 
+$ln(e^x)=x$.
+
+Economists just basically take the natural log of everything that's denominated in dollar terms, which you probably should do as well. You'll notice in the equations below that I specify the `log()` of both dining out and grocery spending. 
+
+
+```{r}
+
+#Part 4: Working with transformations
+mod4<-lm(log(dine_out+1)~ #log of dining out, plus one for zeros
+           +log(grocery+1)+ #log of groceries, plus one again
+           pov_cym+ #poverty
+           fam_size #family size
+         ,data=cex)
+
+summary(mod4)
+
+cex<-cex%>%mutate(pred4=predict(mod4))
+
+rmse_4<-with(cex,exp(rmse(log(dine_out+1),pred4)));rmse_4
+
+g4<-ggplot(cex, aes(x=grocery,y=exp(pred4),color=pov_cym))
+g4<-g4+geom_point(shape=1)
+
+g4
+
+# Function defined by coefficients
+
+fun_mod4<-function(x) exp(mod4$coefficients[1]+ 
+                          (mod4$coefficients[2]*log(x+1))+
+                          (mod4$coefficients[3]*1)+
+                          (mod4$coefficients[4]*mean(cex$fam_size,na.rm=TRUE))  
+                          ) 
+
+g4a<-ggplot(cex,aes(x=grocery,y=dine_out))
+g4a<-g4a+geom_point(alpha=.1,size=.1)
+g4a<-g4a+stat_function(fun = fun_mod4,color="blue")+xlim(0,2000)+ylim(0,1000)
+g4a
+```
+
+When calculating RMSE, I need to work with it in log format. The `prediction` command will give me back a prediction in log format as well. I take the difference between the two in log format, then exponentiate using the `exp` command, which means raising $e$ to the power of $x$, $e^x$.   
+
+```{r}
+#Part 5: Adding income 
+mod5<-lm(log(dine_out+1)~
+           +log(grocery+1)+
+           pov_cym+
+           fam_size+
+           inclass
+         ,data=cex)
+
+summary(mod5)
+
+cex<-cex%>%mutate(pred5=predict(mod5))
+
+rmse_5<-with(cex,exp(rmse(log(dine_out+1),pred5)));rmse_5
+
+g5<-ggplot(cex, aes(x=inclass,y=dine_out,group=1))+
+           geom_point(shape=1)+
+           geom_smooth(method=lm)
+g5
+
+```
+
+## Testing and Training
+The essence of prediction is discovering the extent to which our models can predict outcomes for data that does not come from our sample. Many times this process is temporal. We fit a model to data from one time period, then take predictors from a subsequent time period to come up with a prediction in the future. For instance, we might use data on team performance to predict the likely winners and losers for upcoming soccer games. 
+
+This process does not have to be temporal. We can also have data that is out of sample because it hadn't yet been collected when our first data was collected, or we can also have data that is out of sample because we designated it as out of sample.
+
+The data that is used to generate our predictions is known as 
+*training* data. The idea is that this is the data used to train our model, to let it know what the relationship is between our predictors and our outcome. So far, we have only worked with training data. 
+
+That data that is used to validate our predictions is known as *testing* data. With testing data, we take our trained model and see how good it is at predicting outcomes using out of sample data. 
+
+One very simple approach to this would be to cut our data in half. We could then train our model on half the data, then test it on the other half. This would tell us whether our measure of model fit (e.g. rmse, auc) is similar or different when we apply our model to out of sample data. That's what we've done today: we have only been working with half of our data. 
+
+Model 5 is looking pretty good, but let's see how it does using our testing data-- the half that wasn't used to train our model.
+
+```{r}
+load("cex_test.Rdata")
+
+rmse_5_test<-exp(rmse(log(cex_test$dine_out+1),cex$pred5))
+
+rmse_5;rmse_5_test
+```
+Why is the value from the testing dataset so much larger? 
+
+
+## Regression using a binary outcome
+
+You can also run a regression using a binary variable. Let's recode and then use our cigarettes variable to look at predictors of buying any cigarretes at all.
+
+```{r}
+cex$cigs<-0
+cex$cigs[cex$cigarettes>0]<-1
+
+mod6<-lm(cigs~educ_ref+
+           ref_race+
+           inc_rank+
+           sex_ref+
+           fam_type,
+         data=cex)
+
+summary(mod6)
+
+g4<-ggplot(cex,aes(x=fam_type,y=cigs,group=1))+
+  geom_jitter(alpha=.1)
+
+g4
+```
+
+## Thinking about regression for prediction
+
+You MUST remember: correlation is not causation. All you can pick up on using this tool is associations, or common patterns. You can't know whether one thing causes another. Remember that the left hand side variable could just as easily be on the right hand side. 
