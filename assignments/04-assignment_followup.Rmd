@@ -1,0 +1,66 @@
+---
+title: "Assignment 4 Followup"
+author: "Will Doyle"
+date: "September 25, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(haven)
+library(readxl)
+```
+
+
+#Problem 1
+
+Panel data for OECD countries. Save as file name `oecd.RData` [http://www.wiley.com/legacy/wileychi/baltagi/supp/Gasoline.dat](http://www.wiley.com/legacy/wileychi/baltagi/supp/Gasoline.dat)
+
+```{r}
+oecd<-read_delim("http://www.wiley.com/legacy/wileychi/baltagi/supp/Gasoline.dat",delim="\t")
+save(oecd,file="oecd.Rdata")
+```
+
+#Problem 2 
+
+
+
+2. U.S. National Election Survey data from 2004. Save as file name `nes.RData`. [http://www.uta.edu/faculty/story/DataSets.htm](http://www.uta.edu/faculty/story/DataSets.htm)
+
+
+```{r}
+nes<-read_spss("http://www.uta.edu/faculty/story/DataSets/NES2004.sav")
+save(nes,file="nes.Rdata")
+```
+
+#Problem 3: 
+
+
+3. General social survey, student version. Save as file name `gss.Rdata`. [http://www.uta.edu/faculty/story/DataSets.htm](http://www.uta.edu/faculty/story/DataSets.htm)
+
+
+```{r}
+download.file("http://www.uta.edu/faculty/story/DataSets/GeneralSocialSurvey1996ExcelDataStudentVersion.xls",destfile="gss.xls")
+read_excel("gss.xls")
+```
+
+
+#Problem 4
+
+```{r}
+
+expt<-read_csv("mainData.csv")
+
+save(expt, file="maindata.Rdata")
+
+```
+
+#Problem 5
+```{r}
+lalonde<-read_delim("http://users.nber.org/~rdehejia/data/psid_controls.txt",delim="    ",col_names = FALSE)
+names(lalonde)<-c("treat","age","educ","black","hispanic","married","nodegree","re74","re75","re78")
+
+```
+
+
