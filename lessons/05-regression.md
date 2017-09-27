@@ -107,10 +107,40 @@ g1
 ``` r
 cex<-cex%>%mutate(pred1=predict(mod1)) #predict using data in memory
  
-rmse_1<-with(cex,rmse(dine_out,pred1)); rmse_1
+rmse_1<-with(cex, rmse(dine_out,pred1)) ; rmse_1
 ```
 
     ## [1] 579.9798
+
+``` r
+mod1a<-lm(dine_out~inclass,data=cex); summary(mod1a)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = dine_out ~ inclass, data = cex)
+    ## 
+    ## Residuals:
+    ##    Min     1Q Median     3Q    Max 
+    ## -751.4 -299.2 -103.4  155.6 7048.6 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)  207.278     47.208   4.391 1.16e-05 ***
+    ## inclass02     24.095     66.637   0.362   0.7177    
+    ## inclass03     -9.634     59.030  -0.163   0.8704    
+    ## inclass04     27.098     58.765   0.461   0.6447    
+    ## inclass05     95.998     54.926   1.748   0.0806 .  
+    ## inclass06    139.306     55.328   2.518   0.0119 *  
+    ## inclass07    169.940     55.704   3.051   0.0023 ** 
+    ## inclass08    252.920     53.007   4.771 1.91e-06 ***
+    ## inclass09    544.090     50.010  10.880  < 2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 544.4 on 3405 degrees of freedom
+    ## Multiple R-squared:  0.1313, Adjusted R-squared:  0.1293 
+    ## F-statistic: 64.33 on 8 and 3405 DF,  p-value: < 2.2e-16
 
 What this shows is that as family size increases, the amount spent on dining out increases. For every additional family member, an additional $41 is predicted to be spent on dining out. The rmse of 580 gives us a sense of how wrong the model tends to be when using just this one predictor.
 
