@@ -1,0 +1,36 @@
+---
+title: "Finance APIs"
+author: "Will Doyle"
+date: "October 2, 2017"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(quantmod)
+library(tidyquant)
+library(timetk)
+```
+
+```{r}
+getSymbols("IBM",src="google",type="xts")
+getSymbols("A939RX0Q048SBEA",src="FRED",type="xts")
+
+
+df_ibm<-tk_tbl(IBM)
+
+df_gdp<-tk_tbl(A939RX0Q048SBEA)
+
+full_data<-left_join(df_gdp,df_ibm,by="index")
+full_data<-full_data%>%mutate(year=year(index))%>%filter(as.numeric(year)>2007)
+names(full_data)[2]<-"gdp"
+gg<-ggplot(full_data,aes(x=gdp,y=IBM.Close))
+gg<-gg+geom_point()
+gg
+```
+
+

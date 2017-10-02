@@ -45,6 +45,7 @@ nfl_int_data$interceptions<-as.numeric(nfl_int_data$interceptions)
 nfl_int_data<-nfl_int_data%>%filter(interceptions>0)%>%
   arrange(-interceptions)
 
+nfl_int_data
 # compare with: https://www.pro-football-reference.com/years/2015/leaders.htm
 
 ```
@@ -69,7 +70,7 @@ team_data$powerplays<-as.numeric(team_data$powerplays)
 
 
 gg<-ggplot(team_data,aes(x=powerplays,y=goals_for))
-gg<-gg+geom_jitter(width = .2)
+gg<-gg+geom_jitter(width = .1)
 gg
 ```
 
