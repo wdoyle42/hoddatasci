@@ -227,7 +227,11 @@ summary(mod4)
 
 cex<-cex%>%mutate(pred4=predict(mod4))
 
-rmse_4<-with(cex,exp(rmse(log(dine_out+1),pred4,n)));rmse_4
+## Getting set up for rmse function
+compare_data<-data.frame(cex$dine_out,cex$pred4)%>%filter(is.na(cex.pred4)==FALSE)
+names(compare_data)<-c("dine_out","pred4")
+
+rmse_4<-with(compare_data,exp(rmse(log(dine_out+1),pred4)));rmse_4
 
 g4<-ggplot(cex, aes(x=grocery,y=exp(pred4),color=pov_cym))
 g4<-g4+geom_point(shape=1)
@@ -265,15 +269,16 @@ cex<-cex%>%mutate(pred5=predict(mod5))
 
 rmse_5<-with(cex,exp(rmse(log(dine_out+1),pred5)));rmse_5
 
-g5<-ggplot(cex, aes(x=inclass,y=dine_out,group=1))+
+g5<-ggplot(cex, aes(x=inclass,y=(dine_out+1),group=1))+
            geom_point(shape=1)+
-           geom_smooth(method=lm)
+           geom_smooth(method=lm)+
+          scale_y_continuous(trans="log")
 g5
 
 ```
 
 ## Testing and Training
-The essence of prediction is discovering the extent to which our models can predict outcomes for data that does not come from our sample. Many times this process is temporal. We fit a model to data from one time period, then take predictors from a subsequent time period to come up with a prediction in the future. For instance, we might use data on team performance to predict the likely winners and losers for upcoming soccer games. 
+The essence of prediction is discovering the extent to which our models can predict outcomes for data that *does not come from our sample*. Many times this process is temporal. We fit a model to data from one time period, then take predictors from a subsequent time period to come up with a prediction in the future. For instance, we might use data on team performance to predict the likely winners and losers for upcoming soccer games. 
 
 This process does not have to be temporal. We can also have data that is out of sample because it hadn't yet been collected when our first data was collected, or we can also have data that is out of sample because we designated it as out of sample.
 
@@ -295,6 +300,9 @@ rmse_5;rmse_5_test
 ```
 Why is the value from the testing dataset so much larger? 
 
+*Quick exercise*
+
+What's the rmse for your model when comparing it with the testing data?
 
 ## Regression using a binary outcome
 
@@ -305,10 +313,9 @@ cex$cigs<-0
 cex$cigs[cex$cigarettes>0]<-1
 
 mod6<-lm(cigs~educ_ref+
-           ref_race+
+           as.factor(ref_race)+
            inc_rank+
-           sex_ref+
-           fam_type,
+           as.factor(sex_ref),
          data=cex)
 
 summary(mod6)

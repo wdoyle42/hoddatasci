@@ -261,41 +261,58 @@ Economists just basically take the natural log of everything that's denominated 
 mod4<-lm(log(dine_out+1)~ #log of dining out, plus one for zeros
            +log(grocery+1)+ #log of groceries, plus one again
            pov_cym+ #poverty
-           fam_size #family size
-         ,data=cex)
+           fam_size+#family size
+           log(booze_out+1) 
+         ,data=cex, na.action = "na.exclude")
 
+gg<-ggplot(cex,aes(x=log(booze_out+1)))
+gg<-gg+geom_density()
+gg
+```
+
+    ## Warning: Removed 2196 rows containing non-finite values (stat_density).
+
+![](05-regression_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-6-1.png)
+
+``` r
 summary(mod4)
 ```
 
     ## 
     ## Call:
     ## lm(formula = log(dine_out + 1) ~ +log(grocery + 1) + pov_cym + 
-    ##     fam_size, data = cex)
+    ##     fam_size + log(booze_out + 1), data = cex, na.action = "na.exclude")
     ## 
     ## Residuals:
     ##     Min      1Q  Median      3Q     Max 
-    ## -5.8447 -0.3947  0.8851  1.5986  6.7458 
+    ## -7.1537 -0.2717  0.4846  1.1087  5.2133 
     ## 
     ## Coefficients:
     ##                       Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)            0.41199    0.32849   1.254    0.210    
-    ## log(grocery + 1)       0.42694    0.05075   8.412   <2e-16 ***
-    ## pov_cymNot in Poverty  1.48851    0.12133  12.269   <2e-16 ***
-    ## fam_size               0.01305    0.03073   0.425    0.671    
+    ## (Intercept)            1.42436    0.50332   2.830  0.00473 ** 
+    ## log(grocery + 1)       0.31284    0.07515   4.163 3.37e-05 ***
+    ## pov_cymNot in Poverty  1.28893    0.20427   6.310 3.91e-10 ***
+    ## fam_size               0.02294    0.04431   0.518  0.60474    
+    ## log(booze_out + 1)     0.25523    0.02414  10.573  < 2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 2.496 on 3410 degrees of freedom
-    ## Multiple R-squared:  0.08129,    Adjusted R-squared:  0.08048 
-    ## F-statistic: 100.6 on 3 and 3410 DF,  p-value: < 2.2e-16
+    ## Residual standard error: 1.971 on 1213 degrees of freedom
+    ##   (2196 observations deleted due to missingness)
+    ## Multiple R-squared:  0.142,  Adjusted R-squared:  0.1391 
+    ## F-statistic: 50.17 on 4 and 1213 DF,  p-value: < 2.2e-16
 
 ``` r
 cex<-cex%>%mutate(pred4=predict(mod4))
 
-rmse_4<-with(cex,exp(rmse(log(dine_out+1),pred4)));rmse_4
+## Getting set up for rmse function
+compare_data<-data.frame(cex$dine_out,cex$pred4)%>%filter(is.na(cex.pred4)==FALSE)
+names(compare_data)<-c("dine_out","pred4")
+
+rmse_4<-with(compare_data,exp(rmse(log(dine_out+1),pred4)));rmse_4
 ```
 
-    ## [1] 12.11188
+    ## [1] 7.149152
 
 ``` r
 g4<-ggplot(cex, aes(x=grocery,y=exp(pred4),color=pov_cym))
@@ -304,7 +321,9 @@ g4<-g4+geom_point(shape=1)
 g4
 ```
 
-![](05-regression_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-6-1.png)
+    ## Warning: Removed 2196 rows containing missing values (geom_point).
+
+![](05-regression_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-6-2.png)
 
 ``` r
 # Function defined by coefficients
@@ -323,7 +342,7 @@ g4a
 
     ## Warning: Removed 875 rows containing missing values (geom_point).
 
-![](05-regression_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-6-2.png)
+![](05-regression_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-6-3.png)
 
 When calculating RMSE, I need to work with it in log format. The `prediction` command will give me back a prediction in log format as well. I take the difference between the two in log format, then exponentiate using the `exp` command, which means raising *e* to the power of *x*, *e*<sup>*x*</sup>.
 
@@ -389,7 +408,7 @@ g5
 Testing and Training
 --------------------
 
-The essence of prediction is discovering the extent to which our models can predict outcomes for data that does not come from our sample. Many times this process is temporal. We fit a model to data from one time period, then take predictors from a subsequent time period to come up with a prediction in the future. For instance, we might use data on team performance to predict the likely winners and losers for upcoming soccer games.
+The essence of prediction is discovering the extent to which our models can predict outcomes for data that *does not come from our sample*. Many times this process is temporal. We fit a model to data from one time period, then take predictors from a subsequent time period to come up with a prediction in the future. For instance, we might use data on team performance to predict the likely winners and losers for upcoming soccer games.
 
 This process does not have to be temporal. We can also have data that is out of sample because it hadn't yet been collected when our first data was collected, or we can also have data that is out of sample because we designated it as out of sample.
 
@@ -415,6 +434,10 @@ rmse_5;rmse_5_test
 
 Why is the value from the testing dataset so much larger?
 
+*Quick exercise*
+
+What's the rmse for your model when comparing it with the testing data?
+
 Regression using a binary outcome
 ---------------------------------
 
@@ -425,10 +448,9 @@ cex$cigs<-0
 cex$cigs[cex$cigarettes>0]<-1
 
 mod6<-lm(cigs~educ_ref+
-           ref_race+
+           as.factor(ref_race)+
            inc_rank+
-           sex_ref+
-           fam_type,
+           as.factor(sex_ref),
          data=cex)
 
 summary(mod6)
@@ -436,46 +458,38 @@ summary(mod6)
 
     ## 
     ## Call:
-    ## lm(formula = cigs ~ educ_ref + ref_race + inc_rank + sex_ref + 
-    ##     fam_type, data = cex)
+    ## lm(formula = cigs ~ educ_ref + as.factor(ref_race) + inc_rank + 
+    ##     as.factor(sex_ref), data = cex)
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -0.77472 -0.21603 -0.13672 -0.03792  0.99866 
+    ## -0.67089 -0.22338 -0.14380 -0.05856  0.97050 
     ## 
     ## Coefficients:
-    ##             Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)  0.65301    0.21617   3.021  0.00254 ** 
-    ## educ_ref10  -0.49518    0.21724  -2.279  0.02272 *  
-    ## educ_ref11  -0.38436    0.21652  -1.775  0.07597 .  
-    ## educ_ref12  -0.35878    0.21571  -1.663  0.09636 .  
-    ## educ_ref13  -0.44240    0.21585  -2.050  0.04050 *  
-    ## educ_ref14  -0.41835    0.21655  -1.932  0.05347 .  
-    ## educ_ref15  -0.50125    0.21605  -2.320  0.02041 *  
-    ## educ_ref16  -0.54504    0.21699  -2.512  0.01206 *  
-    ## educ_ref17  -0.51612    0.21969  -2.349  0.01887 *  
-    ## ref_race2   -0.04490    0.02172  -2.067  0.03880 *  
-    ## ref_race3    0.18740    0.10023   1.870  0.06163 .  
-    ## ref_race4   -0.02531    0.03456  -0.732  0.46395    
-    ## ref_race5    0.08028    0.10026   0.801  0.42339    
-    ## ref_race6    0.03525    0.05746   0.613  0.53962    
-    ## inc_rank    -0.07568    0.03028  -2.499  0.01251 *  
-    ## sex_ref2    -0.03881    0.01456  -2.666  0.00772 ** 
-    ## fam_type2    0.01706    0.03529   0.483  0.62889    
-    ## fam_type3   -0.01823    0.02487  -0.733  0.46361    
-    ## fam_type4    0.07942    0.03202   2.480  0.01320 *  
-    ## fam_type5    0.06036    0.03657   1.650  0.09897 .  
-    ## fam_type6    0.06657    0.06948   0.958  0.33808    
-    ## fam_type7    0.05620    0.03759   1.495  0.13497    
-    ## fam_type8   -0.01149    0.02185  -0.526  0.59915    
-    ## fam_type9    0.14139    0.02419   5.846 5.61e-09 ***
+    ##                      Estimate Std. Error t value Pr(>|t|)   
+    ## (Intercept)           0.68501    0.21719   3.154  0.00163 **
+    ## educ_ref10           -0.51028    0.21925  -2.327  0.02001 * 
+    ## educ_ref11           -0.39660    0.21854  -1.815  0.06966 . 
+    ## educ_ref12           -0.37101    0.21772  -1.704  0.08847 . 
+    ## educ_ref13           -0.46594    0.21787  -2.139  0.03255 * 
+    ## educ_ref14           -0.43834    0.21855  -2.006  0.04499 * 
+    ## educ_ref15           -0.53254    0.21805  -2.442  0.01466 * 
+    ## educ_ref16           -0.58866    0.21896  -2.688  0.00722 **
+    ## educ_ref17           -0.55558    0.22170  -2.506  0.01227 * 
+    ## as.factor(ref_race)2 -0.03201    0.02167  -1.477  0.13978   
+    ## as.factor(ref_race)3  0.21296    0.10106   2.107  0.03517 * 
+    ## as.factor(ref_race)4 -0.01412    0.03473  -0.407  0.68435   
+    ## as.factor(ref_race)5  0.10270    0.10092   1.018  0.30895   
+    ## as.factor(ref_race)6  0.04663    0.05795   0.805  0.42108   
+    ## inc_rank             -0.05430    0.02683  -2.024  0.04307 * 
+    ## as.factor(sex_ref)2  -0.02732    0.01422  -1.921  0.05487 . 
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.3724 on 2836 degrees of freedom
+    ## Residual standard error: 0.376 on 2844 degrees of freedom
     ##   (554 observations deleted due to missingness)
-    ## Multiple R-squared:  0.06713,    Adjusted R-squared:  0.05956 
-    ## F-statistic: 8.873 on 23 and 2836 DF,  p-value: < 2.2e-16
+    ## Multiple R-squared:  0.04637,    Adjusted R-squared:  0.04134 
+    ## F-statistic: 9.219 on 15 and 2844 DF,  p-value: < 2.2e-16
 
 ``` r
 g4<-ggplot(cex,aes(x=fam_type,y=cigs,group=1))+
