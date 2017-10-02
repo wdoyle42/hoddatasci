@@ -1,0 +1,75 @@
+---
+title: "Sports APIs"
+author: "Will Doyle"
+date: "October 1, 2017"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+#Order of libraries is important
+library(tidyverse)
+library(devtools)
+#devtools::install_github(devtools::install_github("MySportsFeeds/mysportsfeeds-r"))
+library(mysportsfeedsR)
+```
+
+```{r}
+sf_username<-readLines("sportsfeeds_username.txt")
+sf_password<-readLines("sportsfeeds_pasword.txt")
+```
+
+```{r}
+
+.MySportsFeedsEnv<-list()
+.MySportsFeedsEnv$data$username <-sf_username
+.MySportsFeedsEnv$data$password <- sf_password
+
+nfl_season_stats <- msf_get_results(league='nfl',season='2015-2016-regular',feed='cumulative_player_stats')        
+```
+```{r}
+nfl_int_data<-data.frame(
+nfl_season_stats$api_json$cumulativeplayerstats$playerstatsentry$player.ID,
+nfl_season_stats$api_json$cumulativeplayerstats$playerstatsentry$player.LastName,
+nfl_season_stats$api_json$cumulativeplayerstats$playerstatsentry$player.FirstName,
+nfl_season_stats$api_json$cumulativeplayerstats$playerstatsentry$`stats.Interceptions.#text`)
+
+names(nfl_int_data)<-c("player_id","lastname","firstname","interceptions")
+
+nfl_int_data$interceptions<-as.numeric(nfl_int_data$interceptions)
+
+nfl_int_data<-nfl_int_data%>%filter(interceptions>0)%>%
+  arrange(-interceptions)
+
+# compare with: https://www.pro-football-reference.com/years/2015/leaders.htm
+
+```
+
+
+```{r}
+
+nhl_data<-msf_get_results(league='nhl',season='2015-2016-regular',feed='team_gamelogs',params=list(team=list("nashville-predators")), verbose = TRUE,version=1.1)        
+
+team_data<-data.frame(
+nhl_data$api_json$teamgamelogs$gamelogs$`stats.GoalsFor.#text`,
+nhl_data$api_json$teamgamelogs$gamelogs$`stats.GoalsAgainst.#text`,
+nhl_data$api_json$teamgamelogs$gamelogs$`stats.Wins.#text`,
+nhl_data$api_json$teamgamelogs$gamelogs$`stats.Powerplays.#text`)
+
+names(team_data)<-c("goals_for","goals_against","win","powerplays")
+
+team_data$goals_for<-as.numeric(team_data$goals_for)
+team_data$goals_against<-as.numeric(team_data$goals_against)
+team_data$win<-as.numeric(team_data$win)
+team_data$powerplays<-as.numeric(team_data$powerplays)
+
+
+gg<-ggplot(team_data,aes(x=powerplays,y=goals_for))
+gg<-gg+geom_jitter(width = .2)
+gg
+```
+

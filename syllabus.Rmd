@@ -1,6 +1,6 @@
 ---
 title: "Introduction to Data Science"
-output: github_document
+output: pdf_document
 ---
 
 ```{r echo=FALSE,warning=FALSE,results=FALSE,message=FALSE}
@@ -365,6 +365,18 @@ Assignment `r i-1` Due Midnight `r nice_date(hw_days[i])`
 i<-i+1
 ```
 
+## `r nice_date(first_week_days[i])` Topic for the Week: Analyzing Data 2--Linear Regression
+
+*Training and Testing Models*
+
+## September `r nice_date(second_week_days[i])` Linear Regression, continued
+
+*Second Progress Report for Final Project Due*
+
+```{r echo=FALSE,warning=FALSE,results=FALSE,message=FALSE}
+i<-i+1
+```
+
 ## `r nice_date(first_week_days[i])` Topic for the Week: Presenting data 2--scatterplots
 
 *Resources*
@@ -415,7 +427,6 @@ Assignment `r i-1` Due Midnight `r nice_date(hw_days[i])`
 ## `r nice_date(second_week_days[i])` Web data, continued
 
 *Standing Meetings*
-Progress reports due for section 2. 
 
 *Lab Practical*
 
@@ -441,37 +452,13 @@ Assignment `r i-1` Due Midnight `r nice_date(hw_days[i])`
 
 ##`r nice_date(second_week_days[i])` Classification, continued
 
+*Third Progress Report Due*
+
 *Standing Meetings*
 
 *Lab Practical*
 
 Classifying behavior via text analysis: random acts of pizza.
-
-```{r echo=FALSE,warning=FALSE,results=FALSE,message=FALSE}
-i<-i+1
-```
-
-## `r nice_date(first_week_days[i])` Topic for the Week: Presenting Data 3-- Lattice plots and small multiples
-
-*Resources*
-
-Tufte, Envisioning Information, Chapter 4
-
-*Lecture Notes*
-
-Chapter 9, Small Multiples `09-small_multiples.Rmd`
-
-*Assignments*
-
-Assignment `r i-1` Due Midnight `r nice_date(hw_days[i])`
-
-## `r nice_date(second_week_days[i])` Lattice Plots and Small Multiples, continued.
-
-*Standing Meetings*
-
-Progress reports due for section 1. 
-
-*Lab Practical*
 
 ```{r echo=FALSE,warning=FALSE,results=FALSE,message=FALSE}
 i<-i+1
@@ -541,9 +528,11 @@ Assignment `r i-1` Due Midnight `r nice_date(hw_days[i])`
 
 ## `r nice_date(second_week_days[i])` Mapping, continued
 
+*Fourth Final Project Report Due*
+
 *Standing Meetings*
 
-Progress reports due for section 1 and 2. 
+Progress report 
 
 ```{r echo=FALSE,warning=FALSE,results=FALSE,message=FALSE}
 i<-i+1

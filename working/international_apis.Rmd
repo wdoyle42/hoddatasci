@@ -1,0 +1,117 @@
+---
+title: "International APIs"
+author: "Will Doyle"
+date: "October 2, 2017"
+output: github_document
+---
+
+
+## Data 
+
+Today we'll be working with data from the World Bank's [World Development Indicators]( http://data.worldbank.org/data-catalog/world-development-indicators) database. The world bank has helpfully created an API, which has an R library built around it, [WDI](https://cran.r-project.org/web/packages/WDI/index.html). 
+
+
+```{r}
+
+#libraries: WDI interacts with API
+library(WDI)
+library(tidyverse)
+library(forcats)
+library(ggplot2)
+library(ggthemes)
+library(plotly)
+```
+
+
+The WDI library allows us to use the [WDI API](https://datahelpdesk.worldbank.org/knowledgebase/topics/125589) to access data from their database. We're going to start be getting basic country information, including country code, name and region from the built in `WDI_data`.
+
+```{r}
+
+data(WDI_data)
+
+#Pull country info
+wd.desc<-data.frame(WDI_data$country)
+
+# Do a quick search for indicators related to tourism
+
+WDIsearch("tourism")
+
+```
+
+Next, we need a list of indicators to work with. The full list of indicators is [here](http://databank.worldbank.org/data/reports.aspx?source=world-development-indicators)
+
+```{r}
+
+#List of indicators to grab
+wdilist <- c("NE.TRD.GNFS.ZS",     # Trade (% of GDP)
+             "NY.GDP.PCAP.PP.KD",  # GDP per capita, PPP (constant 2005 intl $)
+             "NY.GDP.PCAP.KD",     # GDP per capita (constant 2000 US$)
+             "NY.GDP.MKTP.KD.ZG",  # GDP growth (annual %)
+             "FP.CPI.TOTL.ZG",     # Inflation, consumer prices (annual %)
+             "FP.CPI.TOTL",        # Consumer price index (2005 = 100) 
+             "NV.AGR.TOTL.ZS",     # Agriculture, value added (% of GDP)
+             "NV.IND.MANF.ZS",     # Manufacturing, value added (% of GDP)
+             "NV.IND.TOTL.ZS",     # Industry, value added (% of GDP)
+             "NV.SRV.TETC.ZS",     # Services, etc., value added (% of GDP)
+             "GC.TAX.TOTL.GD.ZS",  # Tax revenue (% of GDP)
+             "GC.DOD.TOTL.GD.ZS",  # Central government debt, total (% of GDP)
+             "SP.POP.TOTL",        # Population, total
+             "SP.URB.TOTL.IN.ZS",  # Urban population (% of total)
+             "SP.POP.GROW",        # Population growth (annual %)
+             "EN.POP.DNST",        # Population density (people per sq. km of land area)
+             "SP.POP.0014.TO.ZS",  # Population ages 0-14 (% of total)
+             "MS.MIL.TOTL.P1",     # Armed forces personnel, total
+             "MS.MIL.TOTL.TF.ZS",  # Armed forces personnel (% of total labor force)
+             "NY.ADJ.DFOR.GN.ZS",  # Adjusted savings: forest depletion (% of GNI)
+             "NY.ADJ.DMIN.GN.ZS",  # Adjusted savings: mineral depletion (% of GNI)
+             "NY.ADJ.DNGY.GN.ZS",  # Adjusted savings: energy depletion (% of GNI)
+             "IT.CEL.SETS.P2",     # Mobile cellular subscriptions (per 100 people)                  
+             "IT.NET.USER.P2",     # Internet users (per 100 people)                                
+             "SP.DYN.IMRT.IN",
+             "SE.SEC.CUAT.LO.ZS")    # Infant mortality rate
+
+#Extract from WDI database: http://data.worldbank.org/data-catalog/world-development-indicators
+wd.full<-WDI(indicator=wdilist, country="all", start=1990, end=2015)
+
+#Merge with country info
+wd<-left_join(wd.desc,wd.full)
+
+#Make sure region is a character
+wd$region<-as.character(wd$region)
+
+#Save file
+save(wd,file="wd.RData")
+
+```
+
+```{r}
+wd<-wd%>%filter(region=="East Asia & Pacific (all income levels)")
+
+#Rename variables for ease of use
+wd$gdp_percap<-wd$NY.GDP.PCAP.PP.KD
+wd$infant_mortality<-wd$SP.DYN.IMRT.IN
+wd$country2<-as.factor(wd$country)
+wd$urban<-wd$SP.URB.TOTL.IN.ZS
+wd$youngpop<-wd$SP.POP.0014.TO.ZS
+wd$internet<-wd$IT.NET.USER.P2
+wd$educ<-wd$SE.SEC.CUAT.LO.ZS
+```
+
+Let's start with a simple scatterplot by year. 
+
+```{r}
+#Plot GDP per capita by year
+g1<-ggplot(data=wd,aes(x=year,y=gdp_percap))
+g1<-g1+geom_point()
+g1 #Messy!
+
+```
+
+There are several obvious problems. First, a few countries just have much higher GDP per capita than others, which means that for most countries we can't observe change over time. Second, the first question anyone is going to ask is: which country is which? Let's use the `facet_wrap` function to figure out which countries we're talking about.  
+
+```{r}
+g2<-g1+facet_wrap(~country,ncol=7)
+g2
+
+```
+
