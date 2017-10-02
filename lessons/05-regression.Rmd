@@ -138,13 +138,16 @@ g1
 
 cex<-cex%>%mutate(pred1=predict(mod1)) #predict using data in memory
  
-rmse_1<-with(cex,rmse(dine_out,pred1)); rmse_1
+rmse_1<-with(cex, rmse(dine_out,pred1)) ; rmse_1
+
+mod1a<-lm(dine_out~inclass,data=cex); summary(mod1a)
 
 ```
 
 What this shows is that as family size increases, the amount spent on dining out increases. For every additional family member, an additional \$`r prettyNum(mod1$coefficients[2],digits=0)` is predicted to be spent on dining out. The rmse of `r  prettyNum(rmse_1,digits=2)` gives us a sense of how wrong the model tends to be when using just this one predictor. 
 
 _Quick Exercise_ Run a regression using a different predictor. Calculate rmse and see if you can beat my score. 
+
 
 ## Multiple Regression. 
 
@@ -212,14 +215,19 @@ Economists just basically take the natural log of everything that's denominated 
 mod4<-lm(log(dine_out+1)~ #log of dining out, plus one for zeros
            +log(grocery+1)+ #log of groceries, plus one again
            pov_cym+ #poverty
-           fam_size #family size
-         ,data=cex)
+           fam_size+#family size
+           log(booze_out+1) 
+         ,data=cex, na.action = "na.exclude")
+
+gg<-ggplot(cex,aes(x=log(booze_out+1)))
+gg<-gg+geom_density()
+gg
 
 summary(mod4)
 
 cex<-cex%>%mutate(pred4=predict(mod4))
 
-rmse_4<-with(cex,exp(rmse(log(dine_out+1),pred4)));rmse_4
+rmse_4<-with(cex,exp(rmse(log(dine_out+1),pred4,n)));rmse_4
 
 g4<-ggplot(cex, aes(x=grocery,y=exp(pred4),color=pov_cym))
 g4<-g4+geom_point(shape=1)

@@ -230,8 +230,6 @@ Other statistical programs have their own file formats. These are easy for these
 Stata is a very popular statistical programming language among economists and social scientists. Stata files are stored in `dta` format. 
 
 ```{r}
-
-
 # Stata
 
 hsb_stata<-read_dta("https://stats.idre.ucla.edu/stat/stata/notes/hsb2.dta")
@@ -269,7 +267,6 @@ Most of the time, you should store your data as a csv file. This will ensure tha
 
 ```{r}
 #Saving as an R file
-
 save(free2,file="frl.Rdata")
 ```
 

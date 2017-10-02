@@ -18,16 +18,15 @@ library(readxl)
 Panel data for OECD countries. Save as file name `oecd.RData` [http://www.wiley.com/legacy/wileychi/baltagi/supp/Gasoline.dat](http://www.wiley.com/legacy/wileychi/baltagi/supp/Gasoline.dat)
 
 ```{r}
+download.file("http://www.wiley.com/legacy/wileychi/baltagi/supp/Gasoline.dat",destfile = "gas.dat")
+
 oecd<-read_delim("http://www.wiley.com/legacy/wileychi/baltagi/supp/Gasoline.dat",delim="\t")
 save(oecd,file="oecd.Rdata")
 ```
 
 #Problem 2 
 
-
-
 2. U.S. National Election Survey data from 2004. Save as file name `nes.RData`. [http://www.uta.edu/faculty/story/DataSets.htm](http://www.uta.edu/faculty/story/DataSets.htm)
-
 
 ```{r}
 nes<-read_spss("http://www.uta.edu/faculty/story/DataSets/NES2004.sav")

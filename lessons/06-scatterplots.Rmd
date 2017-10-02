@@ -1,0 +1,268 @@
+# Scatterplots {#scatterplots}
+
+Scatterplots are the best way to present data that has a continuous response variable. When creating scatterplots, the idea is to show ALL of the data, and then show how your model is summarizing the relationships in that data. 
+
+## Setup
+The code for today starts with the normal set of preliminaries, opening up the `cex.RData` dataset and creating a codebook. 
+
+```{r,echo=FALSE}
+
+##############################
+# Plotting linear regression
+# Will Doyle 
+# 141006
+##############################
+
+library(tidyverse)
+library(forcats)
+
+load("cex.RData")
+
+my.vals<-names(cex)
+explanation<-c("id",
+               "education: 10 8th grade, 11 9-12, 12 hs grad,13 some college, 14 assoc, 15 bach 16 masters, 17 prof",
+"education of second person",
+"urban: 1=urban, 2=not",
+"race: 1 white, 2 black, 3 native american, 4 asian 5 pi 6 multi",
+"race of other person",
+"income class: 1: 0-10k, 2 5-10k, 3 10-15k 4 15 to 20k 5 20-30k 6 30-40k 7 40-50k 8 50-70k 9 70k+",
+"inc_rank: percentile rank of income",
+"sex of reference: 1 male 2 female",
+"sex of other person",
+"reference person hispanic? 1 hispanic 2 non",
+"other person hispanice? 1 hispanic 2 non",
+"poverty: 1 below poverty, 2 not",
+"region 1 Ne 2 MW 3 South 4 West",
+"family size: ",
+"family type 1 hw, 2 hw own children, oldest under 6, 3 hw own children oldest 6-17, 4 hw own children oldest over 17, 5 all other hws, 6 one parent male, kids under 18, 7 one parent female, kids under 18, 8 single, 9 other ",
+"Children's ages: 0 no kids, 1 all less 6 2 oldest bt 6 and 11, 3 All children between 6 and 11
+ 4 Oldest child between 12 and 17 and at least one child less than 12
+ 5 All children between 12 and 17
+ 6 Oldest child greater than 17 and at least one child less than 17
+ 7 All children greater than 17 one under 6",
+"quarter and year",
+"Dining out",
+"Grocery",
+"Grocery non-food",
+"Grocery food",
+"Alcohol at home",
+"Alcohol out",
+"Other store expenditures",
+"Cigarrettes",
+"Transportation to work"
+)
+
+codebook<-data.frame(my.vals, explanation)
+#View(codebook)
+
+## Quick transformation of income rank
+
+cex<-cex%>%mutate(inc_rank=inc_rank*100)
+
+## Get levels of childage right
+
+cex<-cex%>%mutate(childage=fct_recode(f=childage,
+                     "no kids"="0", 
+"All less 6"="1",
+ "Oldest bt 6 and 11"="2",
+"All children between 6 and 11"="3",
+ "Oldest child between 12 and 17 and at least one child less than 12"="4",
+ "All children between 12 and 17"="5",
+ "Oldest child greater than 17 and at least one child less than 17"="6",
+ "All children greater than 17 one under 6"="7"
+))
+
+
+```
+
+
+## Bivariate Regression
+
+We begin with a simple model of grocery food spending as a function of income rank. As we found out last week, grocery food spending has a long right tail, and is a good candidate for a log transformation. We'll be using that log transformation throughout. 
+
+
+Our first step should be to plot the data. Today, we'll be using the `ggplot2` library, which is a highly functional implementation of what's known as the grammar of graphics. In a very small nutshell, the grammar of graphics refers to laying out a graphic in a series of layers. For our first scatterplot, we first specify the data that we'll be drawing on, then the "aesthetic" of the graphic, which will be based on our x and y variables from our regression. I then specify the first layer, which is a series of points defined by the intersection of the x and y variables. 
+
+
+```{r}
+#Plot Spending vs. Income
+g1<-ggplot(data=cex,
+           aes(x=inc_rank,y=(grocery_food+1))
+           )
+
+g1<-g1+geom_point() # Add points at x and y
+g1
+```
+
+This first graphic shows the basic problem with the data, which is the highly non-normal shape of the outcome variable. No matter! We'll keep moving forward. The next line of code adds a layer with a regression line to the plot. 
+
+```{r}
+g1<-g1+geom_smooth(method="lm")
+g1
+```
+
+
+
+It's also really hard to see. We can use conditional means to help out with that problem. Let's get the average amount of grocery spending at every percentile level of `inc_rank`.  Notice the use of `round` to get income percentiles that are at two digits only. 
+
+```{r}
+
+cex_sum<-cex%>%mutate(inc_rank_r=round(inc_rank))%>%group_by(inc_rank_r)%>%summarize(groc_mean=mean(grocery))
+
+g1a<-ggplot(cex_sum,aes(x=inc_rank_r,y=groc_mean))
+
+g1a<-g1a+geom_point()
+
+g1a
+
+```
+
+
+We can add a regression line to this simpler data
+
+```{r}
+g1a<-g1a+geom_smooth(method=lm) # Add a line
+g1a
+```
+
+As we figured out in class last week, a simple line plot doesn't really do it. We need to transform that dependent variable. Luckily, ggplot has this kind of transformation built in. 
+
+```{r}
+g1<-ggplot(data=cex,
+           aes(x=inc_rank,y=(grocery_food+1))
+           )
+my.breaks=c(0,100,500,1000,5000,10000,20000)
+#Change the scale 
+g1<-g1+scale_y_continuous(trans="log",breaks=my.breaks)
+g1<-g1+geom_point() # Add points
+g1<-g1+geom_smooth(method=lm)  #Add a Line
+g1<-g1+ylab("Grocery Spending")+xlab("Income Percentile (0-1)") #Nice labels
+g1
+```
+
+Notice how different the steps are on the y axis now. But this shows that our line actually fits the data much better once we work on the log scale. We're now ready to go ahead and run our first model based on what we've learned. 
+
+```{r}
+#First model
+
+m1<-lm(log(grocery_food+1)~inc_rank,data=cex);summary(m1)
+
+```
+
+_Quick Exercise_ Create a similar graphic, but this time use other store expenditures as the dependent variable. Run a regression with store expenditures as the dv and income rank as the only independent variable. 
+
+## Multiple Regression
+
+The next step is to add covariates. I'll be working with the variable `childage` which is a factor that summarizes the ages of kids in the family. I'm going to set the color of the markers by the `childage` factor. 
+
+
+```{r}
+g2<-ggplot(data=cex,
+            aes(x=inc_rank,y=(grocery_food+1),color=as.numeric(childage),alpha=as.numeric(childage)) #notice the color option
+           )
+
+g2<-g2+scale_y_continuous(trans="log",breaks=my.breaks)
+g2<-g2+geom_point(size=1)
+g2
+
+```
+
+Our first graphic is a bit complex, but shows that those in the "0" category, with no kids, have consistently lower spending on groceries across income levels. So let's drop that group and see what the graphic looks like for those with at least one kid of any age. 
+
+```{r}
+
+g2a<-ggplot(data=filter(cex,as.character(cex$childage)!="0"),
+            aes(x=inc_rank,y=(grocery_food+1),color=childage)
+           )
+g2a<-g2a+scale_y_continuous(trans="log",breaks=my.breaks,limits=c(100,8000)) #Changed overall scale
+g2a<-g2a+geom_point(size=2) #Bigger points
+g2a<-g2a+scale_colour_hue(l=50) #Darker palette
+g2a
+```
+
+Notice the higher spending levels at every income level among those in the 4 and 5 categories. 
+
+```{r}
+
+#Model 2: with kids
+
+mod2<-lm(log(grocery_food+1)~inc_rank+childage, data=cex,na.action=na.exclude);summary(mod2)
+
+```
+
+
+Now let's take a look at this model plotted against the actual data. I'm going to use the `alpha` setting to make the dots smaller. I'm also going to make the dots smaller. 
+```{r}
+
+cex<-cex%>%mutate(mod2_pred=exp(fitted(mod2)))
+
+g3<-ggplot(cex,aes(x=inc_rank,y=grocery_food))
+g3<-g3+geom_point(alpha=.2,size=.75)
+g3<-g3+scale_y_continuous(trans="log",breaks=my.breaks)
+g3<-g3+geom_smooth(data=cex,(aes(x=inc_rank,y=mod2_pred)))
+g3
+```
+
+
+As we add more variables to the model, it can get more difficult to plot relationships. One very good option is to plot lines based on a hypothetical set of data. Below, I create a hypothetical set of data that include values of income across the range of income, and includes values for every level of `childage`.
+
+
+```{r}
+#Prediction, then plotting
+
+hypo.data<-data.frame(expand.grid(
+          #range of income
+          inc_rank=seq(min(cex$inc_rank,na.rm=TRUE),
+                       max(cex$inc_rank,na.rm=TRUE),
+                       length=100), 
+          #All levels of childage
+          childage=levels(cex$childage)                                     
+                                      )
+                          )
+```
+
+Now, using my estimates from model 2, I predict what would happen to these hypothetical individuals.  Once I've got my prediction, I transform it back out of the log scale into the "response" level of dollars. 
+
+```{r}
+#Predict using mod2 on hypothetical data
+hypo.pred<-predict(mod2,
+                   newdata=hypo.data,
+                   interval="prediction",
+                    se.fit=TRUE
+                   )
+
+hypo.data<-data.frame(hypo.data,hypo.pred$fit) #Add fit to the dataset
+hypo.data$groc.p<-exp(hypo.data$fit) #exponentiate fit
+hypo.data$groc.lwr<-exp(hypo.data$lwr) #exponentiate lower boundary
+hypo.data$groc.upr<-exp(hypo.data$upr) #exponentiate upper boundary
+```
+
+
+Now we can plot the result, using the `geom_smooth` layer to give us lines for every level of `childage`. 
+
+
+```{r}
+g4<-ggplot(data=hypo.data,aes(x=inc_rank,y=groc.p,color=fct_reorder(f=childage,-groc.p))) #notice color
+g4<-g4+geom_smooth(method=lm,se=FALSE)
+g4
+```
+To show this in the data we can break it out for every type of child age grouping. 
+
+```{r}
+## Resort child age for graphic
+
+cex<-cex%>%mutate(childage=fct_reorder(f=childage,-grocery_food))
+
+g5<-ggplot(cex,aes(x=inc_rank,y=grocery_food,color=childage))
+g5<-g5+geom_point(alpha=.5)
+g5<-g5+geom_smooth(method="lm",color="black")
+g5<-g5+facet_wrap(~childage,ncol=3)
+g5<-g5+scale_y_continuous(trans="log",breaks=my.breaks)
+g5<-g5+xlab("Income Rank, 0-100")+ylab("Grocery Spending")
+g5<-g5+theme(legend.position="none")
+
+g5
+
+```
+
+_(Not so) Quick Exercise_ Run a different model, this time using `fam_type` as a factor variable. Plot the estimated relationship between income rank and food spending for each family type. 
