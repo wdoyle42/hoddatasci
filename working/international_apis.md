@@ -117,8 +117,8 @@ wdilist <- c("NE.TRD.GNFS.ZS",     # Trade (% of GDP)
              "NY.ADJ.DFOR.GN.ZS",  # Adjusted savings: forest depletion (% of GNI)
              "NY.ADJ.DMIN.GN.ZS",  # Adjusted savings: mineral depletion (% of GNI)
              "NY.ADJ.DNGY.GN.ZS",  # Adjusted savings: energy depletion (% of GNI)
-             "IT.CEL.SETS.P2",     # Mobile cellular subscriptions (per 100 people)                  
-             "IT.NET.USER.P2",     # Internet users (per 100 people)                                
+             "IT.CEL.SETS.P2",     # Mobile cellular subscriptions (per 100 people)             
+             "IT.NET.USER.P2",     # Internet users (per 100 people)                            
              "SP.DYN.IMRT.IN",
              "SE.SEC.CUAT.LO.ZS")    # Infant mortality rate
 

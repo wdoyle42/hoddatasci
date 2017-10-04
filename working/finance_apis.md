@@ -98,20 +98,20 @@ getSymbols("IBM",src="google",type="xts")
     ## [1] "IBM"
 
 ``` r
-getSymbols("GDP",src="FRED",type="xts")
+getSymbols("A939RX0Q048SBEA",src="FRED",type="xts")
 ```
 
-    ## [1] "GDP"
+    ## [1] "A939RX0Q048SBEA"
 
 ``` r
 df_ibm<-tk_tbl(IBM)
 
-df_gdp<-tk_tbl(GDP)
+df_gdp<-tk_tbl(A939RX0Q048SBEA)
 
 full_data<-left_join(df_gdp,df_ibm,by="index")
 full_data<-full_data%>%mutate(year=year(index))%>%filter(as.numeric(year)>2007)
-
-gg<-ggplot(full_data,aes(x=GDP,y=IBM.Close))
+names(full_data)[2]<-"gdp"
+gg<-ggplot(full_data,aes(x=gdp,y=IBM.Close))
 gg<-gg+geom_point()
 gg
 ```

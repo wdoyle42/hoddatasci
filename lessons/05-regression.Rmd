@@ -18,12 +18,15 @@ Let's say that you've got some consumer data and you want to target those famili
 We're going to be working with expenditure data from the 2012 administration of the consumer expenditure survey. The first bit of code gets the libraries we need, the data we need, and opens up a codebook for the data. 
 
 ```{r,echo=FALSE}
+rm(list=ls())
 
 library(tidyverse)
 library(forcats)
 library(ModelMetrics)
 
 load("cex.RData")
+
+
 
 ## Create training and testing datasets
 
@@ -34,22 +37,20 @@ load("cex.RData")
 ## how it's done
 
 # Get half of the data via random sample
-#cex_train<-sample_frac(cex,.5)
+cex_train<-sample_frac(cex,.5)
 
-#save(cex_train,file="cex_train.Rdata")
+save(cex_train,file="cex_train.Rdata")
 
 ## Testing data is the other half of the data--- the half of cex not in the 
 ##training dataset
 
-#cex_test<-setdiff(cex,cex_train)
+cex_test<-setdiff(cex,cex_train)
 
-#save(cex_test,file="cex_test.Rdata")
+save(cex_test,file="cex_test.Rdata")
 ##---------------------------------------
+load("cex_test.Rdata")
 
-
-##redefine cex as cex training dataset
-load("cex_train.Rdata")
-cex<-cex_train
+cex<-cex_test
 
 my.vals<-names(cex)
 explanation<-c("id",
@@ -88,7 +89,60 @@ explanation<-c("id",
 
 codebook<-data.frame(my.vals, explanation)
 
+## A bit of wrangling
 
+cex<-cex%>%mutate(pov_cym=ifelse(pov_cym=="",NA,pov_cym))
+cex<-cex%>%mutate(pov_cym=fct_recode(as.factor(pov_cym),
+                                     "In Poverty"="2",
+                                     "Not in Poverty"="3"))
+
+cex<-filter(cex,is.na(pov_cym)==FALSE)
+
+cex_test<-cex
+
+save(cex_test,file="cex_test.Rdata")
+
+##redefine cex as cex training dataset
+load("cex_train.Rdata")
+
+cex<-cex_train
+
+my.vals<-names(cex)
+explanation<-c("id",
+               "education: 10 8th grade, 11 9-12, 12 hs grad,13 some college, 14 assoc, 15 bach 16 masters, 17 prof",
+"education of second person",
+"urban: 1=urban, 2=not",
+"race: 1 white, 2 black, 3 native american, 4 asian 5 pi 6 multi",
+"race of other person",
+"income class: 1: 0-10k, 2 5-10k, 3 10-15k 4 15 to 20k 5 20-30k 6 30-40k 7 40-50k 8 50-70k 9 70k+",
+"inc_rank: percentile rank of income",
+"sex of reference: 1 male 2 female",
+"sex of other person",
+"reference person hispanic? 1 hispanic 2 non",
+"other person hispanice? 1 hispanic 2 non",
+"poverty: 1 below poverty, 2 not",
+"region 1 Ne 2 MW 3 South 4 West",
+"family size: ",
+"family type 1 hw, 2 hw own children, oldest under 6, 3 hw own children oldest 6-17, 4 hw own children oldest over 17, 5 all other hws, 6 one parent male, kids under 18, 7 one parent female, kids under 18, 8 single, 9 other ",
+"Children's ages: 0 no kids, 1 all less 6 2 oldest bt 6 and 11, 3 All children between 6 and 11
+ 4 Oldest child between 12 and 17 and at least one child less than 12
+ 5 All children between 12 and 17
+ 6 Oldest child greater than 17 and at least one child less than 17
+ 7 All children greater than 17 one under 6",
+"quarter and year",
+"Dining out",
+"Grocery",
+"Grocery non-food",
+"Grocery food",
+"Alcohol at home",
+"Alcohol out",
+"Other store expenditures",
+"Cigarrettes",
+"Transportation to work"
+)
+
+
+codebook<-data.frame(my.vals, explanation)
 
 ## A bit of wrangling
 
@@ -147,7 +201,6 @@ mod1a<-lm(dine_out~inclass,data=cex); summary(mod1a)
 What this shows is that as family size increases, the amount spent on dining out increases. For every additional family member, an additional \$`r prettyNum(mod1$coefficients[2],digits=0)` is predicted to be spent on dining out. The rmse of `r  prettyNum(rmse_1,digits=2)` gives us a sense of how wrong the model tends to be when using just this one predictor. 
 
 _Quick Exercise_ Run a regression using a different predictor. Calculate rmse and see if you can beat my score. 
-
 
 ## Multiple Regression. 
 
@@ -261,7 +314,12 @@ mod5<-lm(log(dine_out+1)~
            pov_cym+
            fam_size+
            inclass
-         ,data=cex)
+         ,data=cex,na.action="na.exclude")
+
+## Predictions from model 5, using testing data
+mod5_predict<-predict(mod5,newdata=cex_test)
+
+exp(rmse(mod5_predict,log(cex_test$dine_out+1)))
 
 summary(mod5)
 
@@ -292,7 +350,29 @@ One very simple approach to this would be to cut our data in half. We could then
 Model 5 is looking pretty good, but let's see how it does using our testing data-- the half that wasn't used to train our model.
 
 ```{r}
-load("cex_test.Rdata")
+
+cex_test<-cex_test%>%mutate(pred5=predict(mod5,newdata=cex_test))
+
+## What is this really doing? 
+
+cex_line<-cex_test[1,c("grocery","pov_cym","fam_size","inclass")]
+
+cex_test_line<-c(1, #intercept,
+                 log((cex_test$grocery[1]+1)),
+                 0, #poverty,
+                 cex_test$fam_size[1],
+                 1 #income class 8
+                 )
+
+mod5$coefficients
+                 
+cex_coeff<-as.double(mod5$coefficients[c(1:4,11)])                 
+
+cex_predict<-sum(cex_test_line%*%cex_coeff);cex_predict
+
+r_predict<-(predict(mod5,newdata = cex_test[1,]));r_predict[1]
+
+## Comparing test and training rmse
 
 rmse_5_test<-exp(rmse(log(cex_test$dine_out+1),cex$pred5))
 
