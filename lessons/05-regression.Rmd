@@ -37,16 +37,16 @@ load("cex.RData")
 ## how it's done
 
 # Get half of the data via random sample
-cex_train<-sample_frac(cex,.5)
+#cex_train<-sample_frac(cex,.5)
 
-save(cex_train,file="cex_train.Rdata")
+#save(cex_train,file="cex_train.Rdata")
 
 ## Testing data is the other half of the data--- the half of cex not in the 
 ##training dataset
 
-cex_test<-setdiff(cex,cex_train)
+#cex_test<-setdiff(cex,cex_train)
 
-save(cex_test,file="cex_test.Rdata")
+#save(cex_test,file="cex_test.Rdata")
 ##---------------------------------------
 load("cex_test.Rdata")
 
@@ -350,7 +350,7 @@ One very simple approach to this would be to cut our data in half. We could then
 Model 5 is looking pretty good, but let's see how it does using our testing data-- the half that wasn't used to train our model.
 
 ```{r}
-
+## Generate a prediction from the testing dataset
 cex_test<-cex_test%>%mutate(pred5=predict(mod5,newdata=cex_test))
 
 ## What is this really doing? 
@@ -358,7 +358,7 @@ cex_test<-cex_test%>%mutate(pred5=predict(mod5,newdata=cex_test))
 cex_line<-cex_test[1,c("grocery","pov_cym","fam_size","inclass")]
 
 cex_test_line<-c(1, #intercept,
-                 log((cex_test$grocery[1]+1)),
+                 log(cex_test$grocery[1]+1),
                  0, #poverty,
                  cex_test$fam_size[1],
                  1 #income class 8
@@ -366,15 +366,16 @@ cex_test_line<-c(1, #intercept,
 
 mod5$coefficients
                  
-cex_coeff<-as.double(mod5$coefficients[c(1:4,11)])                 
+cex_coeff<-as.double(mod5$coefficients[c(1:4,11)]);cex_coeff;cex_test_line          
 
+#multiply coeffs by values and sum everythig up
 cex_predict<-sum(cex_test_line%*%cex_coeff);cex_predict
 
-r_predict<-(predict(mod5,newdata = cex_test[1,]));r_predict[1]
+r_predict<-(predict(mod5,newdata = cex_test[1,]));r_predict
 
 ## Comparing test and training rmse
 
-rmse_5_test<-exp(rmse(log(cex_test$dine_out+1),cex$pred5))
+rmse_5_test<-exp(rmse(log(cex_test$dine_out+1),cex_test$pred5))
 
 rmse_5;rmse_5_test
 ```
