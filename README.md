@@ -283,7 +283,17 @@ September Wednesday, September 27 Linear Regression, continued
 
 *Lab Practical: linear regression*
 
-Monday, October 2 Topic for the Week: Presenting data 2--scatterplots
+Monday, October 2 Topic for the Week: Analyzing Data 2--Linear Regression
+-------------------------------------------------------------------------
+
+*Training and Testing Models*
+
+September Wednesday, October 4 Linear Regression, continued
+-----------------------------------------------------------
+
+*Second Progress Report for Final Project Due*
+
+Monday, October 9 Topic for the Week: Presenting data 2--scatterplots
 ---------------------------------------------------------------------
 
 *Resources*
@@ -300,17 +310,17 @@ Chapter 6, Scatterplots `06-scatterplots.Rmd`
 
 *Assignments*
 
-Assignment 5 Due Midnight Sunday, October 1
+Assignment 6 Due Midnight Sunday, October 8
 
-Wednesday, October 4 Scatterplots, continued
---------------------------------------------
+Wednesday, October 11 Scatterplots, continued
+---------------------------------------------
 
 *Standing Meetings* Progress reports due for section 1.
 
 *Lab Practical: Presenting Data via Scatterplots*
 
-Monday, October 9 Topic for the week: Getting Data 3-- Getting data from the web
---------------------------------------------------------------------------------
+Monday, October 16 Topic for the week: Getting Data 3-- Getting data from the web
+---------------------------------------------------------------------------------
 
 *Resources*
 
@@ -326,16 +336,16 @@ Chapter 7, Web Scraping and APIs, `07-webscrape.Rmd`
 
 *Assignments*
 
-Assignment 6 Due Midnight Sunday, October 8
+Assignment 7 Due Midnight Sunday, October 15
 
-Wednesday, October 11 Web data, continued
+Wednesday, October 18 Web data, continued
 -----------------------------------------
 
-*Standing Meetings* Progress reports due for section 2.
+*Standing Meetings*
 
 *Lab Practical*
 
-Monday, October 16 Topic for the Week: Analyzing Data 3--Classification
+Monday, October 23 Topic for the Week: Analyzing Data 3--Classification
 -----------------------------------------------------------------------
 
 *Resources*
@@ -350,40 +360,18 @@ Chapter 8, Classification, `08-classification.Rmd`
 
 *Assignments*
 
-Assignment 7 Due Midnight Sunday, October 15
+Assignment 8 Due Midnight Sunday, October 22
 
-Wednesday, October 18 Classification, continued
+Wednesday, October 25 Classification, continued
 -----------------------------------------------
+
+*Third Progress Report Due*
 
 *Standing Meetings*
 
 *Lab Practical*
 
 Classifying behavior via text analysis: random acts of pizza.
-
-Monday, October 23 Topic for the Week: Presenting Data 3-- Lattice plots and small multiples
---------------------------------------------------------------------------------------------
-
-*Resources*
-
-Tufte, Envisioning Information, Chapter 4
-
-*Lecture Notes*
-
-Chapter 9, Small Multiples `09-small_multiples.Rmd`
-
-*Assignments*
-
-Assignment 8 Due Midnight Sunday, October 22
-
-Wednesday, October 25 Lattice Plots and Small Multiples, continued.
--------------------------------------------------------------------
-
-*Standing Meetings*
-
-Progress reports due for section 1.
-
-*Lab Practical*
 
 Monday, October 30 Topic for the Week: Getting Data 4--databases and relational data
 ------------------------------------------------------------------------------------
@@ -447,9 +435,11 @@ Assignment 11 Due Midnight Sunday, November 12
 Wednesday, November 15 Mapping, continued
 -----------------------------------------
 
+*Fourth Final Project Report Due*
+
 *Standing Meetings*
 
-Progress reports due for section 1 and 2.
+Progress report
 
 Monday, November 20 Wednesday, November 22
 ------------------------------------------

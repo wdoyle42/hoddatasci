@@ -1,6 +1,6 @@
 ---
 title: "Introduction to Data Science"
-output: pdf_document
+output: github_document
 ---
 
 ```{r echo=FALSE,warning=FALSE,results=FALSE,message=FALSE}
