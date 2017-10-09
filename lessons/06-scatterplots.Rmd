@@ -137,11 +137,29 @@ g1a<-ggplot(cex_sum,aes(x=inc_rank_r,y=groc_mean))
 
 g1a<-g1a+geom_point()
 
-g1a<-g1a+xlab("Grocery Spending")+ylab("Income Rank")
+g1a<-g1a+ylab("Grocery Spending")+xlab("Income Rank")
 
 g1a
 
 ```
+
+```{r}
+
+cex_sum<-cex%>%mutate(inc_rank_r=round(inc_rank))%>%group_by(inc_rank_r)%>%summarize(store_mean=mean(other_store,na.rm=TRUE))
+
+g1a<-ggplot(cex_sum,aes(x=inc_rank_r,y=store_mean))
+
+g1a<-g1a+geom_point()
+
+g1a<-g1a+ylab("Store  Spending")+xlab("Income Rank")+
+
+g1a<-g1a+geom_smooth(method="lm")
+
+
+g1a
+
+```
+
 
 Better! Simplifying data can help. 
 
@@ -165,6 +183,19 @@ g1<-g1+scale_y_continuous(trans="log",breaks=my.breaks)
 g1<-g1+geom_point() # Add points
 g1<-g1+geom_smooth(method=lm)  #Add a Line
 g1<-g1+ylab("Grocery Spending")+xlab("Income Percentile (0-100)") #Nice labels
+g1
+```
+```{r}
+g1<-ggplot(data=cex,
+           aes(x=inc_rank,y=(other_store+1))
+           )
+# Set nice looking breaks, the ones used by ggplot for log transform typically don't work
+#my.breaks=c(0,100,500,1000,2500,5000,10000,20000)
+#Change the scale 
+g1<-g1+scale_y_continuous(trans="log",breaks=my.breaks)
+g1<-g1+geom_point() # Add points
+g1<-g1+geom_smooth(method=lm)  #Add a Line
+g1<-g1+ylab("Other Store Spending")+xlab("Income Percentile (0-100)") #Nice labels
 g1
 ```
 
@@ -193,7 +224,7 @@ g2<-ggplot(data=cex,
 g2<-g2+scale_y_continuous(trans="log",breaks=my.breaks)
 g2<-g2+geom_point(size=.25)
 g2<-g2+theme(legend.position="bottom"  , legend.title = element_blank())
-g2<-g2+xlab("Grocery Spending")+ylab("Income Rank")
+g2<-g2+ylab("Grocery Spending")+xlab("Income Rank")
 g2
 
 ```
@@ -208,7 +239,7 @@ g2a<-g2a+scale_y_continuous(trans="log",breaks=my.breaks,limits=c(100,8000)) #Ch
 g2a<-g2a+geom_point(size=.25) 
 g2a<-g2a+scale_colour_hue(l=50) #Darker palette
 g2a<-g2a+theme(legend.position = "bottom" , legend.title = element_blank())
-g2a<-g2a+xlab("Grocery Spending")+ylab("Income Rank")
+g2a<-g2a+ylab("Grocery Spending")+xlab("Income Rank")
 g2a
 ```
 

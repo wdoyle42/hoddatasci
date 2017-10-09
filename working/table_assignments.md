@@ -43,27 +43,27 @@ class$rmse<-NA
 print(select(class,first_name,last_name,table),n=100)
 ```
 
-    ## # A tibble: 18 × 3
+    ## # A tibble: 18 x 3
     ##    first_name  last_name  table
     ##         <chr>      <chr> <fctr>
-    ## 1       Raven       Delk      1
-    ## 2        Will   Sullivan      1
-    ## 3       Katie      Means      2
-    ## 4       Susan       Cobb      2
-    ## 5        Siqi       Chen      3
-    ## 6        Jack     Cramer      3
-    ## 7      Brenda         Lu      4
-    ## 8      Connor       Kreb      4
-    ## 9        Cole      Smith      5
-    ## 10      Arjun       Shah      5
-    ## 11     Rachel      Anand      6
-    ## 12      Ethan      Polan      6
-    ## 13        Ben     Scheer      7
-    ## 14     Claire    Fogarty      7
-    ## 15       C.J.       Pond      8
-    ## 16     Alexis       Cook      8
-    ## 17      Sunny        Cao      9
-    ## 18      Henry Livingston      9
+    ##  1       C.J.       Pond      1
+    ##  2       Cole      Smith      1
+    ##  3     Alexis       Cook      2
+    ##  4      Ethan      Polan      2
+    ##  5     Connor       Kreb      3
+    ##  6     Rachel      Anand      3
+    ##  7      Katie      Means      4
+    ##  8      Sunny        Cao      4
+    ##  9     Claire    Fogarty      5
+    ## 10      Henry Livingston      5
+    ## 11        Ben     Scheer      6
+    ## 12      Raven       Delk      6
+    ## 13     Brenda         Lu      7
+    ## 14      Arjun       Shah      7
+    ## 15      Susan       Cobb      8
+    ## 16       Siqi       Chen      8
+    ## 17       Will   Sullivan      9
+    ## 18       Jack     Cramer      9
 
 ``` r
 names(class)

@@ -16,13 +16,22 @@ library(forcats)
 library(ModelMetrics)
 load("../lessons/cex.Rdata")
 #binary variable for cigarette purchases
+cex%>%select(cigarettes)%>%print(n=100) #weird coding
+
+#Replace to be 1 if present, 0 if missing
 cex<-cex%>%mutate(any_cig=ifelse(is.na(cigarettes),0,1))
+
 
 #Poverty recode
 cex<-cex%>%mutate(pov_cym=ifelse(pov_cym=="",NA,pov_cym))
 cex<-cex%>%mutate(pov_cym=fct_recode(as.factor(pov_cym),
                                      "In Poverty"="2",
                                      "Not in Poverty"="3"))
+
+#cex<-cex%>%mutate(cig_spend=fct_recode(cigarettes,
+#                                       "Smoker"=0,
+#                                       "Non-Smoker" =>0))
+
 cex<-filter(cex,is.na(pov_cym)==FALSE)
 
 #Testing/training
