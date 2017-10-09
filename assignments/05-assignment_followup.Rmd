@@ -1,0 +1,94 @@
+---
+title: "Assignment 5 Followup"
+author: "Will Doyle"
+output: github_document
+---
+Assignment 5
+----------------
+
+In this assignment, you'll be asked to predict two related items: first, who spends ANY money on cigarettes, according to the CEX. Second, how much do they spend? You'll need to do a few things.
+
+1. Create a binary variable that's set to 1 if the household spent any money on cigarettes and 0 otherwise.
+
+```{r}
+library(tidyverse)
+library(forcats)
+library(ModelMetrics)
+load("../lessons/cex.Rdata")
+#binary variable for cigarette purchases
+cex<-cex%>%mutate(any_cig=ifelse(is.na(cigarettes),0,1))
+
+#Poverty recode
+cex<-cex%>%mutate(pov_cym=ifelse(pov_cym=="",NA,pov_cym))
+cex<-cex%>%mutate(pov_cym=fct_recode(as.factor(pov_cym),
+                                     "In Poverty"="2",
+                                     "Not in Poverty"="3"))
+cex<-filter(cex,is.na(pov_cym)==FALSE)
+
+#Testing/training
+
+# Get half of the data via random sample
+cex_train<-sample_frac(cex,.5)
+
+save(cex_train,file="cex_train.Rdata")
+
+## Testing data is the other half of the data--- the half of cex not in the 
+##training dataset
+
+cex_test<-setdiff(cex,cex_train)
+
+save(cex_test,file="cex_test.Rdata")
+##---------------------------------------
+```
+
+
+2. Create a model that predicts this variable. 
+
+```{r}
+
+mod_any_cig<-lm(any_cig~
+                  inclass+
+                  as.factor(educ_ref)+
+                  as.factor(ref_race)+
+                  as.factor(sex_ref),
+                  data=cex_train)
+summary(mod_any_cig)
+
+```
+
+3. When you're done, write some comments regarding why you think this model is a good one (write this up in paragraph form, using your finely-honed writing skills). According to this model, who spends any money at all on cigarettes?
+
+*White men with low levels of education*
+
+4. Create a subset of the data that only includes people who spent something (more than 0) on cigarettes. 
+
+```{r}
+cex_cigs_train<-filter(cex_train,any_cig==1)
+cex_cigs_test<-filter(cex_test,any_cig==1)
+
+```
+
+5. Using this subset of the data, predict spending on cigarettes among the group who spent more than 0. 
+
+```{r}
+cigs_spend_mod<-lm(log(cigarettes)~
+                  inclass+
+                  as.factor(educ_ref)+
+                  as.factor(ref_race)+
+                  as.factor(sex_ref),
+                  data=cex_cigs_train)
+summary(cigs_spend_mod)
+
+```
+
+6. Make some equally well-written comments regarding which variables predict expenditures on cigarettes among people who smoke (or at least buy cigarettes). 
+
+*White men with more money*
+
+7. Calculate the rmse for your model agains the testing version of this data. 
+
+```{r}
+cigs_predict<-predict(cigs_spend_mod,newdata=cex_cigs_test)
+exp(rmse(cigs_predict,log(cex_cigs_test$cigarettes)))
+```
+
