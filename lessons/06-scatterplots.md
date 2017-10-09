@@ -122,6 +122,7 @@ factor_mod<-lm(grocery_food~childage,data=cex);summary(factor_mod)
     ## F-statistic: 180.8 on 7 and 6830 DF,  p-value: < 2.2e-16
 
 ``` r
+#Predictions from model
 print(factor_mod$coefficients[2:8]+factor_mod$coefficients[1])
 ```
 
@@ -140,7 +141,7 @@ print(factor_mod$coefficients[2:8]+factor_mod$coefficients[1])
     ##                             childageAll > 17  
     ##                                      1429.076
 
-The reference for the category (the excluded category) is family with no children. Each coefficient is in comparison to this category, indicating that families with children of any age spend more than families with no children on food groceries.
+The reference for the category (the excluded category) is families with no children. Each coefficient is in comparison to this category, indicating how much more or less families with children in each age group spend than families with no children on food groceries. Notice that in this case with no additional covariates, the intercept plus the coefficient for each group is exactly equal to the conditional mean for that group.
 
 Bivariate Regression
 --------------------
@@ -187,6 +188,7 @@ g1a<-ggplot(cex_sum,aes(x=inc_rank_r,y=groc_mean))
 g1a<-g1a+geom_point()
 
 g1a<-g1a+xlab("Grocery Spending")+ylab("Income Rank")
+
 g1a
 ```
 
