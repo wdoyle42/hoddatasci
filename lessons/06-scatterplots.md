@@ -168,7 +168,7 @@ This first graphic shows the basic problem with the data, which is the highly no
 
 ``` r
 g1<-g1+geom_smooth(method="lm")
-g1<-g1+xlab("Grocery Spending")+ylab("Income Rank")
+g1<-g1+ylab("Grocery Spending")+xlab("Income Rank")
 g1
 ```
 
@@ -187,7 +187,7 @@ g1a<-ggplot(cex_sum,aes(x=inc_rank_r,y=groc_mean))
 
 g1a<-g1a+geom_point()
 
-g1a<-g1a+xlab("Grocery Spending")+ylab("Income Rank")
+g1a<-g1a+ylab("Grocery Spending")+xlab("Income Rank")
 
 g1a
 ```
@@ -277,7 +277,7 @@ g2<-ggplot(data=cex,
 g2<-g2+scale_y_continuous(trans="log",breaks=my.breaks)
 g2<-g2+geom_point(size=.25)
 g2<-g2+theme(legend.position="bottom"  , legend.title = element_blank())
-g2<-g2+xlab("Grocery Spending")+ylab("Income Rank")
+g2<-g2+ylab("Grocery Spending")+xlab("Income Rank")
 g2
 ```
 
@@ -295,7 +295,7 @@ g2a<-g2a+scale_y_continuous(trans="log",breaks=my.breaks,limits=c(100,8000)) #Ch
 g2a<-g2a+geom_point(size=.25) 
 g2a<-g2a+scale_colour_hue(l=50) #Darker palette
 g2a<-g2a+theme(legend.position = "bottom" , legend.title = element_blank())
-g2a<-g2a+xlab("Grocery Spending")+ylab("Income Rank")
+g2a<-g2a+ylab("Grocery Spending")+xlab("Income Rank")
 g2a
 ```
 
@@ -371,6 +371,9 @@ g3
     ## Warning: Removed 1134 rows containing missing values (geom_point).
 
 ![](06-scatterplots_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-12-1.png)
+
+Plotting more complex models
+----------------------------
 
 As we add more variables to the model, it can get more difficult to plot relationships. One very good option is to plot lines based on a hypothetical set of data. Below, I create a hypothetical set of data that include values of income across the range of income, and includes values for every level of `childage`.
 
