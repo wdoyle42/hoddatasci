@@ -25,6 +25,7 @@ sf_password<-readLines("sportsfeeds_pasword.txt")
 
 ```{r}
 
+
 .MySportsFeedsEnv<-list()
 .MySportsFeedsEnv$data$username <-sf_username
 .MySportsFeedsEnv$data$password <- sf_password
@@ -40,12 +41,38 @@ nfl_season_stats$api_json$cumulativeplayerstats$playerstatsentry$`stats.Intercep
 
 names(nfl_int_data)<-c("player_id","lastname","firstname","interceptions")
 
-nfl_int_data$interceptions<-as.numeric(nfl_int_data$interceptions)
+## This accesses week by week player-level data
+## Note: don't know why so many players have "2"
 
-nfl_int_data<-nfl_int_data%>%filter(interceptions>0)%>%
-  arrange(-interceptions)
+nfl_game_stats <- msf_get_results(league='nfl',season='2015-2016-regular',feed='player_gamelogs',params = list(team="sf"))
 
-nfl_int_data
+nfl_run_data<-data.frame(
+nfl_game_stats$api_json$playergamelogs$gamelogs$game.id,  
+nfl_game_stats$api_json$playergamelogs$gamelogs$player.ID,
+nfl_game_stats$api_json$playergamelogs$gamelogs$player.LastName,
+nfl_game_stats$api_json$playergamelogs$gamelogs$player.FirstName,
+nfl_game_stats$api_json$playergamelogs$gamelogs$`stats.RushYards.#text`)
+
+  names(nfl_run_data)<-c("game_id","player_id","lastname","firstname","run_yards")
+
+  nfl_run_data$run_yards<-as.numeric(nfl_run_data$run_yards)
+
+  nfl_run_data<-nfl_run_data%>%filter(run_yards>2)
+  nfl_run_data<-nfl_run_data%>%arrange(-run_yards)
+  
+nfl_team_stats<- msf_get_results(league='nfl',season='2015-2016-regular',feed='team_gamelogs',params = list(team="sf"))
+
+nfl_team_data<-data.frame(
+  nfl_team_stats$api_json$teamgamelogs$gamelogs$game.id,
+  nfl_team_stats$api_json$teamgamelogs$gamelogs$game.date,
+  nfl_team_stats$api_json$teamgamelogs$gamelogs$`stats.RushYards.#text`)
+
+names(nfl_team_data)<-c("gameid","game_date","rush_yards")
+
+nfl_team_data$rush_yards<-as.numeric(as.character(nfl_team_data$rush_yards))
+
+    
+  
 # compare with: https://www.pro-football-reference.com/years/2015/leaders.htm
 
 ```
