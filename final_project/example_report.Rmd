@@ -46,7 +46,7 @@ cex<-cex%>%filter(is.na(childage)==FALSE)
 
 ## The Problem
 
-Understnding which families will spend money on groceries is a key analytic problem for our organization. In particular,
+Understanding which families will spend money on groceries is a key analytic problem for our organization. In particular,
 we need to make sure that our advertising on every medium is targeted towards those that will be spending at least $1,000 per quarter on food groceries, with more advertising focused on those that spend more. 
 
 ## The Data
