@@ -24,3 +24,7 @@ http://willdoyle.us/data_step
 # R Cookbook: Graphics
 
 http://www.cookbook-r.com/Graphs/
+
+# Wickham: r4ds
+
+http://r4ds.had.co.nz/
