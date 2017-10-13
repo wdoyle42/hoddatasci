@@ -132,7 +132,7 @@ Mobile phone use is never appropriate in class. I will ask you to leave if you a
 Honor Code Statement
 ====================
 
-All assignments for this class, including weekly assignments and the final project, are to be conducted under the obligations set out in Vanderbilt's Honor Code. Please click [here](http://www.vanderbilt.edu/student_handbook/the-honor-system/)to review the honor code.
+All assignments for this class, including weekly assignments and the final project, are to be conducted under the obligations set out in Vanderbilt's Honor Code. Please click [here](http://www.vanderbilt.edu/student_handbook/the-honor-system/) to review the honor code.
 
 There will be two quite different standards for completing the assignments and the final project.
 

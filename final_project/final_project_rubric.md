@@ -43,6 +43,6 @@ A weak (C) paper will include code chunks, poor formatting, and will just be mes
 
 A strong (A) paper will have code that can generate results from the raw data in an easy to understand way. The code will be commented and will run on my computer without me having to tweak it in any way. (Easy test is to knit the document, with all related files in same directory)
 
-An acceptable paper will have code that is relatively clear, but has some problems, and may not be commented in a way that makes sense.  
+An acceptable (B) paper will have code that is relatively clear, but has some problems, and may not be commented in a way that makes sense.  
 
 A weak (C) paper will have code that is messy, hard to understand and not commented. It will not run on my computer, and cannot be easily debugged. 
