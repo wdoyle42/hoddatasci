@@ -1,0 +1,595 @@
+# Web Scraping
+
+## Introduction
+
+Many large web sites host a huge amount of information. This information is encoded and delivered on demand to the user within a web page, which is really just a markup language that a browser can understand. We can take this data and analyze it using R, via a variety of different means. Today we'll cover scraping web tables and interacting via Automated Programming Interfaces.
+
+## Ethics and Responsiblity
+
+Many of the tools we'll cover can be quite powerful ways to interact with data stored online and gather it for analysis. Because they're powerful, you need to be careful with them. In particular, try to request information in a way that will not burden the website owners. What constitutes a burden depends on the website. Google, Twitter, Facebook, all of the big websites have protections in place to guard against too many requests and have a huge amount of capacity for taking the requests they grant. Smaller websites may not have either. Always strive to be minimally intrusive: you're usually getting this data for free. 
+
+
+```{r chunk1,echo=FALSE,results='hide',cache=TRUE}
+library(tidyverse)
+library(rvest)
+library(ggthemes)
+library(chron)
+library(lubridate)
+library(acs)
+library(RCurl)
+library(gridExtra)
+library(maptools)
+library(ggmap)
+library(plotly)
+
+```
+
+
+# Basics of interacting with information stored online
+
+R can understand a web connection via the `url` command. Once that connection is established, we can download whatever we'd like. 
+
+```{r}
+## Some notes: for this to work, need to make sure everything is already downloaded.
+## then use a consistent file.exists setup
+
+#Web connections: url
+# example
+r_home = url("http://www.r-project.org/")
+r_home
+
+# Pulling text from a website using readlines
+# url of Moby Dick (project Gutenberg)
+moby_url = url("http://www.gutenberg.org/files/2701/2701-h/2701-h.htm")
+# reading the content (first 500 lines)
+moby_dick = readLines(moby_url, n = 1500)
+moby_dick[1145:1148]
+```
+
+
+# Scraping web tables
+
+When we talk about "scraping" a web table, we're talking about pulling a table that exists on a website and turning it into a usable data frame for analysis. Below, I take the table from  `http://en.wikipedia.org/wiki/Marathon_world_record_progression` for men's marathon times and plot the change in speed in m/s as a function of the date that the world record was set. 
+
+```{r}
+#Scraping web tables
+#example
+# load XML
+# url
+marathon_wiki = "https://en.wikipedia.org/wiki/Marathon_world_record_progression"
+
+marathon <- read_html(marathon_wiki)%>%html_table()
+
+marathon<-tbl_df(data.frame(marathon[[1]]))
+
+#View(marathon)
+
+#Convert H:M:S to fraction of a day, convert that to seconds
+marathon<-marathon%>%mutate(Time2=hms(as.character(Time)))%>%mutate(Time2=period_to_seconds(Time2))
+
+#Marathons are 42,200 meters long
+marathon$speed<-(4.22e4)/marathon$Time2
+#Get dates in a usable format
+marathon$date<-mdy(marathon$Date)
+```
+
+## Progression of World Record Marathon Speed in Meters/Second
+```{r}
+g1<-ggplot(data=marathon,
+           aes(y=speed,x=marathon$date,color=Nationality)) + 
+           geom_point() +
+           xlab("Date")+
+           ylab("Meters/Second")+
+           theme_igray()
+g1
+
+```
+
+_Quick Exercise_ Repeat the above analysis for women's world record progression.
+
+# Interacting with more complex websites
+
+To get data from a more complex site will take several steps. First, you need to figure out the strucutre for the url naming. Then you need to use something like [selector gadget](http://selectorgadget.com/) to access the data. We'll go over this in class. 
+
+Below, I access some team data from the nba.com website. To get the table in shape, I needed to figure out the "node" associate with each column. This took some time. It turns out that each column in the table `.left` or `.right` is named `nth-child(#)` where `#` is a number from 1-30. 
+
+## The first step: get the page
+
+I first plug the web page I'm interested in to a variable called url. This makes it simpler to deal with in code. 
+
+```{r}
+## Web Page: could be lots of different things. 
+url<-"http://www.basketball-reference.com/leagues/NBA_2016_totals.html"
+```
+
+The next step is to download that web page onto my computer. I call this `page` and I use the `read_html()` function to get it. 
+
+```{r}
+page<-read_html(url)
+```
+
+The web page has all of the data we need. The trick is to figure out how it's organized. To do this I need to use a tool called `selectorgadget`. What this will do is provide me with the name of the element I'm highlighting. I can also type in element names and see what's highlighted. After some trial and error, I figured out that there are two main elements to the table on this page `.left` and `.right`. `.left` contains player names and positions, while `.right` has all of the relevant data for that player. Using the `html_nodes()` command, I extract player names from `.left`. 
+
+```{r}
+## Get data frame started: fill in player names
+my_nodes<-paste0(".left:nth-child(",2,")")
+
+## This code gets the data !
+player_name<-page%>%
+  html_nodes(my_nodes)%>%
+  html_text()
+  
+player_name[1:10]
+```
+
+Using the same logic, I grab their points from the table
+```{r}
+## Get data frame started: fill in player names
+my_nodes<-paste0(".right:nth-child(",30,")")
+
+## This code gets the data !
+points<-page%>%
+  html_nodes(my_nodes)%>%
+  html_text()
+  
+points[1:10]
+```
+
+
+Now I can combine the two into a data frame. Note that I have to drop the last row of player names-- the web page had an ad there. 
+```{r}
+player_name<-player_name[-length(player_name)]
+
+simple_data<-tibble(player_name,points)
+```
+
+Next we can change the points variable to be numeric, and arrange in descending order. 
+
+```{r}
+simple_data<-simple_data%>%mutate_at("points",as.numeric)
+
+simple_data<-simple_data%>%arrange(-points)
+
+simple_data
+```
+
+*Quick Exercise: Add field goals to the above data frame*
+
+## Putting it all together
+
+The code below takes the exact same steps, but expands in two directions. First, it repeats over the years 1993-2017 to get a 25 year dataset. Next, it includes all of the columnins in the table from the NBA reference website. 
+
+```{r}
+## Pulling from a "stats" website
+
+#Check: do you really want to get data?
+
+get_nba_data<-FALSE
+
+#initialize full dataset
+nba_df_all<-NULL
+
+#What years?
+year_list<-1993:2017
+
+if(get_nba_data==TRUE){
+
+  ## Loop through years
+for (year in year_list){
+
+## Web Page: could be lots of different things. 
+url<-paste0("http://www.basketball-reference.com/leagues/NBA_",year,"_totals.html")
+
+## Get Page
+page<-read_html(url)
+
+#select nodes from the table
+my_nodes<-paste0(".right:nth-child(",1,")")
+
+## This code gets the data !
+player_numbers<-page%>%
+  html_nodes(my_nodes)%>%
+  html_text()
+
+#Name
+## Get data frame started: fill in player names
+my_nodes<-paste0(".left:nth-child(",2,")")
+
+## This code gets the data !
+player_name<-page%>%
+  html_nodes(my_nodes)%>%
+  html_text()
+  
+player_name<-player_name[-length(player_name)]
+
+#Age
+#select nodes from the table
+my_nodes<-paste0(".right:nth-child(",4,")")
+
+## This code gets the data !
+player_age<-page%>%
+  html_nodes(my_nodes)%>%
+  html_text()
+
+#Position
+#select nodes from the table
+my_nodes<-paste0(".center:nth-child(3)")
+
+## This code gets the data !
+player_position<-page%>%
+  html_nodes(my_nodes)%>%
+  html_text()
+
+#Fingers crossed on this kludge
+player_position<-player_position[!player_position=="Pos"]
+
+#select nodes from the table
+my_nodes<-paste0(".left:nth-child(5)")
+
+## This code gets the data !
+player_team<-page%>%
+  html_nodes(my_nodes)%>%
+  html_text()
+#  stringr::str_extract("[\\w]+[\\s]+[\\w]+[^/t]") #You can use this too: gets text
+
+
+## Create Data Frame
+nba_df<-tibble(player_name,
+                   player_position,
+                   player_age,
+                   player_team)
+
+## Go through each column and add it to a the data frame
+
+## We want columns 6:30 from this page
+my_numbers<-6:30
+
+column_names<-c(1:5,
+  "games",
+  "games_started",
+  "minutes_played",
+  "fg",
+  "fg_attempts",
+  "fg_percent",
+  "three_pointers",
+  "three_point_attempts",
+  "three_point_percent",
+  "two_pointers",
+  "two_point_attempts",
+  "two_point_percent",
+  "effective_fg_percent",
+  "free_throws",
+  "free_throw_attempts",
+  "free_throw_percent",
+  "off_rebound",
+  "def_rebound",
+  "total_rebound",
+  "assists",
+  "steals",
+  "blocks",
+  "turnovers",
+  "fouls",
+  "pts"
+)
+
+for (i in my_numbers){
+
+## This is the hardest part: figuring out the part of the page we're interested in    
+my_nodes<-paste0(".right:nth-child(",i,")")
+
+## Take that part, extract it from the page, change it to text, and take just numbers
+node_list<-page%>%
+  html_nodes(my_nodes)%>%
+  html_text()
+
+## Add that column to the data frame
+nba_df<-nba_df%>%add_column(node_list)
+names(nba_df)[i-1]<-column_names[i]
+
+}# End column loop
+
+## Add year, since we'll be including multiple years
+nba_df$year<-year
+
+#Combine into full dataset
+nba_df_all<-bind_rows(nba_df_all,nba_df)
+
+# TOS ask for a 3s crawl delay: NP! https://www.sports-reference.com/robots.txt
+## Wait between 3 and 5 seconds before going back for next season (being polite)
+Sys.sleep(runif(1,3,5))
+
+}#end year loop
+
+#Convert numbers back from text to numbers using mutate_at  
+nba_df_all<-nba_df_all%>%mutate_at(vars(c(column_names[6:30])),as.numeric)
+  
+save(nba_df_all,file = "nba.Rdata")
+
+}else{
+  load("nba.Rdata")
+}    #End conditional
+
+```
+
+## Points per minute and three pointers
+
+Points per minute is one of the key measures of an NBA player's output. Players with points per minute above .6 are considered in the league's elite. The way that players achieve this has changed over time. In particular, players have relied much more on three-point shooting to achieve this benchmark. The graphic below shows points per minute as a function of the number of three pointers scored in a season. In 2001, top producers like Shaquille O'Neal shot no three pointers. By 2015, almost all of the top producers like LeBron James, Steph Curry and Kevin Durant relied on three-point shots as a large part of their production. 
+```{r}
+nba_df_all<-nba_df_all%>%mutate(pts_minute=pts/minutes_played)
+
+gg<-ggplot(filter(nba_df_all,pts>1000,year>2000),aes(y=pts_minute,x=three_pointers,
+                          text=player_name,
+                          color=as.factor(year)))
+gg<-gg+geom_hline(yintercept=.6,linetype="dashed",alpha=.3)
+gg<-gg+geom_point(size=.25,alpha=.75)
+gg<-gg+facet_wrap(~year)
+gg<-gg+theme(legend.position="none")
+ggplotly(gg)
+```
+
+
+# Interacting via APIs
+
+Many websites have created Application Programming Interfaces, which allow the user to directly communicate with the website's underlying database without dealing with the intermediary web content. These have been expanding rapdily and are one of the most exciting areas of development in data access for data science. 
+
+Today, we'll be working with three APIs: google maps, Zillow and the American Community Survey from the census. Please go to: `http://www.census.gov/developers/` and click on "Get a Key" to get your census key. Similarly, go to: `http://www.zillow.com/howto/api/APIOverview.htm` to get your key from Zillow. 
+
+*YOU NEED TO PAY ATTENTION TO TERMS OF USE WHEN USING APIS. DO NOT VIOLATE THESE.*
+
+With these keys in hand, we can interact with these various databases. Today, we're going to take a look at home prices as a function of income and education level for all of the zip codes in Davidson County TN. 
+
+The first step is to create a list of all zip codes in Davidson County. We can do this by using another dataset that includes a comprehensive listing of zip codes by county and city. 
+
+```{r}
+#get list of all zip codes in davidson county
+
+load("../working/zipCityCountyStateMap.Rda")
+names(zipMap2)<-c("state","county","zip","city_name","countyname","statename")
+
+ziplist<-zipMap2$zip[zipMap2$countyname=="Davidson County, TN"]
+citylist<-zipMap2$city_name[zipMap2$countyname=="Davidson County, TN"]
+
+city_zip<-tibble(ziplist,citylist)
+
+names(city_zip)<-c("zip","city")
+city_zip<-city_zip%>%arrange(as.numeric(zip))
+```
+
+Next, we'll turn to the American Community Survey. This includes a large number of tables (available `http://www2.census.gov/acs2011_3yr/summaryfile/ACS_2009-2011_SF_Tech_Doc.pdf`) that cover many demographic and other characteristics of the population, down to the level of zip codes. We'll use the acs package to get two tables for the zip codes we're interested in: levels of education and income. We'll turn these tables into two variables: the proportion of the population with incomes above $75,000, and the proportion of the population with at least a bachelor's degree. 
+
+The first step is to get the table from ACS
+
+```{r}
+
+my_acs_key<-readLines("my_acs_key.txt",warn = FALSE)
+acs_key<-my_acs_key
+
+#acs_key<-"<your_acs_key_here>"
+
+#List of tables: https://www.census.gov/programs-surveys/acs/technical-documentation/summary-file-documentation.html under, 1-year appendices
+# b15002: education of pop over 25, by sex 
+# b19001: household income over last 12 months
+
+get_acs_data<-FALSE
+
+if (get_acs_data==TRUE){
+  
+api.key.install(acs_key, file = "key.rda")
+  
+davidson.zip<-geo.make(zip.cod=ziplist)
+
+davidson.educ=acs.fetch(geography=davidson.zip,
+                        endyear=2014,
+                  table.number="B15002", col.names="pretty")
+
+acs.colnames(davidson.educ)
+
+## Proprtion of individuals at college or above=
+## number with college degree/
+## total number
+prop.coll.above<-divide.acs(numerator=(davidson.educ[,15]+
+                                      davidson.educ[,16]+
+                                      davidson.educ[,17]+
+                                      davidson.educ[,18]+
+                                      davidson.educ[,32]+
+                                      davidson.educ[,33]+
+                                      davidson.educ[,34]+
+                                      davidson.educ[,35]),
+                            denominator=davidson.educ[,1]
+)
+                            
+          
+davidson.inc<-acs.fetch(geography=davidson.zip, 
+                        endyear = 2014,
+                        table.number="B19001", col.names="pretty")
+
+acs.colnames(davidson.inc)
+
+prop.above.75<-divide.acs(numerator=(davidson.inc[,13]+
+                            davidson.inc[,14]+
+                            davidson.inc[,15]+
+                            davidson.inc[,16]+
+                            davidson.inc[,17]),
+                          denominator=davidson.inc[,1]
+                          )
+                          
+
+dav_df<-tibble(substr(geography(davidson.educ)[[1]],7,11),
+                       as.numeric(estimate(prop.coll.above)),
+                       as.numeric(estimate(prop.above.75))
+)
+
+names(dav_df)<-c("zip","college.educ","income75")
+save(dav_df,file="dav.RData")
+}else{
+  load("dav.RData")
+}
+#View(dav.df)
+```
+
+_Quick Exercise_ Pull table B23001 "Sex by Age by Employment Status for the Population 16 and over" from ACS. 
+
+Now, we'll turn to the Zillow API. Using the Zillow library, we'll interact with this API to get average levels of home prices and price per square foot in these zip codes. Notice that I don't download any  dataset if it already exists: this avoids getting too many calls to Zillow-- they won't take more than 1,000 a day (which actually isn't a lot).
+
+```{r}
+my_zillow_key<-readLines("zillow_key.txt")
+zwsid<-my_zillow_key
+
+#zwsid<-"<your_zillow_key_here"
+
+# List of zips for which XML file with Zillow demographic data is to be extracted
+# Add in file.exists thing here, talk about avoiding unnecessary calls to exernal
+
+get_zillow_data=FALSE
+
+if (get_zillow_data==TRUE){
+
+  #Create a blank data frame
+zdemodata=tibble(list(zip=character(),medListPrice=numeric(),medValSqFt=numeric()))
+
+for (i in 1:length(ziplist)) {
+  url=paste("http://www.zillow.com/webservice/GetDemographics.htm?zws-id=",zwsid,"&zip=",ziplist[i],sep="")
+  x=xmlInternalTreeParse(url)
+  zdemodata$zip[i]=ziplist[i]
+  x2=xpathApply(x,"//table[name = 'Affordability Data']/data/attribute[name = 'Median List Price']/values/zip/value",xmlValue)
+  zdemodata$medListPrice[i]=x2[[1]][1]
+  x3=xpathApply(x,"//table[name = 'Affordability Data']/data/attribute[name = 'Median Value Per Sq Ft']/values/zip/value",xmlValue)
+  zdemodata$medValSqFt[i]=x3[[1]][1]
+}
+
+zdemodata2<-tibble(zdemodata)
+
+#Change relevant variables to numeric
+zdemodata2<-zdemodata2%>%mutate_at(c("medListPrice","medValSqFt"),as.numeric)
+
+save(zdemodata2,file="zdemodata.RData")
+}else{
+  load("zdemodata.RData")
+}
+
+head(zdemodata2)
+```
+
+*Quick Exercise: Get median 4-bedroom home value and add it to the above data frame*
+
+Now we merge these two datasets by zip code:
+```{r}
+#Merge two datasets
+dav_house_df<-left_join(zdemodata2,dav_df,by="zip")
+
+dav_house_df<-left_join(dav_house_df,city_zip,by="zip")
+```
+
+We can run a regression predicting value per square foot by income and education:
+
+```{r}
+
+#Predict square footage by income and education
+mod1<-lm(medValSqFt~college.educ+income75,data=dav_house_df);summary(mod1)
+
+```
+
+_Quick Exercise_ Predict total home price by the same factors. 
+
+We can also create a scatterplot that shows median value per square foot as a function of education. 
+
+## Home Prices in Davidson County, TN by Education Level
+```{r}
+#Plot
+g2<-ggplot(data=filter(dav_house_df,medListPrice>0,medValSqFt>55),
+           aes(x=college.educ,y=medValSqFt))
+g2<-g2+geom_point()
+g2<-g2+xlab("Proportion of Population With a College Degree")+ylab("Median Value per Square Foot")
+g2<-g2+geom_smooth(method=lm)
+g2<-g2+theme_igray()
+g2
+```
+
+*Quick Exercise Create a scatterplot with income as the x variable.*
+
+# Mapping
+
+The last set of code maps these zip codes. I have a file that shows the "shape" of the zip codes in Davidson county. Using the `get_googlemap` function, we'll pull a google map centered on Davidson county. I then overlay the zip codes on top of the google map, then fill these in using the level of income. 
+
+```{r}
+
+## FIX: need to do this the SF way using the tiger package
+#Just because: mapping this 
+
+load("davidson_zipshp.RData")
+
+davidson_zipshp$zip<-davidson_zipshp$id
+
+davidson_map<-left_join(dav_house_df,davidson_zipshp)
+
+address="Davidson County, TN"
+
+#Pull Map from Google Maps
+dav_gmap=get_googlemap(center=address,maptype=c("roadmap"),zoom=10,color="bw")
+```
+
+## Income by Zip Code in Davidson County, TN
+```{r}
+
+## These aren't working, need to fix. 
+#Plot Income by Zip Code
+g3<-ggmap(dav_gmap)
+g3<-g3+geom_polygon(data=filter(davidson_map,medValSqFt>55),
+                    aes(x=long,y=lat,group=zip,
+                                       fill=income75),
+                 color="black",alpha=0.5)
+g3=g3+scale_fill_gradient(low="blue",high="red",guide="colourbar")
+g3=g3+labs(title="Proportion of Pop With Income 75+ by Zip Code (US Census data)")
+g3=g3+theme(legend.title=element_blank(),plot.title=element_text(face="bold"))
+print(g3)
+```
+
+Next I repeat the above by education and value per square foot. 
+
+## Proportion of Population with a College Degree, Davidson County, TN
+```{r}
+#Plot Education by Zip Code
+g4=ggmap(dav.gmap)
+g4=g4+geom_polygon(data=davidson.map,aes(x=long,y=lat,group=zip,
+                                         fill=college.educ),
+                   color="black",alpha=0.5)
+g4=g4+scale_fill_gradient(low="blue",high="red",guide="colourbar")
+g4=g4+labs(title="Proportion of Pop With College Degree by Zip Code (US Census data)")
+g4=g4+theme(legend.title=element_blank(),plot.title=element_text(face="bold"))
+print(g4)
+
+#Plot Value per Square Foot by Zip Code
+g5<-ggmap(dav.gmap)
+g5<-g5+geom_polygon(data=davidson.map[davidson.map$medValSqFt>0,],aes(x=long,y=lat,group=zip,
+                                         fill=medValSqFt),
+                   color="black",alpha=0.5)
+g5=g5+scale_fill_gradient(low="blue",high="red",guide="colourbar")
+g5=g5+labs(title="Median Value per Square Foot (Zillow Data)")
+g5=g5+theme(legend.title=element_blank(),plot.title=element_text(face="bold"))
+print(g5)
+```
+
+Last, I create a barplot that shows value per square foot, ordered according to the highest to lowest median values. This plot is combined with the map to provide more information. 
+
+```{r}
+#Need to order zip codes for barplot
+dav_house_df<-dav_house_df%>%mutate(zipfactor=factor(as.character(zip)))
+dav_house_df<-dav_house_df%>%mutate(zipfactor=fct_reorder(f = zipfactor,x=medValSqFt))
+
+#Bar plot of value by zip code
+g6<-ggplot(data=filter(dav_house_df,medValSqFt>55),
+           aes(x=zipfactor,y=medValSqFt,fill=medValSqFt))
+
+g6=g6+scale_fill_gradient(low="blue",high="red")
+g6<-g6+geom_bar(stat="identity")+coord_flip()
+g6<-g6+xlab("")+ylab("Median Value per Square Foot, Nashville Neighborhoods")
+g6<-g6+theme_igray()
+g6<-g6+theme(legend.position="none")
+g6
+
+#Combine bar plot and map
+g7<-arrangeGrob(g5,g6,ncol=2)
+g7
+
+```
+
