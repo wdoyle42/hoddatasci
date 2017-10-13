@@ -277,7 +277,7 @@ Now we can plot the result, using the `geom_smooth` layer to give us lines for e
 g4<-ggplot(data=hypo.data,aes(x=inc_rank,y=groc.p,color=fct_reorder(f=childage,-groc.p))) #notice color
 g4<-g4+geom_smooth(method=lm,se=FALSE)
 g4<-g4+theme(legend.position="bottom",legend.title = element_blank())
-g4<-g4+xlab("Income Rank",ylab="Predicted Grocery Spending")
+g4<-g4+xlab("Income Rank")+ylab("Predicted Grocery Spending")
 g4
 ```
 
