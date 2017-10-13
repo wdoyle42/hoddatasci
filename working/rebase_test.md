@@ -1,10 +1,8 @@
-This is what this looks likr to start. 
-
+This is what this looks like to start. 
 
 Local change
 
 Remote Change.
-
 
 Another local change
  
