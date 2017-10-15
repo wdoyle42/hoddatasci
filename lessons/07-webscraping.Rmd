@@ -595,25 +595,33 @@ g2
 
 The last set of code maps these zip codes. I have a file that shows the "shape" of the zip codes in Davidson county. Using the `get_googlemap` function, we'll pull a google map centered on Davidson county. I then overlay the zip codes on top of the google map, then fill these in using the level of income. 
 
+
+## Tigris library and shapefiles
+
+To map something, you need to get the shapefile that's associate with the geogrpahic units we're interested in. We're going to grab the shapefile associated with zip codes in TN. (Zip codes are tehcnically routes and not geographic areas, but shut up, geography nerds.) The code below uses the `tigris` library, which uses yet another API to intereact with the US Census TIGER shapefiles, which contain shapes for a huge number of geographic divisions of the US, including states, counties, cities, census tracts and blocks, school districts and so on. The code below gets just ZCTAs (Zip code tabulation areas) for Tennessee (fips=37). It then subsets that down to just the zip codes associated with Davidson county. 
 ```{r}
 
-## FIX: need to do this the SF way using the tiger package
-#Just because: mapping this 
-
+# Get shapes of every zip code in TN
 zip_shapes<-zctas(cb=TRUE,  #simpler and smaller
                  starts_with =37
                   )
 
 zip_shapes<-zip_shapes[zip_shapes$ZCTA5CE10%in%dav_house_df$zip,]
 zip_shapes$zip<-zip_shapes$ZCTA5CE10
+```
 
-#dav_house_df<-as.data.frame(dav_house_df)
-#dav_house_df$zip<-as.character(dav_house_df$zip)
+The next step is to merge the geographic data with the Zillow and ACS data using `geo_join`. 
+
+```{r}
 
 davidson_map<-geo_join(zip_shapes,
                       dav_house_df,
                       "zip","zip")
+```
 
+For the map we're going to create, I want text to pop up that will show the characteristics of each Zip code in Davidson county. 
+
+```{r}
 popup <- paste0("Zip: ", davidson_map$zip,
                 "<br>",
                  davidson_map$city,
@@ -621,32 +629,51 @@ popup <- paste0("Zip: ", davidson_map$zip,
                 "Median Value per Square Foot: ",
                 round(davidson_map$medValSqFt,2),
                 "<br>",
-                "Percent of Pop with A Bachelors:",
+                "Median Home Price: ",
+                prettyNum(davidson_map$medListPrice,big.mark = ","),
+                "<br>",
+                "Percent of Pop with A Bachelors: ",
                 round((davidson_map$college_educ*100),1),
                 "<br>",
-                "Median List Price:",
-                prettyNum(davidson_map$medListPrice,big.mark = ",")
+                "Percent of Pop with income > 75: ",
+                round(davidson_map$income_75*100,1)
           )
-                
-#Palette for Square 
+```
+
+Next, we'll need a palette that will map to each of the scales. The `colorNumeric` palette function takes a "palette" from RColorBrewer and maps it to a domain defined by the varible. 
+```{r}
+#Palette for Square  feet
 sqftpal <- colorNumeric(
   palette = "YlGnBu",
   domain = davidson_map$medValSqFt
 )
 
-
+#Palette for home prices
 price_pal <- colorNumeric(
   palette = "YlGnBu",
   domain = davidson_map$medListPrice
 )
 
+#Palette for Education
 educ_pal <- colorNumeric(
   palette = "YlGnBu",
   domain = davidson_map$college_educ
 )
 
+#Palette for Income
+income_pal <- colorNumeric(
+  palette = "YlGnBu",
+  domain = davidson_map$income_75
+)
+```
 
-map3<-leaflet() %>%
+## Mapping using leaflet
+
+Leaflet is a powerful tool based on Javascript. It's implemented in R via the leaflet library. The way this works is in layers, much like ggplot. Each `addPolygons` command maps each zip code according to its own palette. The `addProviderTiles` adds in the underlying roadmap, while the `addLayerControl` provides access to the interface for showing different layers. 
+
+
+```{r}
+map<-leaflet() %>%
   addProviderTiles("CartoDB.Positron") %>%
   addPolygons(data = davidson_map, 
               fillColor = ~sqftpal(medValSqFt), 
@@ -675,11 +702,26 @@ map3<-leaflet() %>%
               popup = popup,
               group="Education"
               ) %>%
+      addPolygons(data = davidson_map, 
+              fillColor = ~income_pal(davidson_map$income_75), 
+              color = "#b2aeae", # you need to use hex colors
+              fillOpacity = 0.7, 
+              weight = 1, 
+              smoothFactor = 0.2,
+              popup = popup,
+              group="Income"
+              ) %>%
+    hideGroup(c("Home Price","Education","Income"))%>%
     addLayersControl(
     baseGroups = c("Price/ Sq Ft"),
-    overlayGroups = c("Education", "Price/ Sq Ft","Home Price"),
+    overlayGroups = c("Price/ Sq Ft","Home Price","Education","Income"),
     options = layersControlOptions(collapsed = FALSE)
   )
-map3
-
 ```
+## Nashville Neighborhoods
+```{r}
+map
+```
+
+Nashville is a city with very sharply demarcated neighborhoods. High income, high SES neighborhoods feature very high home prcies and high prices per square foot, while areas with lower levels of education and income have much less robust housing markets. 
+
