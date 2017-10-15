@@ -1,4 +1,8 @@
-# Web Scraping
+---
+title: "Web Scraping"
+author: "Will Doyle"
+output: html_document
+---
 
 ## Introduction
 
@@ -10,18 +14,18 @@ Many of the tools we'll cover can be quite powerful ways to interact with data s
 
 
 ```{r chunk1,echo=FALSE,results='hide',cache=TRUE}
-library(tidyverse)
+
 library(rvest)
 library(ggthemes)
-library(chron)
 library(lubridate)
 library(acs)
-library(RCurl)
-library(gridExtra)
-library(maptools)
-library(ggmap)
+library(leaflet)
+library(tigris)
+options(tigris_use_cache = TRUE) # save tigris shapefiles
 library(plotly)
-
+library(ggplot2)
+library(forcats)
+library(tidyverse)
 ```
 
 
@@ -62,26 +66,34 @@ marathon <- read_html(marathon_wiki)%>%html_table()
 
 marathon<-tbl_df(data.frame(marathon[[1]]))
 
-#View(marathon)
 
-#Convert H:M:S to fraction of a day, convert that to seconds
+#Convert time to seconds
 marathon<-marathon%>%mutate(Time2=hms(as.character(Time)))%>%mutate(Time2=period_to_seconds(Time2))
 
 #Marathons are 42,200 meters long
 marathon$speed<-(4.22e4)/marathon$Time2
+
 #Get dates in a usable format
 marathon$date<-mdy(marathon$Date)
 ```
 
 ## Progression of World Record Marathon Speed in Meters/Second
 ```{r}
+
+marathon<-marathon%>%mutate(Nationality=fct_reorder(f=as.factor(Nationality),x=-speed,fun = max))
+
 g1<-ggplot(data=marathon,
-           aes(y=speed,x=marathon$date,color=Nationality)) + 
-           geom_point() +
+           aes(y=speed,x=marathon$date,
+               #Reorder nationality by fastest times
+               color=Nationality,
+               text=paste(Name,Time))
+           )  
+g1<-g1+geom_point()+
            xlab("Date")+
            ylab("Meters/Second")+
            theme_igray()
-g1
+
+ggplotly(g1)
 
 ```
 
@@ -99,7 +111,7 @@ I first plug the web page I'm interested in to a variable called url. This makes
 
 ```{r}
 ## Web Page: could be lots of different things. 
-url<-"http://www.basketball-reference.com/leagues/NBA_2016_totals.html"
+url<-"http://www.basketball-reference.com/leagues/NBA_2017_totals.html"
 ```
 
 The next step is to download that web page onto my computer. I call this `page` and I use the `read_html()` function to get it. 
@@ -109,6 +121,8 @@ page<-read_html(url)
 ```
 
 The web page has all of the data we need. The trick is to figure out how it's organized. To do this I need to use a tool called `selectorgadget`. What this will do is provide me with the name of the element I'm highlighting. I can also type in element names and see what's highlighted. After some trial and error, I figured out that there are two main elements to the table on this page `.left` and `.right`. `.left` contains player names and positions, while `.right` has all of the relevant data for that player. Using the `html_nodes()` command, I extract player names from `.left`. 
+
+![selector_gadget][nba_total.png]
 
 ```{r}
 ## Get data frame started: fill in player names
@@ -230,8 +244,7 @@ my_nodes<-paste0(".left:nth-child(5)")
 player_team<-page%>%
   html_nodes(my_nodes)%>%
   html_text()
-#  stringr::str_extract("[\\w]+[\\s]+[\\w]+[^/t]") #You can use this too: gets text
-
+#  stringr::str_extract("[\\w]+[\\s]+[\\w]+[^/t]") #You can use this too: gets text ONLY
 
 ## Create Data Frame
 nba_df<-tibble(player_name,
@@ -239,11 +252,7 @@ nba_df<-tibble(player_name,
                    player_age,
                    player_team)
 
-## Go through each column and add it to a the data frame
-
-## We want columns 6:30 from this page
-my_numbers<-6:30
-
+## Names from the web page
 column_names<-c(1:5,
   "games",
   "games_started",
@@ -272,12 +281,16 @@ column_names<-c(1:5,
   "pts"
 )
 
+## We want columns 6:30 from this page
+my_numbers<-6:30
+
+#Repeat over every column in the table
 for (i in my_numbers){
 
 ## This is the hardest part: figuring out the part of the page we're interested in    
 my_nodes<-paste0(".right:nth-child(",i,")")
 
-## Take that part, extract it from the page, change it to text, and take just numbers
+## Take that part, extract it from the page, change it to text
 node_list<-page%>%
   html_nodes(my_nodes)%>%
   html_text()
@@ -294,7 +307,7 @@ nba_df$year<-year
 #Combine into full dataset
 nba_df_all<-bind_rows(nba_df_all,nba_df)
 
-# TOS ask for a 3s crawl delay: NP! https://www.sports-reference.com/robots.txt
+# TOS ask for a 3s crawl delay: No Problem! https://www.sports-reference.com/robots.txt
 ## Wait between 3 and 5 seconds before going back for next season (being polite)
 Sys.sleep(runif(1,3,5))
 
@@ -341,17 +354,25 @@ With these keys in hand, we can interact with these various databases. Today, we
 The first step is to create a list of all zip codes in Davidson County. We can do this by using another dataset that includes a comprehensive listing of zip codes by county and city. 
 
 ```{r}
-#get list of all zip codes in davidson county
+# Get dataset that matches all zip codes to cities, counties and states. You're Welcome!
+load("zipCityCountyMap.Rdata")
 
-load("../working/zipCityCountyStateMap.Rda")
+#Rename it
 names(zipMap2)<-c("state","county","zip","city_name","countyname","statename")
 
+#select zip codes from Davidson county only
 ziplist<-zipMap2$zip[zipMap2$countyname=="Davidson County, TN"]
+
+#Get city names
 citylist<-zipMap2$city_name[zipMap2$countyname=="Davidson County, TN"]
 
+#Convert to tiblle
 city_zip<-tibble(ziplist,citylist)
 
+#Give it easy names
 names(city_zip)<-c("zip","city")
+
+#Arrange in order
 city_zip<-city_zip%>%arrange(as.numeric(zip))
 ```
 
@@ -360,10 +381,11 @@ Next, we'll turn to the American Community Survey. This includes a large number 
 The first step is to get the table from ACS
 
 ```{r}
-
+# Get your own key and save as my_acs_key.txt
 my_acs_key<-readLines("my_acs_key.txt",warn = FALSE)
 acs_key<-my_acs_key
 
+# Or just paste it here.
 #acs_key<-"<your_acs_key_here>"
 
 #List of tables: https://www.census.gov/programs-surveys/acs/technical-documentation/summary-file-documentation.html under, 1-year appendices
@@ -398,13 +420,14 @@ prop.coll.above<-divide.acs(numerator=(davidson.educ[,15]+
                             denominator=davidson.educ[,1]
 )
                             
-          
+# 19001-- family income           
 davidson.inc<-acs.fetch(geography=davidson.zip, 
                         endyear = 2014,
                         table.number="B19001", col.names="pretty")
 
 acs.colnames(davidson.inc)
 
+#Proportion above 75k-- 
 prop.above.75<-divide.acs(numerator=(davidson.inc[,13]+
                             davidson.inc[,14]+
                             davidson.inc[,15]+
@@ -413,51 +436,87 @@ prop.above.75<-divide.acs(numerator=(davidson.inc[,13]+
                           denominator=davidson.inc[,1]
                           )
                           
-
+# Convert to tibble
 dav_df<-tibble(substr(geography(davidson.educ)[[1]],7,11),
                        as.numeric(estimate(prop.coll.above)),
                        as.numeric(estimate(prop.above.75))
 )
 
-names(dav_df)<-c("zip","college.educ","income75")
+# Give it easy to use names
+names(dav_df)<-c("zip","college_educ","income_75")
 save(dav_df,file="dav.RData")
 }else{
   load("dav.RData")
 }
-#View(dav.df)
+
+#View(dav_df)
 ```
 
 _Quick Exercise_ Pull table B23001 "Sex by Age by Employment Status for the Population 16 and over" from ACS. 
 
 Now, we'll turn to the Zillow API. Using the Zillow library, we'll interact with this API to get average levels of home prices and price per square foot in these zip codes. Notice that I don't download any  dataset if it already exists: this avoids getting too many calls to Zillow-- they won't take more than 1,000 a day (which actually isn't a lot).
 
-```{r}
-my_zillow_key<-readLines("zillow_key.txt")
-zwsid<-my_zillow_key
+We're going to interact directly with the Zillow api, as opposed to using an R "wrapper" like "acs.R". This means we have to have a properly formatted request AND be able to interpret the results when they come back. 
 
+```{r}
+
+# Get your own key and save it as zillow_key.txt
+zwsid<-readLines("zillow_key.txt",warn=FALSE)
+
+#Or just paste it here
 #zwsid<-"<your_zillow_key_here"
 
 # List of zips for which XML file with Zillow demographic data is to be extracted
-# Add in file.exists thing here, talk about avoiding unnecessary calls to exernal
 
 get_zillow_data=FALSE
 
 if (get_zillow_data==TRUE){
 
-  #Create a blank data frame
-zdemodata=tibble(list(zip=character(),medListPrice=numeric(),medValSqFt=numeric()))
+#Create a blank data frame
+zdemodata<- list(zip = list(as.character()),
+                medListPrice=list(as.numeric()),
+                medValsqFt=list(as.numeric())
+                )
 
+# What is all This? 
+
+#repeat across all zip codes
 for (i in 1:length(ziplist)) {
-  url=paste("http://www.zillow.com/webservice/GetDemographics.htm?zws-id=",zwsid,"&zip=",ziplist[i],sep="")
+
+  # url needs zillow key and zip code
+  url=paste0("http://www.zillow.com/webservice/GetDemographics.htm?zws-id=",zwsid,"&zip=",ziplist[i])
+  
+  #parse result
   x=xmlInternalTreeParse(url)
+  
+  #Add zip code to null dataset
   zdemodata$zip[i]=ziplist[i]
+  
+  #Look for right element in xml file, pull it
   x2=xpathApply(x,"//table[name = 'Affordability Data']/data/attribute[name = 'Median List Price']/values/zip/value",xmlValue)
+  
+  # add that element to the dataset
   zdemodata$medListPrice[i]=x2[[1]][1]
+  
+  # And again, find element, pull it
   x3=xpathApply(x,"//table[name = 'Affordability Data']/data/attribute[name = 'Median Value Per Sq Ft']/values/zip/value",xmlValue)
+  
+  # add element to dataset
   zdemodata$medValSqFt[i]=x3[[1]][1]
 }
 
-zdemodata2<-tibble(zdemodata)
+#Convert to tiblle
+zdemodata2<-data.frame(
+                   as.character(unlist(zdemodata$zip)),
+                   as.character(unlist(zdemodata$medListPrice)),
+                   as.character(unlist(zdemodata$medValSqFt))
+                  )
+                   
+names(zdemodata2)<-c("zip","medListPrice","medValSqFt")
+
+zdemodata2<-as.tibble(zdemodata2)
+
+zdemodata2<-zdemodata2%>%mutate_at(c("medListPrice","medValSqFt"),as.character)
 
 #Change relevant variables to numeric
 zdemodata2<-zdemodata2%>%mutate_at(c("medListPrice","medValSqFt"),as.numeric)
@@ -480,12 +539,36 @@ dav_house_df<-left_join(zdemodata2,dav_df,by="zip")
 dav_house_df<-left_join(dav_house_df,city_zip,by="zip")
 ```
 
+First, we can show values of homes (per square foot) by zip code. 
+
+```{r}
+
+#Need to order zip codes for barplot
+dav_house_df<-dav_house_df%>%mutate(zipfactor=factor(as.character(zip)))
+dav_house_df<-dav_house_df%>%mutate(zipfactor=fct_reorder(f = zipfactor,x=medValSqFt))
+
+#Bar plot of value by zip code
+g6<-ggplot(data=filter(dav_house_df,medValSqFt>55),
+           aes(x=zipfactor,y=medValSqFt,fill=medValSqFt,text=city))
+
+g6<-g6+scale_fill_gradient(low="blue",high="red")
+
+g6<-g6+geom_bar(stat="identity")+coord_flip()
+
+g6<-g6+xlab("")+ylab("Median Value per Square Foot, Nashville Neighborhoods")
+
+g6<-g6+theme(legend.position="none")
+
+ggplotly(g6)
+```
+
+
 We can run a regression predicting value per square foot by income and education:
 
 ```{r}
 
 #Predict square footage by income and education
-mod1<-lm(medValSqFt~college.educ+income75,data=dav_house_df);summary(mod1)
+mod1<-lm(medValSqFt~college_educ+income_75,data=dav_house_df);summary(mod1)
 
 ```
 
@@ -497,13 +580,14 @@ We can also create a scatterplot that shows median value per square foot as a fu
 ```{r}
 #Plot
 g2<-ggplot(data=filter(dav_house_df,medListPrice>0,medValSqFt>55),
-           aes(x=college.educ,y=medValSqFt))
+           aes(x=college_educ,y=medValSqFt))
 g2<-g2+geom_point()
 g2<-g2+xlab("Proportion of Population With a College Degree")+ylab("Median Value per Square Foot")
 g2<-g2+geom_smooth(method=lm)
 g2<-g2+theme_igray()
 g2
 ```
+
 
 *Quick Exercise Create a scatterplot with income as the x variable.*
 
@@ -516,80 +600,86 @@ The last set of code maps these zip codes. I have a file that shows the "shape" 
 ## FIX: need to do this the SF way using the tiger package
 #Just because: mapping this 
 
-load("davidson_zipshp.RData")
+zip_shapes<-zctas(cb=TRUE,  #simpler and smaller
+                 starts_with =37
+                  )
 
-davidson_zipshp$zip<-davidson_zipshp$id
+zip_shapes<-zip_shapes[zip_shapes$ZCTA5CE10%in%dav_house_df$zip,]
+zip_shapes$zip<-zip_shapes$ZCTA5CE10
 
-davidson_map<-left_join(dav_house_df,davidson_zipshp)
+#dav_house_df<-as.data.frame(dav_house_df)
+#dav_house_df$zip<-as.character(dav_house_df$zip)
 
-address="Davidson County, TN"
+davidson_map<-geo_join(zip_shapes,
+                      dav_house_df,
+                      "zip","zip")
 
-#Pull Map from Google Maps
-dav_gmap=get_googlemap(center=address,maptype=c("roadmap"),zoom=10,color="bw")
+popup <- paste0("Zip: ", davidson_map$zip,
+                "<br>",
+                 davidson_map$city,
+                "<br>",
+                "Median Value per Square Foot: ",
+                round(davidson_map$medValSqFt,2),
+                "<br>",
+                "Percent of Pop with A Bachelors:",
+                round((davidson_map$college_educ*100),1),
+                "<br>",
+                "Median List Price:",
+                prettyNum(davidson_map$medListPrice,big.mark = ",")
+          )
+                
+#Palette for Square 
+sqftpal <- colorNumeric(
+  palette = "YlGnBu",
+  domain = davidson_map$medValSqFt
+)
+
+
+price_pal <- colorNumeric(
+  palette = "YlGnBu",
+  domain = davidson_map$medListPrice
+)
+
+educ_pal <- colorNumeric(
+  palette = "YlGnBu",
+  domain = davidson_map$college_educ
+)
+
+
+map3<-leaflet() %>%
+  addProviderTiles("CartoDB.Positron") %>%
+  addPolygons(data = davidson_map, 
+              fillColor = ~sqftpal(medValSqFt), 
+              color = "#b2aeae", # you need to use hex colors
+              fillOpacity = 0.7, 
+              weight = 1, 
+              smoothFactor = 0.2,
+              popup = popup,
+              group="Price/ Sq Ft"
+              ) %>%
+    addPolygons(data = davidson_map, 
+              fillColor = ~price_pal(medListPrice), 
+              color = "#b2aeae", # you need to use hex colors
+              fillOpacity = 0.7, 
+              weight = 1, 
+              smoothFactor = 0.2,
+              popup = popup,
+              group="Home Price"
+              ) %>%
+    addPolygons(data = davidson_map, 
+              fillColor = ~educ_pal(college_educ), 
+              color = "#b2aeae", # you need to use hex colors
+              fillOpacity = 0.7, 
+              weight = 1, 
+              smoothFactor = 0.2,
+              popup = popup,
+              group="Education"
+              ) %>%
+    addLayersControl(
+    baseGroups = c("Price/ Sq Ft"),
+    overlayGroups = c("Education", "Price/ Sq Ft","Home Price"),
+    options = layersControlOptions(collapsed = FALSE)
+  )
+map3
+
 ```
-
-## Income by Zip Code in Davidson County, TN
-```{r}
-
-## These aren't working, need to fix. 
-#Plot Income by Zip Code
-g3<-ggmap(dav_gmap)
-g3<-g3+geom_polygon(data=filter(davidson_map,medValSqFt>55),
-                    aes(x=long,y=lat,group=zip,
-                                       fill=income75),
-                 color="black",alpha=0.5)
-g3=g3+scale_fill_gradient(low="blue",high="red",guide="colourbar")
-g3=g3+labs(title="Proportion of Pop With Income 75+ by Zip Code (US Census data)")
-g3=g3+theme(legend.title=element_blank(),plot.title=element_text(face="bold"))
-print(g3)
-```
-
-Next I repeat the above by education and value per square foot. 
-
-## Proportion of Population with a College Degree, Davidson County, TN
-```{r}
-#Plot Education by Zip Code
-g4=ggmap(dav.gmap)
-g4=g4+geom_polygon(data=davidson.map,aes(x=long,y=lat,group=zip,
-                                         fill=college.educ),
-                   color="black",alpha=0.5)
-g4=g4+scale_fill_gradient(low="blue",high="red",guide="colourbar")
-g4=g4+labs(title="Proportion of Pop With College Degree by Zip Code (US Census data)")
-g4=g4+theme(legend.title=element_blank(),plot.title=element_text(face="bold"))
-print(g4)
-
-#Plot Value per Square Foot by Zip Code
-g5<-ggmap(dav.gmap)
-g5<-g5+geom_polygon(data=davidson.map[davidson.map$medValSqFt>0,],aes(x=long,y=lat,group=zip,
-                                         fill=medValSqFt),
-                   color="black",alpha=0.5)
-g5=g5+scale_fill_gradient(low="blue",high="red",guide="colourbar")
-g5=g5+labs(title="Median Value per Square Foot (Zillow Data)")
-g5=g5+theme(legend.title=element_blank(),plot.title=element_text(face="bold"))
-print(g5)
-```
-
-Last, I create a barplot that shows value per square foot, ordered according to the highest to lowest median values. This plot is combined with the map to provide more information. 
-
-```{r}
-#Need to order zip codes for barplot
-dav_house_df<-dav_house_df%>%mutate(zipfactor=factor(as.character(zip)))
-dav_house_df<-dav_house_df%>%mutate(zipfactor=fct_reorder(f = zipfactor,x=medValSqFt))
-
-#Bar plot of value by zip code
-g6<-ggplot(data=filter(dav_house_df,medValSqFt>55),
-           aes(x=zipfactor,y=medValSqFt,fill=medValSqFt))
-
-g6=g6+scale_fill_gradient(low="blue",high="red")
-g6<-g6+geom_bar(stat="identity")+coord_flip()
-g6<-g6+xlab("")+ylab("Median Value per Square Foot, Nashville Neighborhoods")
-g6<-g6+theme_igray()
-g6<-g6+theme(legend.position="none")
-g6
-
-#Combine bar plot and map
-g7<-arrangeGrob(g5,g6,ncol=2)
-g7
-
-```
-
