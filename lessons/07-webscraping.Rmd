@@ -13,8 +13,7 @@ Many large web sites host a huge amount of information. This information is enco
 Many of the tools we'll cover can be quite powerful ways to interact with data stored online and gather it for analysis. Because they're powerful, you need to be careful with them. In particular, try to request information in a way that will not burden the website owners. What constitutes a burden depends on the website. Google, Twitter, Facebook, all of the big websites have protections in place to guard against too many requests and have a huge amount of capacity for taking the requests they grant. Smaller websites may not have either. Always strive to be minimally intrusive: you're usually getting this data for free. 
 
 
-```{r chunk1,echo=FALSE,results='hide',cache=TRUE}
-
+```{r}
 library(rvest)
 library(ggthemes)
 library(lubridate)
@@ -56,16 +55,13 @@ moby_dick[1145:1148]
 When we talk about "scraping" a web table, we're talking about pulling a table that exists on a website and turning it into a usable data frame for analysis. Below, I take the table from  `http://en.wikipedia.org/wiki/Marathon_world_record_progression` for men's marathon times and plot the change in speed in m/s as a function of the date that the world record was set. 
 
 ```{r}
-#Scraping web tables
-#example
-# load XML
-# url
 marathon_wiki = "https://en.wikipedia.org/wiki/Marathon_world_record_progression"
 
+# Get the page, pull the tables via html_table
 marathon <- read_html(marathon_wiki)%>%html_table()
 
+#Men's is the first table
 marathon<-tbl_df(data.frame(marathon[[1]]))
-
 
 #Convert time to seconds
 marathon<-marathon%>%mutate(Time2=hms(as.character(Time)))%>%mutate(Time2=period_to_seconds(Time2))
@@ -73,7 +69,7 @@ marathon<-marathon%>%mutate(Time2=hms(as.character(Time)))%>%mutate(Time2=period
 #Marathons are 42,200 meters long
 marathon$speed<-(4.22e4)/marathon$Time2
 
-#Get dates in a usable format
+#Get dates in a usable format usin lubridate::mdy
 marathon$date<-mdy(marathon$Date)
 ```
 
@@ -589,11 +585,11 @@ g2
 ```
 
 
-*Quick Exercise Create a scatterplot with income as the x variable.*
+*Quick Exercise: Create a scatterplot with income as the x variable.*
 
 # Mapping
 
-The last set of code maps these zip codes. I have a file that shows the "shape" of the zip codes in Davidson county. Using the `get_googlemap` function, we'll pull a google map centered on Davidson county. I then overlay the zip codes on top of the google map, then fill these in using the level of income. 
+The last set of code maps these zip codes. We will use two tools: `tigris` will help us to interact with the Census Bureau's `tiger` shapefile data, and `leaflet` will help us draw interactive maps.
 
 
 ## Tigris library and shapefiles
@@ -674,7 +670,9 @@ Leaflet is a powerful tool based on Javascript. It's implemented in R via the le
 
 ```{r}
 map<-leaflet() %>%
+  # underlying map from Carto.DB
   addProviderTiles("CartoDB.Positron") %>%
+  # Values for median price per square foot
   addPolygons(data = davidson_map, 
               fillColor = ~sqftpal(medValSqFt), 
               color = "#b2aeae", # you need to use hex colors
@@ -684,6 +682,7 @@ map<-leaflet() %>%
               popup = popup,
               group="Price/ Sq Ft"
               ) %>%
+  # Values for median home price  
     addPolygons(data = davidson_map, 
               fillColor = ~price_pal(medListPrice), 
               color = "#b2aeae", # you need to use hex colors
@@ -693,6 +692,7 @@ map<-leaflet() %>%
               popup = popup,
               group="Home Price"
               ) %>%
+  # Values for education  
     addPolygons(data = davidson_map, 
               fillColor = ~educ_pal(college_educ), 
               color = "#b2aeae", # you need to use hex colors
@@ -702,6 +702,7 @@ map<-leaflet() %>%
               popup = popup,
               group="Education"
               ) %>%
+  # Values for income  
       addPolygons(data = davidson_map, 
               fillColor = ~income_pal(davidson_map$income_75), 
               color = "#b2aeae", # you need to use hex colors
@@ -711,7 +712,9 @@ map<-leaflet() %>%
               popup = popup,
               group="Income"
               ) %>%
+  #Hide everying but price per square foot to start
     hideGroup(c("Home Price","Education","Income"))%>%
+  # Add layers control, so user can select different layers
     addLayersControl(
     baseGroups = c("Price/ Sq Ft"),
     overlayGroups = c("Price/ Sq Ft","Home Price","Education","Income"),
@@ -725,3 +728,4 @@ map
 
 Nashville is a city with very sharply demarcated neighborhoods. High income, high SES neighborhoods feature very high home prcies and high prices per square foot, while areas with lower levels of education and income have much less robust housing markets. 
 
+*Quick Exercise: Add the median 4 bedroom home value from above to this map*
