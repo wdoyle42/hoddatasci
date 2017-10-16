@@ -1,0 +1,50 @@
+---
+title: "Assignment 6 followup"
+output: github_document
+---
+
+```{r}
+library(tidyverse)
+load("../lessons/cex_test.Rdata")
+```
+
+
+Assignment 6
+-----------------
+Complete the following steps using the `cex.Rdata` or file. I want you to use the `ggplot` library and commands for all plots. 
+
+1. Choose a dependent variable and plot that dependent variable as a function of a continuous independent variable.
+2. If you need to, adjust the scale of either the dependent variable or independent variable to make more sense. 
+3. Add a line of best fit to your graphic. 
+4. Clean up the labeling and description of the graphic so that it could be presented to a broader audience. 
+5. Now, run a regression predicting your outcome as a function of at least two independent variables. 
+```{r}
+cex$yvar<-cex$dine_out
+cex$xvar1<-cex$inc_rank
+cex$xvar2<-cex$educ_ref #must be categorical
+
+#Create a model with two variables
+mod1<-lm(yvar~
+           xvar1+
+           as.factor(xvar2),
+         data=cex);summary(mod1)
+
+hypo.data<-data.frame(expand.grid(xvar1=seq(min(cex$xvar1,na.rm=TRUE),
+                                           max(cex$xvar1,na.rm=TRUE),
+                                           length=100),
+                                  xvar2=levels(cex$xvar2)))
+                                          
+pred_yvar<-predict(mod1,newdata=hypo.data)
+
+plot_data<-data.frame(hypo.data,pred_yvar)
+
+gg<-ggplot(plot_data,aes(x=xvar1,y=pred_yvar,color=xvar2))
+gg<-gg+geom_smooth()
+
+
+
+```
+
+
+6. Plot your predictions. Make this plot clearly labeled and easy to read.
+7. In your .Rmd file, include a few sentences describing what the graphic above shows. 

@@ -12,12 +12,28 @@ Many large web sites host a huge amount of information. This information is enco
 
 Many of the tools we'll cover can be quite powerful ways to interact with data stored online and gather it for analysis. Because they're powerful, you need to be careful with them. In particular, try to request information in a way that will not burden the website owners. What constitutes a burden depends on the website. Google, Twitter, Facebook, all of the big websites have protections in place to guard against too many requests and have a huge amount of capacity for taking the requests they grant. Smaller websites may not have either. Always strive to be minimally intrusive: you're usually getting this data for free. 
 
+## Libraries
+
+We will use multiple new libraries today. Among the ones you'll need: 
+
+* `rvest` for scraping websites
+
+* `lubridate` for working with dates
+
+* `plotly` for interactive plots
+
+* `acs` for accessing American Community Survey data via the census API
+
+* `tigris` for accessing TIGER shapefiles via the census API
+
+
 
 ```{r}
 library(rvest)
 library(ggthemes)
 library(lubridate)
 library(acs)
+library(noncensus)
 library(leaflet)
 library(tigris)
 options(tigris_use_cache = TRUE) # save tigris shapefiles
@@ -27,6 +43,13 @@ library(forcats)
 library(tidyverse)
 ```
 
+
+## API keys
+
+You will also need two API keys. 
+
+* The Census API, available here: https://api.census.gov/data/key_signup.html 
+* And Zillow's API key, available here: https://www.zillow.com/howto/api/APIOverview.htm
 
 # Basics of interacting with information stored online
 
@@ -174,7 +197,7 @@ The code below takes the exact same steps, but expands in two directions. First,
 
 #Check: do you really want to get data?
 
-get_nba_data<-FALSE
+get_nba_data<-TRUE
 
 #initialize full dataset
 nba_df_all<-NULL
@@ -345,11 +368,22 @@ Today, we'll be working with three APIs: google maps, Zillow and the American Co
 
 *YOU NEED TO PAY ATTENTION TO TERMS OF USE WHEN USING APIS. DO NOT VIOLATE THESE.*
 
-With these keys in hand, we can interact with these various databases. Today, we're going to take a look at home prices as a function of income and education level for all of the zip codes in Davidson County TN. 
+With these keys in hand, we can interact with these various databases. Today, we're going to take a look at home prices as a function of income and education level for all of the zip codes in Davidson County TN. This section was inspired by this post: https://notesofdabbler.wordpress.com/2013/12/25/exploring-census-and-demographic-data-with-r/. 
+
+
+
+## Zip Code Level Data from the American Community Survey
 
 The first step is to create a list of all zip codes in Davidson County. We can do this by using another dataset that includes a comprehensive listing of zip codes by county and city. 
 
 ```{r}
+## Look up fips code for county
+lookup_code("TN","Davidson") 
+
+state_fips<-"47"
+county_stub<-"037"
+county_fips<-paste0(state_fips,county_stub)
+
 # Get dataset that matches all zip codes to cities, counties and states. You're Welcome!
 load("zipCityCountyMap.Rdata")
 
@@ -372,9 +406,10 @@ names(city_zip)<-c("zip","city")
 city_zip<-city_zip%>%arrange(as.numeric(zip))
 ```
 
+
 Next, we'll turn to the American Community Survey. This includes a large number of tables (available `http://www2.census.gov/acs2011_3yr/summaryfile/ACS_2009-2011_SF_Tech_Doc.pdf`) that cover many demographic and other characteristics of the population, down to the level of zip codes. We'll use the acs package to get two tables for the zip codes we're interested in: levels of education and income. We'll turn these tables into two variables: the proportion of the population with incomes above $75,000, and the proportion of the population with at least a bachelor's degree. 
 
-The first step is to get the table from ACS
+The first step is to get the table from ACS. Below, I submit a request using my key to get table B15002, which contains information on education levels. 
 
 ```{r}
 # Get your own key and save as my_acs_key.txt
@@ -388,67 +423,71 @@ acs_key<-my_acs_key
 # b15002: education of pop over 25, by sex 
 # b19001: household income over last 12 months
 
-get_acs_data<-FALSE
+get_acs_data<-TRUE
 
 if (get_acs_data==TRUE){
   
 api.key.install(acs_key, file = "key.rda")
-  
-davidson.zip<-geo.make(zip.cod=ziplist)
 
-davidson.educ=acs.fetch(geography=davidson.zip,
-                        endyear=2014,
-                  table.number="B15002", col.names="pretty")
+select_zip<-geo.make(zip.code=ziplist)
 
-acs.colnames(davidson.educ)
+county_educ=acs.fetch(geography=select_zip,
+                      endyear=2014,
+                      table.number="B15002",
+                      col.names="pretty")
+
+acs.colnames(county_educ)
 
 ## Proprtion of individuals at college or above=
 ## number with college degree/
 ## total number
-prop.coll.above<-divide.acs(numerator=(davidson.educ[,15]+
-                                      davidson.educ[,16]+
-                                      davidson.educ[,17]+
-                                      davidson.educ[,18]+
-                                      davidson.educ[,32]+
-                                      davidson.educ[,33]+
-                                      davidson.educ[,34]+
-                                      davidson.educ[,35]),
-                            denominator=davidson.educ[,1]
+prop_coll_above<-divide.acs(numerator=(county_educ[,15]+
+                                      county_educ[,16]+
+                                      county_educ[,17]+
+                                      county_educ[,18]+
+                                      county_educ[,32]+
+                                      county_educ[,33]+
+                                      county_educ[,34]+
+                                      county_educ[,35]),
+                            denominator=county_educ[,1]
 )
                             
 # 19001-- family income           
-davidson.inc<-acs.fetch(geography=davidson.zip, 
-                        endyear = 2014,
-                        table.number="B19001", col.names="pretty")
+county_income<-acs.fetch(geography=select_zip, 
+                        endyear = 2015,
+                        table.number="B19001", 
+                        col.names="pretty")
 
-acs.colnames(davidson.inc)
+acs.colnames(county_income)
 
 #Proportion above 75k-- 
-prop.above.75<-divide.acs(numerator=(davidson.inc[,13]+
-                            davidson.inc[,14]+
-                            davidson.inc[,15]+
-                            davidson.inc[,16]+
-                            davidson.inc[,17]),
-                          denominator=davidson.inc[,1]
+prop_above_75<-divide.acs(numerator=(county_income[,13]+
+                            county_income[,14]+
+                            county_income[,15]+
+                            county_income[,16]+
+                            county_income[,17]),
+                          denominator=county_income[,1]
                           )
                           
 # Convert to tibble
-dav_df<-tibble(substr(geography(davidson.educ)[[1]],7,11),
-                       as.numeric(estimate(prop.coll.above)),
-                       as.numeric(estimate(prop.above.75))
+county_df<-tibble(substr(geography(county_educ)[[1]],7,11),
+                       as.numeric(estimate(prop_coll_above)),
+                       as.numeric(estimate(prop_above_75))
 )
 
 # Give it easy to use names
-names(dav_df)<-c("zip","college_educ","income_75")
-save(dav_df,file="dav.RData")
+names(county_df)<-c("zip","college_educ","income_75")
+save(county_df,file="dav.RData")
 }else{
   load("dav.RData")
 }
 
-#View(dav_df)
+#View(county_df)
 ```
 
 _Quick Exercise_ Pull table B23001 "Sex by Age by Employment Status for the Population 16 and over" from ACS. 
+
+# Housing Data from Zillow
 
 Now, we'll turn to the Zillow API. Using the Zillow library, we'll interact with this API to get average levels of home prices and price per square foot in these zip codes. Notice that I don't download any  dataset if it already exists: this avoids getting too many calls to Zillow-- they won't take more than 1,000 a day (which actually isn't a lot).
 
@@ -464,7 +503,7 @@ zwsid<-readLines("zillow_key.txt",warn=FALSE)
 
 # List of zips for which XML file with Zillow demographic data is to be extracted
 
-get_zillow_data=FALSE
+get_zillow_data=TRUE
 
 if (get_zillow_data==TRUE){
 
@@ -530,7 +569,7 @@ head(zdemodata2)
 Now we merge these two datasets by zip code:
 ```{r}
 #Merge two datasets
-dav_house_df<-left_join(zdemodata2,dav_df,by="zip")
+dav_house_df<-left_join(zdemodata2,county_df,by="zip")
 
 dav_house_df<-left_join(dav_house_df,city_zip,by="zip")
 ```
@@ -596,14 +635,18 @@ The last set of code maps these zip codes. We will use two tools: `tigris` will 
 
 To map something, you need to get the shapefile that's associate with the geogrpahic units we're interested in. We're going to grab the shapefile associated with zip codes in TN. (Zip codes are tehcnically routes and not geographic areas, but shut up, geography nerds.) The code below uses the `tigris` library, which uses yet another API to intereact with the US Census TIGER shapefiles, which contain shapes for a huge number of geographic divisions of the US, including states, counties, cities, census tracts and blocks, school districts and so on. The code below gets just ZCTAs (Zip code tabulation areas) for Tennessee (fips=37). It then subsets that down to just the zip codes associated with Davidson county. 
 ```{r}
+if (get_zip_data==TRUE){
 
-# Get shapes of every zip code in TN
+  # Get shapes of every zip code in TN
 zip_shapes<-zctas(cb=TRUE,  #simpler and smaller
-                 starts_with =37
+                 starts_with =37 #All zip codes in TN start with 37
                   )
+save(zip_shapes, file="zip_shapes.Rdata")
 
 zip_shapes<-zip_shapes[zip_shapes$ZCTA5CE10%in%dav_house_df$zip,]
 zip_shapes$zip<-zip_shapes$ZCTA5CE10
+}
+
 ```
 
 The next step is to merge the geographic data with the Zillow and ACS data using `geo_join`. 
@@ -725,6 +768,7 @@ map<-leaflet() %>%
 ```{r}
 map
 ```
+*Note: Use the box in the upper right corner to select different attributes of neighborhoods*
 
 Nashville is a city with very sharply demarcated neighborhoods. High income, high SES neighborhoods feature very high home prcies and high prices per square foot, while areas with lower levels of education and income have much less robust housing markets. 
 
