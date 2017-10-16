@@ -96,6 +96,26 @@ marathon$speed<-(4.22e4)/marathon$Time2
 marathon$date<-mdy(marathon$Date)
 ```
 
+
+```{r}
+marathon_wiki = "https://en.wikipedia.org/wiki/Marathon_world_record_progression"
+
+# Get the page, pull the tables via html_table
+marathon <- read_html(marathon_wiki)%>%html_table()
+
+#Men's is the first table
+marathon<-tbl_df(data.frame(marathon[[2]]))
+
+#Convert time to seconds
+marathon<-marathon%>%mutate(Time2=hms(as.character(Time)))%>%mutate(Time2=period_to_seconds(Time2))
+
+#Marathons are 42,200 meters long
+marathon$speed<-(4.22e4)/marathon$Time2
+
+#Get dates in a usable format usin lubridate::mdy
+marathon$date<-mdy(marathon$Date)
+```
+
 ## Progression of World Record Marathon Speed in Meters/Second
 ```{r}
 
@@ -166,6 +186,16 @@ points<-page%>%
   html_text()
   
 points[1:10]
+
+my_nodes<-paste0(".right:nth-child(",9,")")
+
+## This code gets the data !
+fg<-page%>%
+  html_nodes(my_nodes)%>%
+  html_text()
+  
+fg[1:10]
+
 ```
 
 
@@ -173,7 +203,7 @@ Now I can combine the two into a data frame. Note that I have to drop the last r
 ```{r}
 player_name<-player_name[-length(player_name)]
 
-simple_data<-tibble(player_name,points)
+simple_data<-tibble(player_name,points,fg)
 ```
 
 Next we can change the points variable to be numeric, and arrange in descending order. 
@@ -364,13 +394,11 @@ ggplotly(gg)
 
 Many websites have created Application Programming Interfaces, which allow the user to directly communicate with the website's underlying database without dealing with the intermediary web content. These have been expanding rapdily and are one of the most exciting areas of development in data access for data science. 
 
-Today, we'll be working with three APIs: google maps, Zillow and the American Community Survey from the census. Please go to: `http://www.census.gov/developers/` and click on "Get a Key" to get your census key. Similarly, go to: `http://www.zillow.com/howto/api/APIOverview.htm` to get your key from Zillow. 
+Today, we'll be working with two APIs:  Zillow and the American Community Survey from the census. Please go to: `http://www.census.gov/developers/` and click on "Get a Key" to get your census key. Similarly, go to: `http://www.zillow.com/howto/api/APIOverview.htm` to get your key from Zillow. 
 
 *YOU NEED TO PAY ATTENTION TO TERMS OF USE WHEN USING APIS. DO NOT VIOLATE THESE.*
 
 With these keys in hand, we can interact with these various databases. Today, we're going to take a look at home prices as a function of income and education level for all of the zip codes in Davidson County TN. This section was inspired by this post: https://notesofdabbler.wordpress.com/2013/12/25/exploring-census-and-demographic-data-with-r/. 
-
-
 
 ## Zip Code Level Data from the American Community Survey
 
@@ -385,27 +413,26 @@ county_stub<-"037"
 county_fips<-paste0(state_fips,county_stub)
 
 # Get dataset that matches all zip codes to cities, counties and states. You're Welcome!
-load("zipCityCountyMap.Rdata")
+county_to_zip<-read_csv("http://www2.census.gov/geo/docs/maps-data/data/rel/zcta_county_rel_10.txt")
 
-#Rename it
-names(zipMap2)<-c("state","county","zip","city_name","countyname","statename")
+#easier names to work with
+names(county_to_zip)<-tolower(names(county_to_zip))
 
-#select zip codes from Davidson county only
-ziplist<-zipMap2$zip[zipMap2$countyname=="Davidson County, TN"]
+#Just zip codes in selected county
+county_to_zip<-county_to_zip%>%filter(state==state_fips,county==county_stub)%>%
+  select(zcta5,state,county)
 
-#Get city names
-citylist<-zipMap2$city_name[zipMap2$countyname=="Davidson County, TN"]
+#list of zip codes
+ziplist<-county_to_zip$zcta5
 
-#Convert to tiblle
-city_zip<-tibble(ziplist,citylist)
+#City names
+data(zip_codes)
 
-#Give it easy names
-names(city_zip)<-c("zip","city")
+city_zip<-zip_codes%>%filter(zip%in%ziplist)%>%select(zip,city)
 
 #Arrange in order
 city_zip<-city_zip%>%arrange(as.numeric(zip))
 ```
-
 
 Next, we'll turn to the American Community Survey. This includes a large number of tables (available `http://www2.census.gov/acs2011_3yr/summaryfile/ACS_2009-2011_SF_Tech_Doc.pdf`) that cover many demographic and other characteristics of the population, down to the level of zip codes. We'll use the acs package to get two tables for the zip codes we're interested in: levels of education and income. We'll turn these tables into two variables: the proportion of the population with incomes above $75,000, and the proportion of the population with at least a bachelor's degree. 
 
@@ -434,7 +461,7 @@ select_zip<-geo.make(zip.code=ziplist)
 county_educ=acs.fetch(geography=select_zip,
                       endyear=2014,
                       table.number="B15002",
-                      col.names="pretty")
+                      col.names="pretty",verbose=T)
 
 acs.colnames(county_educ)
 
@@ -635,6 +662,9 @@ The last set of code maps these zip codes. We will use two tools: `tigris` will 
 
 To map something, you need to get the shapefile that's associate with the geogrpahic units we're interested in. We're going to grab the shapefile associated with zip codes in TN. (Zip codes are tehcnically routes and not geographic areas, but shut up, geography nerds.) The code below uses the `tigris` library, which uses yet another API to intereact with the US Census TIGER shapefiles, which contain shapes for a huge number of geographic divisions of the US, including states, counties, cities, census tracts and blocks, school districts and so on. The code below gets just ZCTAs (Zip code tabulation areas) for Tennessee (fips=37). It then subsets that down to just the zip codes associated with Davidson county. 
 ```{r}
+
+get_zip_data=TRUE
+
 if (get_zip_data==TRUE){
 
   # Get shapes of every zip code in TN
