@@ -1,0 +1,23 @@
+---
+title: "Untitled"
+author: "Will Doyle"
+date: "October 17, 2017"
+output: html_document
+---
+
+```{r}
+#install.packages("coinmarketcapr")
+
+library(coinmarketcapr)
+library(lubridate)
+
+latest_marketcap <- get_global_marketcap('USD')
+
+market<-get_marketcap_ticker_all(currency = "USD")
+
+market$date<-as_date(as.POSIXct(as.numeric(market$last_updated), origin="1970-01-01"))
+
+save(market,file=paste0("marketcap_",market$date[1],".Rdata"))
+
+```
+
