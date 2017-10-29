@@ -12,6 +12,18 @@ Many large web sites host a huge amount of information. This information is enco
 
 Many of the tools we'll cover can be quite powerful ways to interact with data stored online and gather it for analysis. Because they're powerful, you need to be careful with them. In particular, try to request information in a way that will not burden the website owners. What constitutes a burden depends on the website. Google, Twitter, Facebook, all of the big websites have protections in place to guard against too many requests and have a huge amount of capacity for taking the requests they grant. Smaller websites may not have either. Always strive to be minimally intrusive: you're usually getting this data for free. 
 
+## Ways of getting data from the web
+
+We will cover several different ways you can get data from the web
+
+1. Directly downloading web pages via the `url()` command. 
+1. Scraping simple web tables via `read_html()` and `html_table()` command
+1. Scraping complex web tables via `read_html()` and `html_nodes()`
+1. Interacting with Application Programming Interfaces (APIs) via R libraries that have been designed as "wrappers" for these interfaces, like the awesome `acs` library and the `tigris` library for geographic shapes. 
+1. Interacting with APIs directly, using the [Zillow API](https://www.zillow.com/howto/api/APIOverview.htm).
+
+Just for fun, we'll output the results of this data to interactive graphics. 
+
 ## Libraries
 
 We will use multiple new libraries today. Among the ones you'll need: 
@@ -25,6 +37,8 @@ We will use multiple new libraries today. Among the ones you'll need:
 * `acs` for accessing American Community Survey data via the census API
 
 * `tigris` for accessing TIGER shapefiles via the census API
+
+* `noncensus` for various geographic information, particularly around zip codes. 
 
 
 
@@ -49,6 +63,7 @@ library(tidyverse)
 You will also need two API keys. 
 
 * The Census API, available here: https://api.census.gov/data/key_signup.html 
+
 * And Zillow's API key, available here: https://www.zillow.com/howto/api/APIOverview.htm
 
 # Basics of interacting with information stored online
@@ -56,8 +71,6 @@ You will also need two API keys.
 R can understand a web connection via the `url` command. Once that connection is established, we can download whatever we'd like. 
 
 ```{r}
-## Some notes: for this to work, need to make sure everything is already downloaded.
-## then use a consistent file.exists setup
 
 #Web connections: url
 # example
@@ -159,9 +172,10 @@ The next step is to download that web page onto my computer. I call this `page` 
 page<-read_html(url)
 ```
 
+
 The web page has all of the data we need. The trick is to figure out how it's organized. To do this I need to use a tool called `selectorgadget`. What this will do is provide me with the name of the element I'm highlighting. I can also type in element names and see what's highlighted. After some trial and error, I figured out that there are two main elements to the table on this page `.left` and `.right`. `.left` contains player names and positions, while `.right` has all of the relevant data for that player. Using the `html_nodes()` command, I extract player names from `.left`. 
 
-![selector_gadget][nba_total.png]
+![selector_gadget](./nba_totals.png)
 
 ```{r}
 ## Get data frame started: fill in player names
@@ -227,7 +241,7 @@ The code below takes the exact same steps, but expands in two directions. First,
 
 #Check: do you really want to get data?
 
-get_nba_data<-TRUE
+get_nba_data<-FALSE
 
 #initialize full dataset
 nba_df_all<-NULL
@@ -358,13 +372,15 @@ nba_df_all<-bind_rows(nba_df_all,nba_df)
 
 # TOS ask for a 3s crawl delay: No Problem! https://www.sports-reference.com/robots.txt
 ## Wait between 3 and 5 seconds before going back for next season (being polite)
-Sys.sleep(runif(1,3,5))
+Sys.sleep(runif(1,3,4))
+print(paste("Completed year", year))
 
 }#end year loop
 
 #Convert numbers back from text to numbers using mutate_at  
 nba_df_all<-nba_df_all%>%mutate_at(vars(c(column_names[6:30])),as.numeric)
-  
+
+nba_df_all<-nba_df_all%>%group_by(player_name,year)%>%mutate_at(vars(c(column_names[6:30])),sum)  
 save(nba_df_all,file = "nba.Rdata")
 
 }else{
@@ -379,16 +395,21 @@ Points per minute is one of the key measures of an NBA player's output. Players 
 ```{r}
 nba_df_all<-nba_df_all%>%mutate(pts_minute=pts/minutes_played)
 
-gg<-ggplot(filter(nba_df_all,pts>1000,year>2000),aes(y=pts_minute,x=three_pointers,
+gg<-ggplot(filter(nba_df_all,pts>1000,year>1997),aes(y=pts_minute,x=three_pointers,
                           text=player_name,
                           color=as.factor(year)))
 gg<-gg+geom_hline(yintercept=.6,linetype="dashed",alpha=.3)
-gg<-gg+geom_point(size=.25,alpha=.75)
+gg<-gg+geom_point(size=.5,alpha=.75)
 gg<-gg+facet_wrap(~year)
-gg<-gg+theme(legend.position="none")
+gg<-gg+theme(legend.position="none")+xlab("Three Pointers")+ylab("Pts/Minute")
 ggplotly(gg)
-```
 
+#Predicting points per minute by three pointers, 1998
+nba_mod_1998<-lm(pts_minute~I(three_pointers/100),data=filter(nba_df_all,year==1998));summary(nba_mod_1998)
+
+#Predicting same in 2017
+nba_mod_2017<-lm(pts_minute~I(three_pointers/100),data=filter(nba_df_all,year==2017));summary(nba_mod_2017)
+```
 
 # Interacting via APIs
 
@@ -410,9 +431,10 @@ lookup_code("TN","Davidson")
 
 state_fips<-"47"
 county_stub<-"037"
+
 county_fips<-paste0(state_fips,county_stub)
 
-# Get dataset that matches all zip codes to cities, counties and states. You're Welcome!
+# Get dataset that matches all zip codes to cities, counties and states. 
 county_to_zip<-read_csv("http://www2.census.gov/geo/docs/maps-data/data/rel/zcta_county_rel_10.txt")
 
 #easier names to work with
@@ -434,7 +456,7 @@ city_zip<-zip_codes%>%filter(zip%in%ziplist)%>%select(zip,city)
 city_zip<-city_zip%>%arrange(as.numeric(zip))
 ```
 
-Next, we'll turn to the American Community Survey. This includes a large number of tables (available `http://www2.census.gov/acs2011_3yr/summaryfile/ACS_2009-2011_SF_Tech_Doc.pdf`) that cover many demographic and other characteristics of the population, down to the level of zip codes. We'll use the acs package to get two tables for the zip codes we're interested in: levels of education and income. We'll turn these tables into two variables: the proportion of the population with incomes above $75,000, and the proportion of the population with at least a bachelor's degree. 
+Next, we'll turn to the American Community Survey. This includes a large number of tables (available here in excel file form:  https://www.census.gov/programs-surveys/acs/technical-documentation/summary-file-documentation.html) that cover many demographic and other characteristics of the population, down to the level of zip codes. We'll use the `acs` package to get two tables for the zip codes we're interested in: levels of education and income. We'll turn these tables into two variables: the proportion of the population with incomes above $75,000, and the proportion of the population with at least a bachelor's degree. 
 
 The first step is to get the table from ACS. Below, I submit a request using my key to get table B15002, which contains information on education levels. 
 
@@ -478,7 +500,8 @@ prop_coll_above<-divide.acs(numerator=(county_educ[,15]+
                                       county_educ[,35]),
                             denominator=county_educ[,1]
 )
-                            
+
+
 # 19001-- family income           
 county_income<-acs.fetch(geography=select_zip, 
                         endyear = 2015,
@@ -509,14 +532,14 @@ save(county_df,file="dav.RData")
   load("dav.RData")
 }
 
-#View(county_df)
+head(county_df)
 ```
 
 _Quick Exercise_ Pull table B23001 "Sex by Age by Employment Status for the Population 16 and over" from ACS. 
 
 # Housing Data from Zillow
 
-Now, we'll turn to the Zillow API. Using the Zillow library, we'll interact with this API to get average levels of home prices and price per square foot in these zip codes. Notice that I don't download any  dataset if it already exists: this avoids getting too many calls to Zillow-- they won't take more than 1,000 a day (which actually isn't a lot).
+Now, we'll turn to the Zillow API. We'll interact with this API to get average levels of home prices and price per square foot in these zip codes. Notice that I don't download any  dataset if it already exists: this avoids getting too many calls to Zillow-- they won't take more than 1,000 a day (which actually isn't a lot).
 
 We're going to interact directly with the Zillow api, as opposed to using an R "wrapper" like "acs.R". This means we have to have a properly formatted request AND be able to interpret the results when they come back. 
 
@@ -537,10 +560,9 @@ if (get_zillow_data==TRUE){
 #Create a blank data frame
 zdemodata<- list(zip = list(as.character()),
                 medListPrice=list(as.numeric()),
-                medValsqFt=list(as.numeric())
-                )
-
-# What is all This? 
+                medValsqFt=list(as.numeric()),
+                med4price=list(as.numeric())
+              )
 
 #repeat across all zip codes
 for (i in 1:length(ziplist)) {
@@ -548,11 +570,8 @@ for (i in 1:length(ziplist)) {
   # url needs zillow key and zip code
   url=paste0("http://www.zillow.com/webservice/GetDemographics.htm?zws-id=",zwsid,"&zip=",ziplist[i])
   
-  #parse result
+  #send request and parse result
   x=xmlInternalTreeParse(url)
-  
-  #Add zip code to null dataset
-  zdemodata$zip[i]=ziplist[i]
   
   #Look for right element in xml file, pull it
   x2=xpathApply(x,"//table[name = 'Affordability Data']/data/attribute[name = 'Median List Price']/values/zip/value",xmlValue)
@@ -565,16 +584,28 @@ for (i in 1:length(ziplist)) {
   
   # add element to dataset
   zdemodata$medValSqFt[i]=x3[[1]][1]
+
+# And again, find element, pull it
+  x4=xpathApply(x,"//table[name = 'Affordability Data']/data/attribute[name = 'Median 4-Bedroom Home Value']/values/zip/value",xmlValue)
+  
+  # add element to dataset
+  zdemodata$med4price[i]=x4[[1]][1]
+    
+    
+  #Add zip code to null dataset
+  zdemodata$zip[i]=ziplist[i]
+  
 }
 
 #Convert to tiblle
 zdemodata2<-data.frame(
                    as.character(unlist(zdemodata$zip)),
                    as.character(unlist(zdemodata$medListPrice)),
-                   as.character(unlist(zdemodata$medValSqFt))
-                  )
+                   as.character(unlist(zdemodata$medValSqFt)),
+                  as.character(unlist(zdemodata$med4price))
+                   )
                    
-names(zdemodata2)<-c("zip","medListPrice","medValSqFt")
+names(zdemodata2)<-c("zip","medListPrice","medValSqFt","med4price")
 
 zdemodata2<-as.tibble(zdemodata2)
 
@@ -598,7 +629,15 @@ Now we merge these two datasets by zip code:
 #Merge two datasets
 dav_house_df<-left_join(zdemodata2,county_df,by="zip")
 
+# Add in city informtion from city_zip
 dav_house_df<-left_join(dav_house_df,city_zip,by="zip")
+
+#Only reliable data
+dav_house_df<-dav_house_df%>%
+  mutate(medListPrice=ifelse(medListPrice<100000,NA,medListPrice))%>%
+  mutate(medValSqFt=ifelse(medValSqFt<100,NA,medValSqFt))
+
+head(dav_house_df)
 ```
 
 First, we can show values of homes (per square foot) by zip code. 
@@ -662,7 +701,6 @@ The last set of code maps these zip codes. We will use two tools: `tigris` will 
 
 To map something, you need to get the shapefile that's associate with the geogrpahic units we're interested in. We're going to grab the shapefile associated with zip codes in TN. (Zip codes are tehcnically routes and not geographic areas, but shut up, geography nerds.) The code below uses the `tigris` library, which uses yet another API to intereact with the US Census TIGER shapefiles, which contain shapes for a huge number of geographic divisions of the US, including states, counties, cities, census tracts and blocks, school districts and so on. The code below gets just ZCTAs (Zip code tabulation areas) for Tennessee (fips=37). It then subsets that down to just the zip codes associated with Davidson county. 
 ```{r}
-
 get_zip_data=TRUE
 
 if (get_zip_data==TRUE){
@@ -671,10 +709,17 @@ if (get_zip_data==TRUE){
 zip_shapes<-zctas(cb=TRUE,  #simpler and smaller
                  starts_with =37 #All zip codes in TN start with 37
                   )
-save(zip_shapes, file="zip_shapes.Rdata")
 
+# Limit to just the zip codes in Davidson County
 zip_shapes<-zip_shapes[zip_shapes$ZCTA5CE10%in%dav_house_df$zip,]
+
+#Add a variable called zip based on ZCTAs
 zip_shapes$zip<-zip_shapes$ZCTA5CE10
+
+#Save file/load file
+save(zip_shapes, file="zip_shapes.Rdata")
+}else{
+  load("zip_shapes.Rdata")
 }
 
 ```
@@ -710,29 +755,34 @@ popup <- paste0("Zip: ", davidson_map$zip,
 ```
 
 Next, we'll need a palette that will map to each of the scales. The `colorNumeric` palette function takes a "palette" from RColorBrewer and maps it to a domain defined by the varible. 
+
 ```{r}
 #Palette for Square  feet
 sqftpal <- colorNumeric(
   palette = "YlGnBu",
-  domain = davidson_map$medValSqFt
+  domain = davidson_map$medValSqFt,
+  na.color="gray"
 )
 
 #Palette for home prices
 price_pal <- colorNumeric(
   palette = "YlGnBu",
-  domain = davidson_map$medListPrice
+  domain = davidson_map$medListPrice,
+    na.color="gray"
 )
 
 #Palette for Education
 educ_pal <- colorNumeric(
   palette = "YlGnBu",
-  domain = davidson_map$college_educ
+  domain = davidson_map$college_educ,
+    na.color="gray"
 )
 
 #Palette for Income
 income_pal <- colorNumeric(
   palette = "YlGnBu",
-  domain = davidson_map$income_75
+  domain = davidson_map$income_75,
+    na.color="gray"
 )
 ```
 
