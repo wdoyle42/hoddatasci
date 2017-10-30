@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Pizza
 
-Today we'll be working with the pizza dataset, which comes from the subreddit random acts of pizza. Each line represents a post to this subreddit. We have various characteristics of these posts, along with the request text from the post itself. We'll use these characteristics of the posts to predict whether or not the poster received pizza. 
+Today we'll be working with the pizza dataset, which comes from the subreddit random acts of pizza. Each line represents a post to this subreddit. We have various characteristics of these posts, along with the request text from the post itself. We'll use these characteristics of the posts to predict whether or not the poster received pizza. This lesson is inspired by [this article](http://www.aaai.org/ocs/index.php/ICWSM/ICWSM14/paper/download/8106/8101)
 
 ```{r libraries}
 library(tidyverse)
@@ -20,19 +20,25 @@ library(knitr)
 library(caret)
 library(forcats)
 library(tidytext)
+library(stringr)
+library(AUC)
 ```
 
 ```{r data}
 za<-read_csv("pizza.csv")
 ```
 
-Below, we do some basic data wrangling, changing variable names and recoding a few variables to be in a more usable format. 
+Below, I do some basic data wrangling, changing variable names and recoding a few variables to be in a more usable format. The outcome variable, whether the poster indicated they received a pizza, should be a binary variable: one if the person received a pizza, 0 otherwise. Our goal is to create a classifier that will accurately classify people in a testing dataset as to whether they will receive a pizza or not, based on the content of their post. This is a VERY common task in data science-- taking user supplied content and using it to accurately classify that user, typically as someone who will buy a product or service.   
 
 ```{r wrangling}
 #Recoding
 za$got_pizza<-rep(0,dim(za)[1])
 za$got_pizza[za$requester_received_pizza=="True"]<-1
+```
 
+Next, I shorten a bunch of variable names I plan to use. Long variable and data frame names should always be avoided. 
+
+```{r}
 ## Renaming looooong variable names
 za$karma<-za$requester_upvotes_minus_downvotes_at_request
 
@@ -47,42 +53,119 @@ za$activity<-za$requester_number_of_subreddits_at_request
 za$total_posts<-za$requester_number_of_posts_at_request
 
 za$raop_posts<-za$requester_number_of_posts_on_raop_at_request
+```
 
-# Binary variable for previous post
-za$prev_raop_post<-0
 
-za$prev_raop_post[za$raop_posts>0]<-1
-
-za<-za%>%mutate(
+Then I have a series of variables that I want to to turn into binary variables, then into factors. The factor part will help me with labels and etc. 
+```{r}
+# Binary variable for any previous post on this subreddit
+za<-za%>%mutate(prev_raop_post=ifelse(raop_posts>0,1,0))%>%
+        mutate(
            prev_raop_post=
-             fct_recode(as.factor(prev_raop_post),
+          fct_recode(as.factor(prev_raop_post),
                                      "First Post"="0",
                                      "Posted Before"="1"))
 
 # Binary variable: word "student" in text
-za$student<-0
+za<-za%>%mutate(student=ifelse(grepl(x=request_text,pattern="student"),1,0))%>%
+        mutate(student=fct_recode(as.factor(student),
+                            "Student"="1",
+                            "No student"="0"))
 
-za$student[grep("student",za$request_text)]<-1
+
+## Raw count of words in post
+za$words<-str_count(za$request_text,"\\S+")
 
 # Binary variable: word "poor" or "money" in text
-za$poor<-0
 
-za$poor[match(c("poor","money"),za$request_text)]<-1
+za<-za%>%mutate(poor=ifelse(grepl(x=request_text,pattern="poor"),1,0))%>%
+  mutate(poor=fct_recode(as.factor(poor),
+                "Poor in post"="1",
+                "Poor not in post"="0"))
 
 # Binary variable: word "grateful"" in text
-za$grateful<-0
 
-za$grateful[grep("grateful",za$request_text)]<-1
-
-## Post contains positive or negative sentiments
-
-affin<-get_sentiments("afinn")
-
+za<-za%>%mutate(grateful=
+                  ifelse(grepl(x = request_text,pattern="grateful"),1,0))%>%
+                  mutate(grateful=fct_recode(as.factor(grateful),
+                  "Grateful in post"="1",
+                  "Grateful not in post"="0"))
+                 
 
 
 ```
 
-We'll start by generating some cross tabs and some quick plots, showing the probability of receiving pizza according to several characteristics of the post.  We start with a basic crosstab of the dependent variable. We use `prop.table` to change this from raw counts to proportions. 
+
+## Sentiment Analysis
+
+Sentiment analysis involves coding the positive or negative sentiments provided in a given text. There are many ways to do this, but we're going to do a simple way. We will match the words in the post with a list of words known to contain positive or negative sentiments. We'll then sum up the total score of the post by the score of the sentiments expressed. 
+
+To get this done, we need to create a dataset that has one line per combination of post and word. 
+
+```{r}
+## Create a new dataset with one line per word per request: crazy, I know
+za_expand<-za%>%
+  select(request_id,request_text)%>%
+  group_by(request_id)%>%
+  unnest_tokens(input=request_text,output=word,token="words")
+
+## What this looks like
+za_expand%>%select(word)
+```
+
+Next, we drop what are called ["stop words"](https://en.wikipedia.org/wiki/Stop_words): words unlikely to have content that we are interested in. 
+
+```{r}
+## Drop known stop words
+za_expand<-za_expand%>%anti_join(stop_words,by="word")  
+
+## What this looks like
+za_expand%>%select(word)
+```
+
+Notice how the content of the post has changed after dropping the stop words. 
+
+Now we'll combine this data frame with a dataframe of words with 
+[sentiment scores](https://en.wikipedia.org/wiki/Sentiment_analysis). 
+Each word gets its own score, if the word is associated with a positive or negative sentiment.In this analysis, non-sentiment words will be coded as 0. 
+
+```{r}
+## Merge with data frame of words and associated sentiment scores
+za_expand<-za_expand%>%left_join(sentiments,by="word")
+
+##Missing=0
+za_expand<-za_expand%>%
+  mutate(score=ifelse(is.na(score),0,score))
+
+## Show words and scores
+za_expand%>%select(word,score)
+
+## Just score words
+za_expand%>%select(word,score)%>%filter(score>0)%>%print()
+```
+
+Now we're ready to bring this back in. We'll sum up the scores for each post to get how positive or negative it is. 
+
+```{r}
+## Sum score per post
+za_sum<-za_expand%>%group_by(request_id)%>%
+  summarize(score=sum(score))
+
+za_sum%>%select(request_id,score)%>%print()
+```
+
+Now we can add this back in. 
+```{r}
+za<-za%>%left_join(za_sum,by="request_id")
+
+za%>%select(request_text,score)
+
+head(za)
+```
+
+## Conditional Means as a Classifier
+
+We'll start by generating some cross tabs and some quick plots, showing the probability of receiving pizza according to several characteristics of the post.  We start with a basic crosstab of the dependent variable. We use `prop.table` to change this from raw counts to proportions. I also provide a brief exampl of how to do a table using the `kable` function. 
 
 ```{r descriptives}
 #Cross Tabs
@@ -91,7 +174,6 @@ za%>%
   count(got_pizza)%>% # Count numbers getting pizza
   mutate(p=prop.table(n))%>% #mutate for proportions using prop.table
   kable(format="markdown") # output to table
-
 
 ```
 
@@ -103,9 +185,6 @@ Next, we cross-tabulate receiving pizza with certain terms. First, if the reques
 za%>%
   count(got_pizza,student)%>%
   spread(got_pizza,n)
-
-
-
 ```
 
 Next, if the request mentioned the word "grateful."
@@ -121,7 +200,7 @@ Crosstabs using binary data are equivalent to generating conditional means, as s
 ```{r condtional_means}
 #Predictions using conditional means
 
-za%>%group_by(grateful)%>%summarize(mean(got.pizza))
+za%>%group_by(grateful)%>%summarize(mean(got_pizza))
 
 ```
 
@@ -139,7 +218,7 @@ za_sum
 
 ## Probability of Receiving Pizza, Using Various Terms in Post
 ```{r}
-gg<-ggplot(za_sum,aes(x=grateful,y=mean_pizza))
+gg<-ggplot(za_sum,aes(x=grateful,y=mean_pizza,fill=grateful))
 gg<-gg+geom_bar(stat="identity")
 gg<-gg+facet_wrap(~student+poor)
 gg
@@ -152,14 +231,17 @@ We can use standard OLS regression for classification. It's not ideal, but most 
 ```{r linear_model}
 # Linear model
 
-lm.mod<-lm(got_pizza~
+lm_mod<-lm(got_pizza~
              age+
              karma+
              log(total_posts+1)+
              raop_posts+
+             karma+
              student+
-             grateful,
-           data=za,y=TRUE,na.exclude=TRUE);summary(lm.mod)
+             grateful+
+             pop_request+
+             score,
+           data=za,y=TRUE,na.exclude=TRUE);summary(lm_mod)
 ```
 
 We're going to do something a bit different with the predictions from this model. After creating predictions, we're going to classify everyone with a predicted probablity above .5 as being predicted to get a pizza, while everyone with a predicted probability below .5 is predicted to not get one. We'll compare our classifications with the actual data. 
@@ -167,40 +249,54 @@ We're going to do something a bit different with the predictions from this model
 ```{r}
 #Predictions
 
-lm.predict<-predict(lm.mod)
+## Linear model predictions
+lm_predict<-predict(lm_mod)
 
-lm.predict.bin<-rep(0,length(lm.predict))
+## Convert to binary, 1= >.5
+lm_predict_bin<-ifelse(lm_predict>.5,1,0)
 
-lm.predict.bin[lm.predict>=.5]<-1
+## Table of actual vs. predicted, what's going on here?
+lm_table<-table(lm_predict_bin,lm_mod$y)
 
-lm.table<-table(lm.predict.bin,lm.mod$y)
+## Percent correctly predicted
+pcp<-(lm_table[1,1]+lm_table[2,2])/sum(lm_table)
 
-pcp<-(lm.table[1,1]+lm.table[2,2])/sum(lm.table)
-
-pred_table<-prop.table(lm.table,margin=1)
+pred_table<-prop.table(lm_table,margin=1)
 
 rownames(pred_table)<-c("Predicted: Yes","Predicted: No")
 colnames(pred_table)<-c("Actual: Yes","Actual: No")
 
-confusionMatrix(data=lm.predict.bin,reference = lm.mod$y,positive="1")
+## Generate confusion matrix
+confusionMatrix(data=lm_predict_bin,
+                reference = lm_mod$y,positive="1")
 ```
 
 The confusion matrix generated here is explained [here](https://topepo.github.io/caret/measuring-performance.html#class). 
 
 We're usually interested in three things: the overall accuracy of a classification is the proportion of cases accurately classified. The sensitivity is the proportion of "ones" that are accurately classified as ones-- it's the probability that a case classified as positive will indeed be positive. Specificity is the probability that a case classified as 0 will indeed by classified as 0. 
 
+*Question: how do you get perfect specificity? How do you get 
+perfect sensitivity?*
+
 There are several well-known problems with linear regression as a classification algortihm. Two should give us pause: it can generate probabilites outside of 0,1 and it implies a linear change in probabilities as a function of the predictors which may not be justified given the underlying relationship between the predictors and the probability that the outcome is 1. Logistic regresssion should give a better predicted probability, one that's more sensitive to the actual relationship between the predictors and the outcome. 
+
+## Logistic regression as a classifier
+
+Logistic regression is set up to handle binary outcomes as the dependent variable. In particular, the predictions will always be a probability, which makes it better than the ironically named linear probability model. The downside to logistic regression is that it is modeling the log odds of the outcome, which means all of the coefficients are expressed as log odds, which no one understands intuitively. Below I run the same model using logistic regression. Note the use of `glm` and the `family` option, which specifies a functional form and a particular link function. 
 
 ```{r}
 #Logisitic model
 
 logit_mod<-glm(got_pizza~
-            age+
+              age+
              karma+
              log(total_posts+1)+
              raop_posts+
+             karma+
              student+
-             grateful,
+             grateful+
+             pop_request+
+             score,
              data=za,
             na.action=na.exclude,
             family=binomial(link="logit"),
@@ -209,11 +305,14 @@ logit_mod<-glm(got_pizza~
 summary(logit_mod)
 ```
 
-With these results in hand we can generate predicted probabilities and see if this model did any better. 
+With these results in hand we can generate predicted probabilities and see if this model did any better. To get predicted probabilities
 
 ```{r}
 logit_predict<-predict(logit_mod,type="response")
+```
 
+We can convert the predictions to a binary variable by setting a "threshold" of .5. Any prediction above .5 is considered to be a 1, anything below, a 0. 
+```{r}
 logit_predict_bin<-rep(0,length(logit_predict))
 
 logit_predict_bin[logit_predict>=.5]<-1
@@ -229,79 +328,39 @@ rownames(pred_table)<-c("Predicted: Yes","Predicted: No")
 colnames(pred_table)<-c("Actual: Yes","Actual: No")
 
 confusionMatrix(data=logit_predict_bin,reference=za$got_pizza,positive="1")
-
-logit.roc<-roc(logit_predict,as.factor(logit.mod$y))
-
-auc(logit.roc)
-
-plot(logit.roc)
-
 ```
+
+## Area Under the Curve (AUC)
+
+The area under the curve considers both the sensitivity (does the model accurately predict every positive outcome) with the specificity (does the model accurately predict every negative outcome) for a given model, and does so across every possible threshold value. 
+
+```{r}
+logit_predict_no_na<-na.omit(logit_predict)
+
+logit_roc<-roc(logit_predict_no_na,as.factor(logit_mod$y))
+
+auc(logit_roc)
+ 
+plot(logit_roc)
+```
+
+## Plotting Predicted Probability
+
+Plots of binary models can be weird. To help with this, we can "jitter" the plot to add some random noise. 
 
 ```{r}
 
-logit.mod.2<-glm(got.pizza~
-               data=za,
-               na.exclude=TRUE,
-               y=TRUE)
+## Tbl of possible predictors
+za_preds<-za%>%select(karma,got_pizza,student,age)
 
-summary(logit.mod.2)
-
-logit_pred_2<-predict(logit.mod.2,type="response")
-
-logit_pred_2_bin<-rep(0,length(logit_pred_2))
-logit_pred_2_bin[logit_pred_2>.5]<-1
-
-confusionMatrix(data=logit_pred_2_bin,reference=logit.mod.2$y,positive="1")
-
-```
-
-## Predicted Probability
-
-```{r}
-
-za_preds<-za%>%select(karma,got_pizza,student)
+#Prediction
 za_preds$predict<-logit_predict
-ze_preds<-za_preds%>%arrange(age)
 
 gg<-ggplot(za_preds,aes(x=karma,y=got_pizza))
 gg<-gg+geom_jitter(alpha=.25,size=.5,position=position_jitter(height=.4,width=.4))
 gg<-gg+scale_x_continuous(trans="log",breaks=c(0,10,100,1000,3000,10000))
 gg<-gg+geom_smooth(data=za_preds,aes(x=karma,y=predict,color=as.factor(student)))
-
 gg
-
-za$words<-str_count(za$request_text,"\\S+")
-
-
-```
-
-```{r}
-affin<-get_sentiments("afinn")
-
-za_expand<-za%>%
-  select(request_id,request_text)%>%
-  group_by(request_id)%>%
-  unnest_tokens(input=request_text,output=word,token="words")
-
-za_expand<-za_expand%>%anti_join(stop_words,by="word")  
-
-za_expand<-za_expand%>%left_join(sentiments,by="word")
-
-za_sum<-za_expand%>%group_by(request_id)%>%
-  mutate(affin_score=sum(score))
-
-gg<-ggplot(za_sum,aes(x=score))
-gg<-gg+geom_density()
-gg
-
-za<-za%>%left_join(za_sum,by="request_id")
-
-gg<-ggplot(za,aes(x=score,y=got_pizza,color=as.factor(student)))
-gg<-gg+geom_jitter(size=.5,alpha=.5)
-gg
-
-score_mod<-glm(got_pizza~score,data=za,family = "binomial")
 
 ```
 
