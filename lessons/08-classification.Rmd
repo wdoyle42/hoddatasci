@@ -91,8 +91,6 @@ za<-za%>%mutate(grateful=
                   "Grateful in post"="1",
                   "Grateful not in post"="0"))
                  
-
-
 ```
 
 
@@ -162,6 +160,17 @@ za%>%select(request_text,score)
 
 head(za)
 ```
+
+```{r}
+# Training and testing datasets
+
+za_train<-za%>%sample_frac(.5)
+za_test<-setdiff(za,za_train)
+write_csv(za_train,path="za_train.csv")
+write_csv(za_train,path="za_test.csv")
+
+```
+
 
 ## Conditional Means as a Classifier
 
@@ -236,7 +245,6 @@ lm_mod<-lm(got_pizza~
              karma+
              log(total_posts+1)+
              raop_posts+
-             karma+
              student+
              grateful+
              pop_request+

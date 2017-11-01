@@ -202,7 +202,7 @@ Next, we drop what are called ["stop words"](https://en.wikipedia.org/wiki/Stop_
 za_expand<-za_expand%>%anti_join(stop_words,by="word")  
 
 ## What this looks like
-za_expand%>%select(word)%>%print()
+za_expand%>%select(word)
 ```
 
     ## Adding missing grouping variables: `request_id`
@@ -225,7 +225,7 @@ za_expand%>%select(word)%>%print()
 
 Notice how the content of the post has changed after dropping the stop words.
 
-Now we'll combine this data frame with a dataframe of words with [sentiment scores](https://en.wikipedia.org/wiki/Sentiment_analysis). Each word gets its own score, if the word is associated with a positive or negative sentiment.
+Now we'll combine this data frame with a dataframe of words with [sentiment scores](https://en.wikipedia.org/wiki/Sentiment_analysis). Each word gets its own score, if the word is associated with a positive or negative sentiment.In this analysis, non-sentiment words will be coded as 0.
 
 ``` r
 ## Merge with data frame of words and associated sentiment scores
@@ -372,10 +372,19 @@ head(za)
     ## #   raop_posts <int>, prev_raop_post <fctr>, student <fctr>, words <int>,
     ## #   poor <fctr>, grateful <fctr>, score <dbl>
 
+``` r
+# Training and testing datasets
+
+za_train<-za%>%sample_frac(.5)
+za_test<-setdiff(za,za_train)
+write_csv(za_train,path="za_train.csv")
+write_csv(za_train,path="za_test.csv")
+```
+
 Conditional Means as a Classifier
 ---------------------------------
 
-We'll start by generating some cross tabs and some quick plots, showing the probability of receiving pizza according to several characteristics of the post. We start with a basic crosstab of the dependent variable. We use `prop.table` to change this from raw counts to proportions.
+We'll start by generating some cross tabs and some quick plots, showing the probability of receiving pizza according to several characteristics of the post. We start with a basic crosstab of the dependent variable. We use `prop.table` to change this from raw counts to proportions. I also provide a brief exampl of how to do a table using the `kable` function.
 
 ``` r
 #Cross Tabs
@@ -485,7 +494,7 @@ gg<-gg+facet_wrap(~student+poor)
 gg
 ```
 
-![](08-classification_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-11-1.png)
+![](08-classification_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-12-1.png)
 
 Classifiation Using Linear Probability Model
 --------------------------------------------
@@ -500,7 +509,6 @@ lm_mod<-lm(got_pizza~
              karma+
              log(total_posts+1)+
              raop_posts+
-             karma+
              student+
              grateful+
              pop_request+
@@ -514,8 +522,8 @@ lm_mod<-lm(got_pizza~
     ## 
     ## Call:
     ## lm(formula = got_pizza ~ age + karma + log(total_posts + 1) + 
-    ##     raop_posts + karma + student + grateful + pop_request + score, 
-    ##     data = za, y = TRUE, na.exclude = TRUE)
+    ##     raop_posts + student + grateful + pop_request + score, data = za, 
+    ##     y = TRUE, na.exclude = TRUE)
     ## 
     ## Residuals:
     ##     Min      1Q  Median      3Q     Max 
@@ -734,7 +742,7 @@ auc(logit_roc)
 plot(logit_roc)
 ```
 
-![](08-classification_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-16-1.png)
+![](08-classification_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-17-1.png)
 
 Plotting Predicted Probability
 ------------------------------
@@ -769,4 +777,4 @@ gg
 
     ## Warning: Removed 72 rows containing missing values (geom_point).
 
-![](08-classification_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-17-1.png)
+![](08-classification_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-18-1.png)
