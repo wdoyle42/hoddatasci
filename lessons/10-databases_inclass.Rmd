@@ -31,7 +31,7 @@ Our goal is to identify trends in batting, pitching and team stats and to combin
 
 ## Pitching Group: filename: `pitching.Rmd` 
 
-1. Create a dataset for pitchers with at least 100 innings pitchedfor the years 2011-2015. 
+1. Create a dataset for pitchers with at least 100 innings pitched for the years 2011-2015. 
 2. For those pitchers, calculate WHIP (Walks plus hits plus innings pitched) which is `BB` plus `H` divided by `IP` for the years 2011-2015. 
 3. Again for those pitchers, calculate BABIP (batting average balls in play) which is:`(H-HR) /(BFP-SO-BB-HR)`, total hits minus home runs divided by batters faced less strikeouts, walks and home runs. 
 
@@ -39,6 +39,11 @@ Our goal is to identify trends in batting, pitching and team stats and to combin
 1. Create a dataset that includes wins, losses, rank and a postseason indicator (Division winner or Wild Card Winner) for every team for the years 2011-2015. 
 2. From the salaries table, create a variable for total salary for the team for each season. 
 3. From the allstar table, create a variable for number of players that were all stars.  
+
+
+## Fielding fielding.Rmd
+
+1. Create a dataset that includes Games, Games started, innings, putouts, assists and errors. Calculate assists/inning, errors/inning and putouts/inning for players that completed at least 100 innings. 
 
 ## All Groups
 
