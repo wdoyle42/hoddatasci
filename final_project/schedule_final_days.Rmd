@@ -13,11 +13,15 @@ knitr::opts_chunk$set(echo = TRUE)
 
 2017-11-08, Weds
 
+2017-11-12 Assignment 9 Due
+
 2017-11-13, Mon Multiple Models
 
 2017-11-15, Weds Multiple Models
 
 2017-11-20 & 2017-11-22 Thanksgiving Break
+
+2017-11-26 Assignment 10 due
 
 2017-11-27 Unsupervised Learning
 
