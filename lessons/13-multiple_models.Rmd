@@ -30,6 +30,7 @@ We start by getting a new package `modelr` which has nice facilities for creatin
 ```{r}
 library(tidyverse)
 library(modelr)
+library(caret)
 ```
 
 Next we load the quickfacts data, which contains county-by-county information. We're going to create a simple model that predicts median home values in the county as a function of education, home ownership and income. 
@@ -37,7 +38,7 @@ Next we load the quickfacts data, which contains county-by-county information. W
 ```{r}
 load("quickfacts.Rdata")
 qf<-qf%>%
-  select(median_home_val,median_hh_inc,coll_grad_pc,homeown_rate,per_capita_inc)%>%
+  select(median_home_val,median_hh_inc,coll_grad_pc,homeown_rate,per_capita_inc,white_pc)%>%
        mutate_all(funs(as.numeric))%>%tbl_df()
 ```
 
@@ -67,7 +68,7 @@ The `crossv_kfold` command creates a list of datasets from our original dataset,
 
 ```{r}
 qf_cf<-qf%>%
-  crossv_kfold(10)
+  crossv_kfold(20)
 qf_cf
 ```
 
@@ -146,12 +147,21 @@ mod2_formula<-formula("log(median_home_val+1)~
               log(median_hh_inc+1)+
               homeown_rate+
               coll_grad_pc+
-              per_capita_inc")
+              log(per_capita_inc+1)")
 
+
+
+## Define the model
+mod3_formula<-formula("log(median_home_val+1)~
+              log(median_hh_inc+1)+
+              homeown_rate+
+              coll_grad_pc+
+              log(per_capita_inc+1)+
+              white_pc")
 
 mod2_rmse_cv<-qf_cv %>% 
   mutate(train = map(train, as_tibble)) %>% ## Convert to tibbles
-  mutate(model = map(train, ~ lm(mod2_formula, data = .)))%>%
+  mutate(model = map(train, ~ lm(mod3_formula, data = .)))%>%
   mutate(rmse = map2_dbl(model, test, rmse))%>% 
   select(.id, rmse) ## pull just id and rmse 
 
@@ -159,6 +169,8 @@ mod2_rmse_cv
 
 summary(mod2_rmse_cv$rmse)
 summary(mod1_rmse_cv$rmse)
+
+
 gg<-ggplot(mod2_rmse_cv,aes(x=rmse))
 gg<-gg+geom_density()
 gg<-gg+geom_density(data=mod1_rmse_cv,aes(x=rmse),color="blue")
@@ -166,3 +178,63 @@ gg
 
 ```
 
+*Not So quick exercise* From the qf dataset, choose new variables to add to your model to predict median home values. Compare the distribution of rmse from your model to the ones I obtained. 
+
+
+## Model Tuning
+
+In model tuning, we try to find the best possible model among various candidates. There are two basic ways to acomplish this. One is using a model that the analyst has identified, either through theory or practice or both, as a good model to predict the outcome. This has been our basic perspective in this class. However, this model can still be refined by choosing the best candidate after having trained it on multiple training datasets, by choosing the model parameters that minimize RMSE. The code below, based on the `train` function from the `caret` library does just that. 
+```{r}
+load("quickfacts.Rdata")
+
+qf<-qf%>%
+  select(median_home_val,
+         median_hh_inc,
+         coll_grad_pc,
+         homeown_rate,
+         per_capita_inc,
+         white_pc,
+         persons_below_poverty,
+         person_per_hh)%>%
+       mutate_all(funs(as.numeric))%>%tbl_df()
+
+fitControl <- trainControl(method = "cv",
+                            n=100,
+                            p=)
+
+qf$log_median_home_val<-log(qf$median_home_val+1)
+
+
+fit1<-train(mod1_formula,
+            data=qf,
+            method="lm",
+            trControl=fitControl)
+```
+## Machine Learning
+
+Of course, we can also just let the computer choose a model from a set of candidate variables. Below, I use stepqise regression, which involves proposing candidate variables and evaluating their ability to lower RMSE, as the basis for choosing a "best" model. 
+
+```{r}
+#Tuning model parameters
+
+fit2<-train(log_median_home_val~.,
+            data=qf,
+            method="glmStepAIC",
+            trControl=fitControl,
+            verbose=TRUE)
+
+fit1$results
+
+fit2$results
+
+rmse_data<-tbl_df(data.frame(fit1$resample$RMSE,fit2$resample$RMSE))
+names(rmse_data)<-c("fit1","fit2")
+
+gg<-ggplot(rmse_data,aes(x=fit1))
+gg<-gg+geom_density()
+gg<-gg+geom_density(aes(x=fit2),color="red")
+gg
+```
+
+
+In different situations we may care more about WHY something predicts an outcome, and in other situations we care more about WHETHER something predicts an outcome. The key is to be clear with yourself and/or your client about what you're interested in. Model selection via stepwise regression or other algorithms is not a panacea. 
