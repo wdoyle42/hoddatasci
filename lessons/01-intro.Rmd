@@ -35,7 +35,6 @@ If you haven't already, you need to download Rstudio here:
 ## Installing git
 
 `git` is a version control program. A standard problem in programming is how to track the changes that have been made to a project. These challenges are well-known to anyone who has had to work on a complex document, particularly with collaborators. Because these problems are particularly severe in programming, they developed a set of tools called version control. These will keep track of every change you make to a file, and record why you made the change. 
-
 Download git here and accept all of the defaults on installation: (https://git-scm.com/downloads)
 
 ## Getting set up on GitHub
