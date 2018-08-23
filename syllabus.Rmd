@@ -335,7 +335,6 @@ Assignment `r i-1` Due Midnight `r nice_date(hw_days[i])`
 ## `r nice_date(second_week_days[i])`  Pre-processed data, continued
 
 *Standing Meeting*
-Progress reports due for section 2.
 
 *Lab Practical: working with various data formats*
 ```{r echo=FALSE,warning=FALSE,results=FALSE,message=FALSE}
@@ -399,7 +398,6 @@ Assignment `r i-2` Due Midnight `r nice_date(hw_days[i])`
 ## `r nice_date(second_week_days[i])` Scatterplots, continued
 
 *Standing Meetings*
-Progress Reports 2 Due
 
 *Lab Practical: Presenting Data via Scatterplots*
 
@@ -478,6 +476,8 @@ Assignment `r i-2` Due Midnight `r nice_date(hw_days[i])`
 ##`r nice_date(second_week_days[i])` Plots for Classification, continued
 
 *Standing Meetings*
+
+*Third Progress Reports Due*
 
 *Lab Practical*
 
@@ -577,8 +577,10 @@ Assignment `r i-2` Due Midnight `r nice_date(hw_days[i])`
 
 *Standing Meetings*
 
-*Lab Practical:* K-means clustering, nearest neighbor classification
+*Fourth Progress Reports Due*
 
+
+*Lab Practical:* K-means clustering, nearest neighbor classification
 
 
 ```{r echo=FALSE,warning=FALSE,results=FALSE,message=FALSE}
