@@ -105,10 +105,10 @@ When we say that R is extensible, we mean that people in the community can write
 To run the code below in R, you can:
 
 - Press the "play" button next to the code chunk
-- In OS X, place the cursor
+- In OS X, place the cursor in the code chunk and hit `CMD+RETURN`
+- In Windows, place the cursor in the code chunk and hit `CTRIL+RETURN`
+
 ```{r scorecard} 
-## Clear environment
-rm(list=ls())
 ## Get necessary libraries-- won't work the first time, because you need to install them!
 library(tidyverse)
 ```
