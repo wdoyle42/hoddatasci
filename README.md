@@ -256,7 +256,7 @@ Assignment 3 Due Midnight Sunday, September 16
 Thursday, September 20 Pre-processed data, continued
 ----------------------------------------------------
 
-*Standing Meeting* Progress reports due for section 2.
+*Standing Meeting*
 
 *Lab Practical: working with various data formats*
 
@@ -314,7 +314,7 @@ Assignment 5 Due Midnight Sunday, October 7
 Thursday, October 11 Scatterplots, continued
 --------------------------------------------
 
-*Standing Meetings* Progress Reports 2 Due
+*Standing Meetings*
 
 *Lab Practical: Presenting Data via Scatterplots*
 
@@ -387,6 +387,8 @@ Thursday, November 1 Plots for Classification, continued
 --------------------------------------------------------
 
 *Standing Meetings*
+
+*Third Progress Reports Due*
 
 *Lab Practical*
 
@@ -469,6 +471,8 @@ Thursday, November 29 Unsupervised Learning, continued
 ------------------------------------------------------
 
 *Standing Meetings*
+
+*Fourth Progress Reports Due*
 
 *Lab Practical:* K-means clustering, nearest neighbor classification
 
