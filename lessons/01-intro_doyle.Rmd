@@ -35,7 +35,6 @@ If you haven't already, you need to download Rstudio here:
 ## Installing git
 
 `git` is a version control program. A standard problem in programming is how to track the changes that have been made to a project. These challenges are well-known to anyone who has had to work on a complex document, particularly with collaborators. Because these problems are particularly severe in programming, they developed a set of tools called version control. These will keep track of every change you make to a file, and record why you made the change. 
-
 Download git here and accept all of the defaults on installation: (https://git-scm.com/downloads)
 
 ## Getting set up on GitHub
@@ -106,10 +105,10 @@ When we say that R is extensible, we mean that people in the community can write
 To run the code below in R, you can:
 
 - Press the "play" button next to the code chunk
-- In OS X, place the cursor
+- In OS X, place the cursor in the code chunk and hit `CMD+RETURN`
+- In Windows, place the cursor in the code chunk and hit `CTRIL+RETURN`
+
 ```{r scorecard} 
-## Clear environment
-rm(list=ls())
 ## Get necessary libraries-- won't work the first time, because you need to install them!
 library(tidyverse)
 ```
@@ -117,8 +116,6 @@ library(tidyverse)
 Now we're ready to load in data. The data frame will be our basic way of interacting with everything in this class. The `sc` data frame contains information from the college scorecard on 127 different colleges and univeristies. 
 
 However, we first need to make sure that R is looking in the right place. When you opened up your project, Rstudio automagically took you to the directory for that project. But because we keep lessons in a separate directory, we need to 
-
-Blah blah 
 
 ```{r load_data}
 ## Load in the data
@@ -160,7 +157,7 @@ We can look at the whole dataset using View.
 ## What does this data look like? Look at the first few rows, first few variables
 sc
 
-View(sc)
+#View(sc)
 ```
 
 *Filter, Select, Arrange*
@@ -181,8 +178,6 @@ Let's grab just the data for Vanderbilt, then look only at the average test scor
 ## Where are we?
 sc%>%filter(instnm=="Vanderbilt University")
 
-sc%>%filter(instnm=="Harvard University")
-
 sc%>%filter(instnm=="Vanderbilt University")%>%select(instnm,adm_rate,sat_avg )
 
 ## Just colleges with low admit rates: show admit rate and sat scores, arrange in a pleasing way
@@ -192,11 +187,12 @@ sc%>%filter(adm_rate<.1)%>%select(instnm,adm_rate,sat_avg)%>%arrange(sat_avg,adm
 sc%>%filter(adm_rate<.1)%>%select(instnm,adm_rate,sat_avg)%>%arrange(-sat_avg)
   
 ## New cut
-sc%>%filter(adm_rate>.3)%>%select(instnm,sat_avg,md_earn_wne_p6,stabbr)%>%arrange(stabbr,-sat_avg)%>%print(n=100)
-
-sc%>%filter(instnm=="New York University")%>%select(debt_mdn,md_earn_wne_p6)
-
+sc_sub <- sc%>%filter(adm_rate>.3)%>%
+  select(instnm,sat_avg,md_earn_wne_p6,stabbr)%>%
+  arrange(stabbr,-sat_avg)%>%print(n=100)
 ```
+
+
 
 *Quick Exercise*
 Choose a different college and two different things about that college. 
@@ -206,6 +202,10 @@ Choose a different college and two different things about that college.
 ```{r summarize}
 ## What's the average median debt?
 sc%>%summarize(mean_debt=mean(debt_mdn,na.rm=TRUE))
+
+sc%>%summarize(sat_avg=mean(sat_avg,na.rm=TRUE))
+
+
 ```
 *Quick Exercise*
 Summarize the average entering SAT scores in this dataset. 
@@ -220,26 +220,25 @@ sc%>%filter(adm_rate<.1)%>%summarize(mean_debt=mean(debt_mdn,na.rm=TRUE))
 ## And for not very selective schools?
 sc%>%filter(adm_rate>.3)%>%summarize(mean_debt=mean(debt_mdn,na.rm=TRUE))
 
+
+sc%>%filter(sat_avg>1200)%>%summarize(avg_earn=mean(md_earn_wne_p6,na.rm=TRUE))
+
+
 ```
 
 *Quick Exercise* Calculate average earnings for schools where SAT>1200
-
-```{r}
-sc%>%filter(sat_avg>1200)%>%summarize(mean_earnings=mean(md_earn_wne_p6,na.rm=TRUE))
-```
-
 
 *Grouping Data*
 Another powerful tool is being able to calculate characteristics for various groups. For example, what are the average earnings for the three different types of colleges (public, private non-profit, private for-profit) in the dataset?
 
 ```{r grouping}
-# 
-# sc%>%group_by(control)
-# %>%
-#   summarize(mean_earnings=mean(md_earn_wne_p6))
-# 
-# sc%>%group_by(control)%>%
-#   summarize(mean_debt=mean(debt_mdn))
+
+sc%>%group_by(control)%>%summarize(mean_earnings=mean(md_earn_wne_p6,na.rm=TRUE))
+ 
+sc%>%group_by(control)%>%summarize(mean_debt=mean(debt_mdn,na.rm=TRUE))
+
+sc%>%group_by(control)%>%summarize(mean(debt_mdn,na.rm=TRUE))
+
 
 ```
 

@@ -16,6 +16,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(forcats)
 library(RColorBrewer)
+library(knitr)
 ```
 
 Next we load in the data, using the `readr` package. Note that this data is saved as comma separated or `csv.` This is an easy file format to recognize. When we use the `readr` package, it gives us some output that says how it interprets the data-- is it a string variable, numeric (float), integer and so on. 
@@ -93,6 +94,36 @@ at_sum
 ```
 
 Remember that the mean of a binary variable indicates the proportion of the population that has a certain characteristcs. So, in our case, `r  round(at_sum$attr_avg[2],2)` of the sample that travels frequently left the company in the last year. Our first plot will be a basic bar plot, showing the average levels of attrition. 
+
+```{r}
+at %>%
+  count(BusinessTravel,attrit) %>%
+  group_by(BusinessTravel)%>%
+  mutate(prop = prop.table(n)) %>%
+  select(-n) %>%
+  spread(attrit, prop)%>%kable()
+```
+
+
+```{r}
+at1<-at %>%
+  count(BusinessTravel,attrit) %>%
+  group_by(BusinessTravel)%>%
+  mutate(prop = prop.table(n)) %>%
+  select(-n) %>%
+  spread(attrit, prop)%>%kable()
+```
+
+```{r}
+gg<-ggplot(at1,aes(y=BusinessTravel,x=as.factor(attrit)))
+gg<-gg+geom_tile(aes(fill=prop))
+gg<-gg+scale_fill_gradient2(low="white",high="blue")
+gg<-gg+xlab("Left Company")
+gg
+```
+
+
+
 
 ```{r}
 ## Bar Plot with aesthetics: mean attrition as height, business travel as cateogry
@@ -183,6 +214,9 @@ gg<-ggplot(at_sum,aes(x=fct_reorder(BusinessTravel,attr_avg),y=attr_avg,color=Ge
 gg<-gg+geom_bar(stat="identity",aes(fill=Gender),position="dodge")
 gg
 
+gg<-gg+ylab("Pr(Attrition)")+xlab("Frequency of Travel")
+gg
+ggsave(gg, file="~/Desktop/travel.png")
 ## Plot it using a dot plot
 gg<-ggplot(at_sum,aes(x=reorder(BusinessTravel,attr_avg),y=attr_avg),color=Gender)
 gg<-gg+geom_point(aes(color=Gender))
@@ -206,11 +240,6 @@ at_sum<-at%>%
 
 at_sum
 
-pd<-pd%>%
-  group_by(college_ed_level,)%>%
-  mutate(avg_homeown_by_college=mean(homeown))
-
-
 gg<-ggplot(at_sum,aes(x=reorder(BusinessTravel,attr_avg),
                       y=attr_avg,
                       fill=Gender))
@@ -222,6 +251,7 @@ gg<-gg+facet_wrap(~MaritalStatus)
 gg<-gg+coord_flip()
 ## Print
 gg
+ ggsave(gg,file="~/Desktop/travel.png")
 ```
 
 _Side_ _Note_: Colors

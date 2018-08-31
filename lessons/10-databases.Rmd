@@ -40,7 +40,7 @@ We'll also use the Lahman database, which contains information on every single p
 library(tidyverse)
 library(DBI)
 library(dbplyr)
-#library(RSQLite)
+library(RSQLite)
 library(nycflights13)
 library(Lahman)
 ```
@@ -117,6 +117,22 @@ dbClearResult(req)
 ```
 
 
+```{r}
+#Generate a SQL request to a database
+req_text<-"Select * from weather"
+
+#Send query through connection
+req<-dbSendQuery(con,req_text)
+
+#Generate dataframe from results
+req_df<-dbFetch(req,n=-1)
+
+#Good practice: clear request
+dbClearResult(req)
+```
+
+
+
 
 Let's take a look at the generated data frame. 
 ```{r}
@@ -154,6 +170,34 @@ delay_summary<-req1_df%>%
 delay_summary
 ```
 
+
+
+```{r}
+#New request: which carriers have longer delays? 
+req1_text<-"SELECT a.carrier, a.name, f.distance 
+            FROM flights f 
+            JOIN airlines a ON a.carrier=f.carrier 
+            WHERE f.distance>1000
+            "
+req1<-dbSendQuery(con,req1_text)
+
+req1_df<-dbFetch(req1,n=-1)
+
+dbClearResult(req1)
+
+head(req1_df)
+
+table(req1_df$name)
+
+dist_flights<-req1_df%>%
+  group_by(name)%>%
+  tally()%>%
+  arrange(-n)
+
+dist_flights
+```
+
+
 *Quick Exercise:  Get data on airlines who fly at least 1000km, and number of flights over that length*
 
 We can combine multiple tables to answer questions about how multiple factors, like weather and carrier, might be related. 
@@ -181,6 +225,13 @@ weather_summary<-
   group_by(wind_gust)%>%
   summarize(avg_delay=mean(dep_delay,na.rm=TRUE))
 
+
+weather_summary_2<-
+  weather_df%>%
+  group_by(wind_speed)%>%
+  summarize(avg_delay=mean(dep_delay,na.rm=TRUE))
+
+
 weather_summary
 
 ```
@@ -189,7 +240,7 @@ As always, this data can then be plotted to view trends.
 
 ```{r}
 #Plot average delay by visibility
-g1<-ggplot(data=weather_summary,aes(x=wind_gust,y=avg_delay))
+g1<-ggplot(data=weather_summary_2,aes(x=wind_speed,y=avg_delay))
 g1<-g1+geom_point()
 g1
 
@@ -273,10 +324,4 @@ bat_full<-bat_full%>%
 ## MY ADVICE
 
 Unless you're going to be a database analyst, do a bare minimum in the DBMS. Instead, use the DBMS to generate tables of manageable size for your computer, then get to work with R. Also, buy low and sell high. 
-
-```{r}
-
-
-
-```
 

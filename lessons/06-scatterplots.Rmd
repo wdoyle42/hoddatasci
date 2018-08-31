@@ -1,8 +1,4 @@
----
-title: "Scatterplots"
-author: "Will Doyle"
-output: github_document
----
+# Scatterplots {#scatterplots}
 
 Scatterplots are the best way to present data that has a continuous response variable. When creating scatterplots, the idea is to show ALL of the data, and then show how your model is summarizing the relationships in that data. 
 
@@ -143,9 +139,15 @@ Better! Simplifying data can help.
 We can add a regression line to this simpler data
 
 ```{r}
-g1a<-g1a+geom_smooth(method=lm) # Add a line
-g1a
+g1b<-g1a+geom_smooth(method=lm) # Add a line
+g1b
 ```
+
+```{r}
+g1c<-g1a+geom_smooth(method=loess) # Add a line
+g1c
+```
+
 
 As we figured out in class last week, a simple line plot doesn't really do it. We need to transform that dependent variable. Luckily, ggplot has this kind of transformation built in. 
 

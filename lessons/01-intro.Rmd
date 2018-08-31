@@ -187,8 +187,12 @@ sc%>%filter(adm_rate<.1)%>%select(instnm,adm_rate,sat_avg)%>%arrange(sat_avg,adm
 sc%>%filter(adm_rate<.1)%>%select(instnm,adm_rate,sat_avg)%>%arrange(-sat_avg)
   
 ## New cut
-sc%>%filter(adm_rate>.3)%>%select(instnm,sat_avg,md_earn_wne_p6,stabbr)%>%arrange(stabbr,-sat_avg)%>%print(n=100)
+sc_sub <- sc%>%filter(adm_rate>.3)%>%
+  select(instnm,sat_avg,md_earn_wne_p6,stabbr)%>%
+  arrange(stabbr,-sat_avg)%>%print(n=100)
 ```
+
+
 
 *Quick Exercise*
 Choose a different college and two different things about that college. 

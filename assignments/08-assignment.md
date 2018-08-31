@@ -15,5 +15,5 @@ Complete the following steps.
 6. Calculate the AUC for the linear predictions from the ROC against the outcome for the training dataset. 
 7. Now, predict the probability of being a lemon using a logistic regression (`glm(y~x,family=binomial(link="logit")`)), again using covariates of your choosing. Add these to the existing linear model already give to you.  
 8. Make predictions from the logit model. Make sure these are probabilities. 
-9. Calculate the AUC for the linear predictions from the ROC. 
+9. Calculate the AUC for the predictions from the ROC based on the logit model. 
 10. (optional) submit your predictions from the testing dataset as a late submission to Kaggle and see how you do against real-wolrd competition. 

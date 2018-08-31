@@ -13,17 +13,16 @@ Today we'll be working with the pizza dataset, which comes from the subreddit ra
 library(tidyverse)
 ```
 
-    ## Loading tidyverse: ggplot2
-    ## Loading tidyverse: tibble
-    ## Loading tidyverse: tidyr
-    ## Loading tidyverse: readr
-    ## Loading tidyverse: purrr
-    ## Loading tidyverse: dplyr
+    ## ── Attaching packages ─────────────────────────────── tidyverse 1.2.1 ──
 
-    ## Conflicts with tidy packages ----------------------------------------------
+    ## ✔ ggplot2 2.2.1.9000     ✔ purrr   0.2.4     
+    ## ✔ tibble  1.3.4          ✔ dplyr   0.7.4     
+    ## ✔ tidyr   0.7.2          ✔ stringr 1.2.0     
+    ## ✔ readr   1.1.1          ✔ forcats 0.2.0
 
-    ## filter(): dplyr, stats
-    ## lag():    dplyr, stats
+    ## ── Conflicts ────────────────────────────────── tidyverse_conflicts() ──
+    ## ✖ dplyr::filter() masks stats::filter()
+    ## ✖ dplyr::lag()    masks stats::lag()
 
 ``` r
 library(knitr)
@@ -378,7 +377,7 @@ head(za)
 za_train<-za%>%sample_frac(.5)
 za_test<-setdiff(za,za_train)
 write_csv(za_train,path="za_train.csv")
-write_csv(za_train,path="za_test.csv")
+write_csv(za_test,path="za_test.csv")
 ```
 
 Conditional Means as a Classifier
@@ -559,6 +558,14 @@ lm_predict<-predict(lm_mod)
 ## Convert to binary, 1= >.5
 lm_predict_bin<-ifelse(lm_predict>.5,1,0)
 
+lpm_roc<-roc(lm_predict_bin,as.factor(lm_mod$y))
+
+auc(lpm_roc)
+```
+
+    ## [1] 0.5155284
+
+``` r
 ## Table of actual vs. predicted, what's going on here?
 lm_table<-table(lm_predict_bin,lm_mod$y)
 

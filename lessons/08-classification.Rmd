@@ -156,9 +156,25 @@ Now we can add this back in.
 ```{r}
 za<-za%>%left_join(za_sum,by="request_id")
 
-za%>%select(request_text,score)
-
 head(za)
+
+za<-za%>%select(got_pizza,
+                karma,
+                age,
+                raop_age,
+                pop_request,
+                activity,
+                total_posts,
+                raop_posts,
+                prev_raop_post,
+                words,
+                poor,
+                student,
+                grateful,
+                score
+                )
+
+save(za,file="za.RData")
 ```
 
 ```{r}
@@ -167,7 +183,10 @@ head(za)
 za_train<-za%>%sample_frac(.5)
 za_test<-setdiff(za,za_train)
 write_csv(za_train,path="za_train.csv")
-write_csv(za_train,path="za_test.csv")
+save(za_train,file="za_train.RData")
+write_csv(za_test,path="za_test.csv")
+save(za_test,file="za_test.RData")
+
 
 ```
 
@@ -262,6 +281,12 @@ lm_predict<-predict(lm_mod)
 
 ## Convert to binary, 1= >.5
 lm_predict_bin<-ifelse(lm_predict>.5,1,0)
+
+lpm_roc<-roc(lm_predict_bin,as.factor(lm_mod$y))
+
+auc(lpm_roc)
+ 
+
 
 ## Table of actual vs. predicted, what's going on here?
 lm_table<-table(lm_predict_bin,lm_mod$y)

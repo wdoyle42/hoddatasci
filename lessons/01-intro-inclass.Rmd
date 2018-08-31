@@ -8,6 +8,20 @@ output: github_document
  Complete the following steps:
 
 1. Calculate the average earnings for individuals at the most selective colleges, then compare that with individuals at the least selective colleges in the dataset. 
+```{r}
+
+```
+
+
+
+```{r}
+library(tidyverse)
+
+load("college.Rdata")
+
+
+```
+
 
 2. Find a way to determine whether colleges with very high SAT scores tend to be larger or smaller than colleges with low SAT scores. 
 
