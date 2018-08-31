@@ -25,7 +25,7 @@ For your first assignment, I want you to create a file called `01-assignment_<la
 
 1. A sentence that says "Hello, World"
 2. R output that summarizes one of the variables in the `colllege.Rdata` dataset
-3. R output that shows a scatterplot for two of the variables in the `college.Rdata` dataset. 
+
 Submit it under assignment 1, using the format `01-assignment_<lastname>.Rmd`. All assignments should be turned in using this format. Since my last name is Doyle, I would use `01-assignment_doyle.Rmd` as my file name. Unless your name is also Doyle, you should use a different name. 
 
 
