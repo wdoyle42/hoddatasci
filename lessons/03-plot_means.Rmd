@@ -73,7 +73,7 @@ gg<-gg+geom_density()
 gg
 
 ## Changing bandwidth-- not recommended, just showing you how. 
-gg<-gg+geom_density(bw=10)
+gg<-gg+geom_density(bw=10,color="blue")
 gg
 ```
 
@@ -94,35 +94,6 @@ at_sum
 ```
 
 Remember that the mean of a binary variable indicates the proportion of the population that has a certain characteristcs. So, in our case, `r  round(at_sum$attr_avg[2],2)` of the sample that travels frequently left the company in the last year. Our first plot will be a basic bar plot, showing the average levels of attrition. 
-
-```{r}
-at %>%
-  count(BusinessTravel,attrit) %>%
-  group_by(BusinessTravel)%>%
-  mutate(prop = prop.table(n)) %>%
-  select(-n) %>%
-  spread(attrit, prop)%>%kable()
-```
-
-
-```{r}
-at1<-at %>%
-  count(BusinessTravel,attrit) %>%
-  group_by(BusinessTravel)%>%
-  mutate(prop = prop.table(n)) %>%
-  select(-n) %>%
-  spread(attrit, prop)%>%kable()
-```
-
-```{r}
-gg<-ggplot(at1,aes(y=BusinessTravel,x=as.factor(attrit)))
-gg<-gg+geom_tile(aes(fill=prop))
-gg<-gg+scale_fill_gradient2(low="white",high="blue")
-gg<-gg+xlab("Left Company")
-gg
-```
-
-
 
 
 ```{r}
