@@ -336,7 +336,6 @@ gg<-ggplot(at_sum,aes(x=fct_reorder(BusinessTravel,attr_avg),y=attr_avg))
 gg<-gg+geom_bar(stat="identity",aes(fill=MaritalStatus),position="dodge")
 gg<-gg+facet_wrap(~Gender+WorkLifeBalance,ncol=4)
 
-
 gg<-gg+ylab("Proportion of Employees Who Departed")+xlab("Category")
 gg<-gg+theme(axis.text.x = element_text(angle = 60, hjust = 1))
 gg<-gg+ggtitle("Departure by Gender and Level of Work/Life Satisfaction")
