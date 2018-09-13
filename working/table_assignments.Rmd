@@ -8,14 +8,14 @@ output: github_document
 # R script to randomize class and place them at tables
 library(tidyverse)
 
-class<-read_csv("../../classlist.csv")
+class<-read_csv("classlist.csv")
 
 class["random"]<-runif(dim(class)[1])
 
 class<-class%>%arrange(random)
 
 class["index"]<-seq(1:dim(class)[1])
-ngroups<-4
+ngroups<-7
 class<-class%>%mutate(table=cut(index,ngroups,(1:ngroups)))
 
 class$rmse<-NA

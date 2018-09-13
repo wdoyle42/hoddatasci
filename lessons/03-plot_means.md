@@ -85,7 +85,7 @@ gg<-gg+geom_bar()
 gg
 ```
 
-![](03-plot_means_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-4-1.png)
+![](03-plot_means_files/figure-markdown_github/unnamed-chunk-4-1.png)
 
 The next univariate graphic you should know is for continuous variables. The first thing you generally want is a histogram.
 
@@ -95,7 +95,7 @@ gg<-gg+geom_histogram(binwidth = 1,fill="lightblue")
 gg
 ```
 
-![](03-plot_means_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-5-1.png) Density plots provide a continous graphic of the distribution of a variable:
+![](03-plot_means_files/figure-markdown_github/unnamed-chunk-5-1.png) Density plots provide a continous graphic of the distribution of a variable:
 
 ``` r
 gg<-ggplot(at,aes(x=DistanceFromHome))
@@ -103,7 +103,7 @@ gg<-gg+geom_density()
 gg
 ```
 
-![](03-plot_means_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-6-1.png)
+![](03-plot_means_files/figure-markdown_github/unnamed-chunk-6-1.png)
 
 ``` r
 ## Changing bandwidth-- not recommended, just showing you how. 
@@ -111,7 +111,7 @@ gg<-gg+geom_density(bw=10)
 gg
 ```
 
-![](03-plot_means_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-6-2.png)
+![](03-plot_means_files/figure-markdown_github/unnamed-chunk-6-2.png)
 
 Predicting Attrition
 --------------------
@@ -127,28 +127,13 @@ at_sum
 ```
 
     ## # A tibble: 3 x 2
-    ##      BusinessTravel  attr_avg
-    ##               <chr>     <dbl>
-    ## 1        Non-Travel 0.0800000
-    ## 2 Travel_Frequently 0.2490975
-    ## 3     Travel_Rarely 0.1495686
+    ##   BusinessTravel    attr_avg
+    ##   <chr>                <dbl>
+    ## 1 Non-Travel           0.08 
+    ## 2 Travel_Frequently    0.249
+    ## 3 Travel_Rarely        0.150
 
 Remember that the mean of a binary variable indicates the proportion of the population that has a certain characteristcs. So, in our case, 0.25 of the sample that travels frequently left the company in the last year. Our first plot will be a basic bar plot, showing the average levels of attrition.
-
-``` r
-at %>%
-  count(BusinessTravel,attrit) %>%
-  group_by(BusinessTravel)%>%
-  mutate(prop = prop.table(n)) %>%
-  select(-n) %>%
-  spread(attrit, prop)%>%kable()
-```
-
-| BusinessTravel     |          0|          1|
-|:-------------------|----------:|----------:|
-| Non-Travel         |  0.9200000|  0.0800000|
-| Travel\_Frequently |  0.7509025|  0.2490975|
-| Travel\_Rarely     |  0.8504314|  0.1495686|
 
 ``` r
 ## Bar Plot with aesthetics: mean attrition as height, business travel as cateogry
@@ -159,7 +144,7 @@ gg<-gg+geom_bar(stat="Identity")
 gg
 ```
 
-![](03-plot_means_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-9-1.png)
+![](03-plot_means_files/figure-markdown_github/unnamed-chunk-8-1.png)
 
 This is fine, but it should really be in the order of the underlying variable. We can use `fct_reorder` to do this.
 
@@ -179,7 +164,7 @@ gg<-gg+xlab("Amount of Travel")+ylab("Yearly Attrition")
 gg
 ```
 
-![](03-plot_means_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-10-1.png)
+![](03-plot_means_files/figure-markdown_github/unnamed-chunk-9-1.png)
 
 *Quick Exercise: Create a bar plot showing average attrition by department instead of travel*
 
@@ -192,11 +177,11 @@ at_sum
 ```
 
     ## # A tibble: 3 x 2
-    ##               Department  attr_avg
-    ##                    <chr>     <dbl>
-    ## 1        Human Resources 0.1904762
-    ## 2 Research & Development 0.1383975
-    ## 3                  Sales 0.2062780
+    ##   Department             attr_avg
+    ##   <chr>                     <dbl>
+    ## 1 Human Resources           0.190
+    ## 2 Research & Development    0.138
+    ## 3 Sales                     0.206
 
 ``` r
 gg<-ggplot(at_sum,aes(x=fct_reorder(Department,attr_avg),y=attr_avg))
@@ -209,7 +194,7 @@ gg<-gg+xlab("Department")+ylab("Yearly Attrition")
 gg
 ```
 
-![](03-plot_means_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-11-1.png)
+![](03-plot_means_files/figure-markdown_github/unnamed-chunk-10-1.png)
 
 A dot plot can be a good way of displaying conditional means as well. Many times dot plots are more easily understood if they are horizontal, so we'll use `coord_flip` to make it horizontal.
 
@@ -222,11 +207,11 @@ at_sum
 ```
 
     ## # A tibble: 3 x 2
-    ##      BusinessTravel  attr_avg
-    ##               <chr>     <dbl>
-    ## 1        Non-Travel 0.0800000
-    ## 2 Travel_Frequently 0.2490975
-    ## 3     Travel_Rarely 0.1495686
+    ##   BusinessTravel    attr_avg
+    ##   <chr>                <dbl>
+    ## 1 Non-Travel           0.08 
+    ## 2 Travel_Frequently    0.249
+    ## 3 Travel_Rarely        0.150
 
 ``` r
 ## Now a dot plot
@@ -236,7 +221,7 @@ gg<-gg+coord_flip()
 gg
 ```
 
-![](03-plot_means_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-12-1.png)
+![](03-plot_means_files/figure-markdown_github/unnamed-chunk-11-1.png)
 
 *Quick Exercise: Create a dot plot showing average attrition by department*
 
@@ -257,14 +242,14 @@ at_sum
 
     ## # A tibble: 6 x 3
     ## # Groups:   BusinessTravel [?]
-    ##      BusinessTravel Gender   attr_avg
-    ##               <chr>  <chr>      <dbl>
-    ## 1        Non-Travel Female 0.06122449
-    ## 2        Non-Travel   Male 0.08910891
-    ## 3 Travel_Frequently Female 0.25641026
-    ## 4 Travel_Frequently   Male 0.24375000
-    ## 5     Travel_Rarely Female 0.12796209
-    ## 6     Travel_Rarely   Male 0.16425121
+    ##   BusinessTravel    Gender attr_avg
+    ##   <chr>             <chr>     <dbl>
+    ## 1 Non-Travel        Female   0.0612
+    ## 2 Non-Travel        Male     0.0891
+    ## 3 Travel_Frequently Female   0.256 
+    ## 4 Travel_Frequently Male     0.244 
+    ## 5 Travel_Rarely     Female   0.128 
+    ## 6 Travel_Rarely     Male     0.164
 
 ``` r
 ## PLot it using a bar plot
@@ -273,14 +258,14 @@ gg<-gg+geom_bar(stat="identity",aes(fill=Gender),position="dodge")
 gg
 ```
 
-![](03-plot_means_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-13-1.png)
+![](03-plot_means_files/figure-markdown_github/unnamed-chunk-12-1.png)
 
 ``` r
 gg<-gg+ylab("Pr(Attrition)")+xlab("Frequency of Travel")
 gg
 ```
 
-![](03-plot_means_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-13-2.png)
+![](03-plot_means_files/figure-markdown_github/unnamed-chunk-12-2.png)
 
 ``` r
 ggsave(gg, file="~/Desktop/travel.png")
@@ -296,7 +281,7 @@ gg<-gg+coord_flip()
 gg
 ```
 
-![](03-plot_means_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-13-3.png)
+![](03-plot_means_files/figure-markdown_github/unnamed-chunk-12-3.png)
 
 *Quick Exercise: Create either a bar plot or a dot plot showing attrition by department AND field of education*
 
@@ -315,26 +300,26 @@ at_sum
 
     ## # A tibble: 18 x 4
     ## # Groups:   BusinessTravel, Gender [?]
-    ##       BusinessTravel Gender MaritalStatus   attr_avg
-    ##                <chr>  <chr>         <chr>      <dbl>
-    ##  1        Non-Travel Female      Divorced 0.00000000
-    ##  2        Non-Travel Female       Married 0.00000000
-    ##  3        Non-Travel Female        Single 0.20000000
-    ##  4        Non-Travel   Male      Divorced 0.03030303
-    ##  5        Non-Travel   Male       Married 0.08333333
-    ##  6        Non-Travel   Male        Single 0.15625000
-    ##  7 Travel_Frequently Female      Divorced 0.20833333
-    ##  8 Travel_Frequently Female       Married 0.13636364
-    ##  9 Travel_Frequently Female        Single 0.38775510
-    ## 10 Travel_Frequently   Male      Divorced 0.20512821
-    ## 11 Travel_Frequently   Male       Married 0.17567568
-    ## 12 Travel_Frequently   Male        Single 0.38297872
-    ## 13     Travel_Rarely Female      Divorced 0.04878049
-    ## 14     Travel_Rarely Female       Married 0.12195122
-    ## 15     Travel_Rarely Female        Single 0.18518519
-    ## 16     Travel_Rarely   Male      Divorced 0.10869565
-    ## 17     Travel_Rarely   Male       Married 0.12714777
-    ## 18     Travel_Rarely   Male        Single 0.26041667
+    ##    BusinessTravel    Gender MaritalStatus attr_avg
+    ##    <chr>             <chr>  <chr>            <dbl>
+    ##  1 Non-Travel        Female Divorced        0     
+    ##  2 Non-Travel        Female Married         0     
+    ##  3 Non-Travel        Female Single          0.2   
+    ##  4 Non-Travel        Male   Divorced        0.0303
+    ##  5 Non-Travel        Male   Married         0.0833
+    ##  6 Non-Travel        Male   Single          0.156 
+    ##  7 Travel_Frequently Female Divorced        0.208 
+    ##  8 Travel_Frequently Female Married         0.136 
+    ##  9 Travel_Frequently Female Single          0.388 
+    ## 10 Travel_Frequently Male   Divorced        0.205 
+    ## 11 Travel_Frequently Male   Married         0.176 
+    ## 12 Travel_Frequently Male   Single          0.383 
+    ## 13 Travel_Rarely     Female Divorced        0.0488
+    ## 14 Travel_Rarely     Female Married         0.122 
+    ## 15 Travel_Rarely     Female Single          0.185 
+    ## 16 Travel_Rarely     Male   Divorced        0.109 
+    ## 17 Travel_Rarely     Male   Married         0.127 
+    ## 18 Travel_Rarely     Male   Single          0.260
 
 ``` r
 gg<-ggplot(at_sum,aes(x=reorder(BusinessTravel,attr_avg),
@@ -350,7 +335,7 @@ gg<-gg+coord_flip()
 gg
 ```
 
-![](03-plot_means_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-14-1.png)
+![](03-plot_means_files/figure-markdown_github/unnamed-chunk-13-1.png)
 
 ``` r
  ggsave(gg,file="~/Desktop/travel.png")
@@ -371,7 +356,7 @@ gg<-gg+scale_fill_manual(values =mypal )
 gg
 ```
 
-![](03-plot_means_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-15-1.png)
+![](03-plot_means_files/figure-markdown_github/unnamed-chunk-14-1.png)
 
 You can also use `RColorBrewer` which has a wide variety of palettes already built. Below I use the qualitative palette creatively named "Set1".
 
@@ -387,7 +372,7 @@ gg<-gg+scale_fill_brewer(palette = "Set1")
 gg
 ```
 
-![](03-plot_means_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-16-1.png)
+![](03-plot_means_files/figure-markdown_github/unnamed-chunk-15-1.png)
 
 *Quick Exercise: Plot predicted attrition by Education Field, Department and Gender*
 
@@ -409,17 +394,17 @@ at_sum
 
     ## # A tibble: 70 x 5
     ##    BusinessTravel Gender MaritalStatus WorkLifeBalance attr_avg
-    ##             <chr>  <chr>         <chr>           <int>    <dbl>
-    ##  1     Non-Travel Female      Divorced               2        0
-    ##  2     Non-Travel Female      Divorced               3        0
-    ##  3     Non-Travel Female      Divorced               4        0
-    ##  4     Non-Travel Female       Married               1        0
-    ##  5     Non-Travel Female       Married               2        0
-    ##  6     Non-Travel Female       Married               3        0
-    ##  7     Non-Travel Female       Married               4        0
-    ##  8     Non-Travel Female        Single               1        0
-    ##  9     Non-Travel Female        Single               3        0
-    ## 10     Non-Travel   Male      Divorced               2        0
+    ##    <chr>          <chr>  <chr>                   <int>    <dbl>
+    ##  1 Non-Travel     Female Divorced                    2        0
+    ##  2 Non-Travel     Female Divorced                    3        0
+    ##  3 Non-Travel     Female Divorced                    4        0
+    ##  4 Non-Travel     Female Married                     1        0
+    ##  5 Non-Travel     Female Married                     2        0
+    ##  6 Non-Travel     Female Married                     3        0
+    ##  7 Non-Travel     Female Married                     4        0
+    ##  8 Non-Travel     Female Single                      1        0
+    ##  9 Non-Travel     Female Single                      3        0
+    ## 10 Non-Travel     Male   Divorced                    2        0
     ## # ... with 60 more rows
 
 ``` r
@@ -439,18 +424,18 @@ at_sum%>%select(grouping,attr_avg)
 ```
 
     ## # A tibble: 70 x 2
-    ##                                     grouping attr_avg
-    ##                                       <fctr>    <dbl>
+    ##    grouping                                  attr_avg
+    ##    <fct>                                        <dbl>
     ##  1 Non-Travel, Female, Divorced, Work/Life:2        0
     ##  2 Non-Travel, Female, Divorced, Work/Life:3        0
     ##  3 Non-Travel, Female, Divorced, Work/Life:4        0
-    ##  4  Non-Travel, Female, Married, Work/Life:1        0
-    ##  5  Non-Travel, Female, Married, Work/Life:2        0
-    ##  6  Non-Travel, Female, Married, Work/Life:3        0
-    ##  7  Non-Travel, Female, Married, Work/Life:4        0
-    ##  8   Non-Travel, Female, Single, Work/Life:1        0
-    ##  9   Non-Travel, Female, Single, Work/Life:3        0
-    ## 10   Non-Travel, Male, Divorced, Work/Life:2        0
+    ##  4 Non-Travel, Female, Married, Work/Life:1         0
+    ##  5 Non-Travel, Female, Married, Work/Life:2         0
+    ##  6 Non-Travel, Female, Married, Work/Life:3         0
+    ##  7 Non-Travel, Female, Married, Work/Life:4         0
+    ##  8 Non-Travel, Female, Single, Work/Life:1          0
+    ##  9 Non-Travel, Female, Single, Work/Life:3          0
+    ## 10 Non-Travel, Male, Divorced, Work/Life:2          0
     ## # ... with 60 more rows
 
 ``` r
@@ -463,7 +448,7 @@ gg<-gg+coord_flip()
 gg
 ```
 
-![](03-plot_means_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-17-1.png)
+![](03-plot_means_files/figure-markdown_github/unnamed-chunk-16-1.png)
 
 ``` r
 ##Cleaning up a bit
@@ -475,10 +460,10 @@ gg<-gg+coord_flip()
 gg
 ```
 
-![](03-plot_means_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-17-2.png)
+![](03-plot_means_files/figure-markdown_github/unnamed-chunk-16-2.png)
 
 The other solution is to use facets, or lots of little graphs, which show how the pattern varies across different groups. In this case, our groups will be defined by gender and work/life balance.
 
-![](03-plot_means_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-18-1.png)
+![](03-plot_means_files/figure-markdown_github/unnamed-chunk-17-1.png)
 
 *Sort of Quick Exercise: Try and Replicate one of the above plots using performance review, department, education field and overtime. *

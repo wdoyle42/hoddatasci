@@ -47,8 +47,6 @@ table(at$attrit,at$Attrition)
 ```
 
 
-
-
 ##Univariate Graphics
 
 Univariate graphics help us understand what individual variables look like-- how are they distibuted across the sample? Here's a quick rundown on some univariate graphics. Say we wanted a quick count of who was in each department. We can use geom_bar to get this done. By default, this will give us a count in each department. 
@@ -125,6 +123,30 @@ gg
 
 *Quick Exercise: Create a bar plot showing average attrition by department instead of travel*
 
+```{r}
+at_sum<-at%>%group_by(Department)%>%
+  summarize(mean_attrit=mean(attrit))
+
+
+## Bar Plot with aesthetics: mean attrition as height, business travel as cateogry
+gg<-ggplot(at_sum,aes(x=Department,y=mean_attrit))
+## Use bar plot geometry, height of bars set by level observed in dataset
+gg<-gg+geom_bar(stat="Identity")
+## Print
+gg
+
+
+gg<-ggplot(at_sum,aes(x=fct_reorder(Department,mean_attrit),y=mean_attrit))
+
+## Use bar plot geometry, height of bars set by level observed in dataset
+gg<-gg+geom_bar(stat="Identity")
+## Print
+gg
+
+
+```
+
+
 
 ```{r}
 
@@ -187,6 +209,7 @@ gg
 
 gg<-gg+ylab("Pr(Attrition)")+xlab("Frequency of Travel")
 gg
+
 ggsave(gg, file="~/Desktop/travel.png")
 ## Plot it using a dot plot
 gg<-ggplot(at_sum,aes(x=reorder(BusinessTravel,attr_avg),y=attr_avg),color=Gender)
@@ -204,7 +227,6 @@ gg
 We can continue this logic with three variables. Now we're going to summarize by Travel, Gender and Marital status. Here we're going to use an additional tool in our arsenal: Faceting. Faceting means making multiple graphs with the same structure. In the code below, we will arrange positions based on travel, color based on gender, and then split the graphic by marital status. 
 
 ```{r}
-
 at_sum<-at%>%
   group_by(BusinessTravel,Gender,MaritalStatus)%>%
   summarize(attr_avg=mean(attrit))
