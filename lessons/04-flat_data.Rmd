@@ -116,13 +116,13 @@ Notice that no column is selected, which R interprets as using ALL columns.
 
 ## Cleaning a Dataset
 
-First, let's git rid of unwanted columns by selecting a list of things we don't want, using the `-(c(element1,element2,...))` setup. 
+First, let's git rid of unwanted columns by selecting a list of things we don't want, using the `slice(-c(element1,element2,...))` or `select(slice(-c(element1,element2,...)))` setup. 
 
 ```{r}
 # Now need to clean up 
 #Get rid of unwanted columns
 
-free2<-free[ ,-(c(3,6,9,12,15,18))]
+free2<-free%>%select(-c(3,6,9,12,15,18))
 
 #Get rid of unwanted rows
 free2<-free2%>%filter(is.na(X__1)==FALSE)
@@ -132,7 +132,7 @@ Now we're going to select some things we DO want, by using the `number_1:number_
 
 ```{r}
 ##50 states plus dc only
-free2<-free2[2:52,]
+free2<-free2%>%slice(2:52)
 
 head(free2)
 
