@@ -22,12 +22,21 @@ gg
 ```
 
 2. Create a graph that shows the average level of monthly income by field of education.
+
+```{r}
+gg<-ggplot(data=at,aes(x=Education,y=MonthlyIncome))
+gg<-gg+geom_bar(stat="mean")
+gg
+```
+
+
 ```{r}
 at_sum<-at%>%
-  group_by(Education)%>%
+  group_by(EducationField)%>%
   summarize(mean_income=mean(MonthlyIncome))
 
-gg<-ggplot(data=at_sum,aes(x=Education,y=mean_income))
+gg<-ggplot(data=at_sum,aes(x=fct_reorder(as.factor(EducationField),mean_income)
+                                        ,y=mean_income))
 gg<-gg+geom_bar(stat="identity")
 gg
 ```
@@ -37,10 +46,11 @@ gg
 
 ```{r}
 at_sum<-at%>%
-  group_by(Education,Gender)%>%
+  group_by(EducationField,Gender)%>%
   summarize(mean_income=mean(MonthlyIncome))
 
-gg<-ggplot(data=at_sum,aes(x=Education,y=mean_income,fill=Gender))
+gg<-ggplot(data=at_sum,aes(x=fct_reorder(as.factor(EducationField),mean_income),
+                                        y=mean_income,fill=Gender))
 gg<-gg+geom_bar(stat="identity",position = "dodge")
 gg
 ```
@@ -49,10 +59,12 @@ gg
 
 ```{r}
 at_sum<-at%>%
-  group_by(Education,Gender,JobLevel)%>%
+  group_by(EducationField,Gender,JobLevel)%>%
   summarize(mean_income=mean(MonthlyIncome))
 
-gg<-ggplot(data=at_sum,aes(x=Education,y=mean_income,fill=Gender))
+
+gg<-ggplot(data=at_sum,aes(x=fct_reorder(as.factor(EducationField),mean_income),
+                                        y=mean_income,fill=Gender))
 gg<-gg+geom_bar(stat="identity",position = "dodge")
 gg<-gg+facet_wrap(~JobLevel)
 gg
@@ -63,13 +75,16 @@ gg
 
 ```{r}
 at_sum<-at%>%
-  group_by(Education,Gender,JobLevel,Department)%>%
+  group_by(EducationField,Gender,JobLevel,Department)%>%
   summarize(mean_income=mean(MonthlyIncome))
 
-gg<-ggplot(data=at_sum,aes(x=Education,y=mean_income,fill=Gender))
+
+gg<-ggplot(data=at_sum,aes(x=fct_reorder(as.factor(EducationField),mean_income),
+                                        y=mean_income,fill=Gender))
 gg<-gg+geom_bar(stat="identity",position = "dodge")
 gg<-gg+facet_wrap(~Department+JobLevel,nrow=3)
 gg<-gg+ylab("Average Montly Income")
+gg<-gg+theme_fivethirtyeight()
 gg
 ```
 
