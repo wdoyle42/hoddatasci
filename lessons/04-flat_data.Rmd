@@ -36,7 +36,7 @@ my.names<-names(hsb)
 write_delim(hsb, path="hsb.txt",delim="\t")
 
 write_delim(hsb, path="hsb_semicolon.txt",delim=";")
-#gdata::write.fwf(data.frame(hsb),file="hsb.dat",sep="",colnames=FALSE)
+gdata::write.fwf(data.frame(hsb),file="hsb.dat",sep="",colnames=FALSE)
 ```
 
 *Quick exercise: write out the HSB file with a semicolon delimiter*
@@ -267,14 +267,20 @@ Most of the time, you should store your data as a csv file. This will ensure tha
 
 ```{r}
 #Saving as an R file
-save(free2,file="frl.Rdata")
+save(free_tidy,file="free_tidy.Rdata")
 ```
 
 Otherwise, go with csv, like so:
 ```{r}
 #Outputting delimited
-write_csv(free2,"frl.csv")
+write_csv(free_tidy,"free_tidy.csv")
 ```
+
+```{r}
+library(writexl)
+write_xlsx(free_tidy,path="free_tidy.xlsx")
+```
+
 
 ## Databses and flat files
 
