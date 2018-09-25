@@ -22,7 +22,7 @@ cex<-cex%>%mutate(inc_rank=inc_rank*100)
 
 ## Get levels of childage right
 
-cex<-cex%>%mutate(childage=fct_recode(f=childage,
+cex<-cex%>%mutate(childage=fct_recode(.f=as.factor(childage),
                      "No kids"="0", 
 "All less 6"="1",
  "Oldest b/t 6 and 11"="2",
@@ -87,8 +87,15 @@ myprob=.25 ## This gives the number of groups--.25=4 groups
 
 ## Create a variable for quantiles of college education
 cex<-cex%>%mutate(fam_income_level=ntile(inc_rank,4))
+
+cex<-cex%>%mutate(fam_income_level=as_factor(as.character(fam_income_level)))
+
+
 cex_sum<-cex%>%group_by(fam_income_level)%>%summarize(groc_fam=mean(grocery_food))
-cex_sum<-cex_sum%>%mutate(fam_income_level=as.factor(fam_income_level))
+
+
+cex_sum<-cex_sum%>%mutate(fam_income_level=as.factor(as.character(fam_income_level)))
+
 
 gg<-ggplot(cex_sum,aes(x=fct_reorder(f=fam_income_level,groc_fam),y=groc_fam,fill=fam_income_level))
 

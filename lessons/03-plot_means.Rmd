@@ -305,14 +305,20 @@ at_sum%>%select(grouping,attr_avg)
 at_sum<-at_sum%>%filter(attr_avg>.01)
 
 gg<-ggplot(at_sum,aes(x=fct_reorder(grouping,attr_avg),y=attr_avg))
-gg<-gg+geom_bar(stat="identity",aes(fill=MaritalStatus))
+gg<-gg+geom_bar(stat="identity",aes(fill=WorkLifeBalance))
 gg<-gg+coord_flip()
 gg
 
 ##Cleaning up a bit
 
 gg<-ggplot(at_sum,aes(x=fct_reorder(grouping,attr_avg),y=attr_avg))
-gg<-gg+geom_bar(stat="identity",aes(fill=MaritalStatus))
+gg<-gg+geom_bar(stat="identity",aes(fill=WorkLifeBalance))
+gg<-gg+ylab("Proportion of Employees Who Departed")+xlab("Category")
+gg<-gg+coord_flip()
+gg
+
+gg<-ggplot(at_sum,aes(x=fct_reorder(grouping,attr_avg),y=attr_avg))
+gg<-gg+geom_point(aes(color=WorkLifeBalance))
 gg<-gg+ylab("Proportion of Employees Who Departed")+xlab("Category")
 gg<-gg+coord_flip()
 gg

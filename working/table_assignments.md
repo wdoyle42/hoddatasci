@@ -6,14 +6,14 @@ Table Assignments
 library(tidyverse)
 ```
 
-    ## ── Attaching packages ───────────────────────────────────────────── tidyverse 1.2.1 ──
+    ## ── Attaching packages ──────────────────────────────────────────────────────── tidyverse 1.2.1 ──
 
     ## ✔ ggplot2 3.0.0     ✔ purrr   0.2.5
     ## ✔ tibble  1.4.2     ✔ dplyr   0.7.6
     ## ✔ tidyr   0.8.1     ✔ stringr 1.3.1
     ## ✔ readr   1.1.1     ✔ forcats 0.3.0
 
-    ## ── Conflicts ──────────────────────────────────────────────── tidyverse_conflicts() ──
+    ## ── Conflicts ─────────────────────────────────────────────────────────── tidyverse_conflicts() ──
     ## ✖ dplyr::filter() masks stats::filter()
     ## ✖ dplyr::lag()    masks stats::lag()
 
@@ -44,21 +44,21 @@ print(select(class,first_name,last_name,table),n=100)
     ## # A tibble: 15 x 3
     ##    first_name last_name  table
     ##    <chr>      <chr>      <fct>
-    ##  1 Melissa    Dunn       1    
-    ##  2 Angelina   Xu         1    
-    ##  3 Jason      Washington 1    
-    ##  4 Cynthia    Shen       2    
+    ##  1 Veer       Shah       1    
+    ##  2 Carol      Cheng      1    
+    ##  3 Cynthia    Shen       1    
+    ##  4 Jason      Washington 2    
     ##  5 Cindy      Ni         2    
-    ##  6 Ruby       Cho        3    
-    ##  7 Lauren     Simkovic   3    
-    ##  8 Stephanie  Zhang      4    
-    ##  9 Sydney     Banks      4    
-    ## 10 Alexander  Young      5    
-    ## 11 Veer       Shah       5    
-    ## 12 Emily      Saperstone 6    
+    ##  6 Emily      Saperstone 3    
+    ##  7 Angelina   Xu         3    
+    ##  8 Sydney     Banks      4    
+    ##  9 Stephanie  Zhang      4    
+    ## 10 Melissa    Dunn       5    
+    ## 11 Alexander  Young      5    
+    ## 12 Bingrong   Zhang      6    
     ## 13 Dmitry     Semenov    6    
-    ## 14 Carol      Cheng      7    
-    ## 15 Bingrong   Zhang      7
+    ## 14 Lauren     Simkovic   7    
+    ## 15 Ruby       Cho        7
 
 ``` r
 names(class)

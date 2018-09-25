@@ -13,7 +13,7 @@ $$Y=\beta_0+\beta_1 x_1 +\beta_2 x_2+ ... \beta_k x_k + \epsilon$$
 
 It's just a linear, additive model. Y increases or decreases as a function of x, with multiple x's included. $\epsilon$ is the extent to which an individual value is above or below the line created. 
 
-Let's say that you've got some consumer data and you want to target those families that are likely to spend between  \$100and \$500 a month on dining out. We would need to be able to predict which families would spend in that range based on observable characteristics like family size, income and family type. 
+Let's say that you've got some consumer data and you want to target those families that are likely to spend between  \$100 and \$500 a month on dining out. We would need to be able to predict which families would spend in that range based on observable characteristics like family size, income and family type. 
 
 We're going to be working with expenditure data from the 2012 administration of the consumer expenditure survey. The first bit of code gets the libraries we need, the data we need, and opens up a codebook for the data. 
 

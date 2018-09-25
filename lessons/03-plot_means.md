@@ -107,7 +107,7 @@ gg
 
 ``` r
 ## Changing bandwidth-- not recommended, just showing you how. 
-gg<-gg+geom_density(bw=10)
+gg<-gg+geom_density(bw=10,color="blue")
 gg
 ```
 
@@ -169,6 +169,32 @@ gg
 *Quick Exercise: Create a bar plot showing average attrition by department instead of travel*
 
 ``` r
+at_sum<-at%>%group_by(Department)%>%
+  summarize(mean_attrit=mean(attrit))
+
+
+## Bar Plot with aesthetics: mean attrition as height, business travel as cateogry
+gg<-ggplot(at_sum,aes(x=Department,y=mean_attrit))
+## Use bar plot geometry, height of bars set by level observed in dataset
+gg<-gg+geom_bar(stat="Identity")
+## Print
+gg
+```
+
+![](03-plot_means_files/figure-markdown_github/unnamed-chunk-10-1.png)
+
+``` r
+gg<-ggplot(at_sum,aes(x=fct_reorder(Department,mean_attrit),y=mean_attrit))
+
+## Use bar plot geometry, height of bars set by level observed in dataset
+gg<-gg+geom_bar(stat="Identity")
+## Print
+gg
+```
+
+![](03-plot_means_files/figure-markdown_github/unnamed-chunk-10-2.png)
+
+``` r
 at_sum<-at%>%
   group_by(Department)%>%
   summarize(attr_avg=mean(attrit))
@@ -194,7 +220,7 @@ gg<-gg+xlab("Department")+ylab("Yearly Attrition")
 gg
 ```
 
-![](03-plot_means_files/figure-markdown_github/unnamed-chunk-10-1.png)
+![](03-plot_means_files/figure-markdown_github/unnamed-chunk-11-1.png)
 
 A dot plot can be a good way of displaying conditional means as well. Many times dot plots are more easily understood if they are horizontal, so we'll use `coord_flip` to make it horizontal.
 
@@ -221,7 +247,7 @@ gg<-gg+coord_flip()
 gg
 ```
 
-![](03-plot_means_files/figure-markdown_github/unnamed-chunk-11-1.png)
+![](03-plot_means_files/figure-markdown_github/unnamed-chunk-12-1.png)
 
 *Quick Exercise: Create a dot plot showing average attrition by department*
 
@@ -258,14 +284,14 @@ gg<-gg+geom_bar(stat="identity",aes(fill=Gender),position="dodge")
 gg
 ```
 
-![](03-plot_means_files/figure-markdown_github/unnamed-chunk-12-1.png)
+![](03-plot_means_files/figure-markdown_github/unnamed-chunk-13-1.png)
 
 ``` r
 gg<-gg+ylab("Pr(Attrition)")+xlab("Frequency of Travel")
 gg
 ```
 
-![](03-plot_means_files/figure-markdown_github/unnamed-chunk-12-2.png)
+![](03-plot_means_files/figure-markdown_github/unnamed-chunk-13-2.png)
 
 ``` r
 ggsave(gg, file="~/Desktop/travel.png")
@@ -281,7 +307,7 @@ gg<-gg+coord_flip()
 gg
 ```
 
-![](03-plot_means_files/figure-markdown_github/unnamed-chunk-12-3.png)
+![](03-plot_means_files/figure-markdown_github/unnamed-chunk-13-3.png)
 
 *Quick Exercise: Create either a bar plot or a dot plot showing attrition by department AND field of education*
 
@@ -335,7 +361,7 @@ gg<-gg+coord_flip()
 gg
 ```
 
-![](03-plot_means_files/figure-markdown_github/unnamed-chunk-13-1.png)
+![](03-plot_means_files/figure-markdown_github/unnamed-chunk-14-1.png)
 
 ``` r
  ggsave(gg,file="~/Desktop/travel.png")
@@ -356,7 +382,7 @@ gg<-gg+scale_fill_manual(values =mypal )
 gg
 ```
 
-![](03-plot_means_files/figure-markdown_github/unnamed-chunk-14-1.png)
+![](03-plot_means_files/figure-markdown_github/unnamed-chunk-15-1.png)
 
 You can also use `RColorBrewer` which has a wide variety of palettes already built. Below I use the qualitative palette creatively named "Set1".
 
@@ -372,7 +398,7 @@ gg<-gg+scale_fill_brewer(palette = "Set1")
 gg
 ```
 
-![](03-plot_means_files/figure-markdown_github/unnamed-chunk-15-1.png)
+![](03-plot_means_files/figure-markdown_github/unnamed-chunk-16-1.png)
 
 *Quick Exercise: Plot predicted attrition by Education Field, Department and Gender*
 
@@ -443,27 +469,27 @@ at_sum%>%select(grouping,attr_avg)
 at_sum<-at_sum%>%filter(attr_avg>.01)
 
 gg<-ggplot(at_sum,aes(x=fct_reorder(grouping,attr_avg),y=attr_avg))
-gg<-gg+geom_bar(stat="identity",aes(fill=MaritalStatus))
+gg<-gg+geom_bar(stat="identity",aes(fill=WorkLifeBalance))
 gg<-gg+coord_flip()
 gg
 ```
 
-![](03-plot_means_files/figure-markdown_github/unnamed-chunk-16-1.png)
+![](03-plot_means_files/figure-markdown_github/unnamed-chunk-17-1.png)
 
 ``` r
 ##Cleaning up a bit
 
 gg<-ggplot(at_sum,aes(x=fct_reorder(grouping,attr_avg),y=attr_avg))
-gg<-gg+geom_bar(stat="identity",aes(fill=MaritalStatus))
+gg<-gg+geom_bar(stat="identity",aes(fill=WorkLifeBalance))
 gg<-gg+ylab("Proportion of Employees Who Departed")+xlab("Category")
 gg<-gg+coord_flip()
 gg
 ```
 
-![](03-plot_means_files/figure-markdown_github/unnamed-chunk-16-2.png)
+![](03-plot_means_files/figure-markdown_github/unnamed-chunk-17-2.png)
 
 The other solution is to use facets, or lots of little graphs, which show how the pattern varies across different groups. In this case, our groups will be defined by gender and work/life balance.
 
-![](03-plot_means_files/figure-markdown_github/unnamed-chunk-17-1.png)
+![](03-plot_means_files/figure-markdown_github/unnamed-chunk-18-1.png)
 
 *Sort of Quick Exercise: Try and Replicate one of the above plots using performance review, department, education field and overtime. *

@@ -76,8 +76,19 @@ gg
 ```{r}
 at_sum<-at%>%
   group_by(EducationField,Gender,JobLevel,Department)%>%
-  summarize(mean_income=mean(MonthlyIncome))
+  summarize(mean_income=mean(MonthlyIncome))%>%
+  ungroup()
 
+
+at_sum<-at_sum%>%mutate(grouping=paste(EducationField,":",
+                                        Gender,":",
+                                        "Job level:", JobLevel,
+                                        Department))
+
+gg<-ggplot(data=at_sum,aes(x=fct_reorder(as.factor(grouping), mean_income),
+                                        y=mean_income,fill=JobLevel))
+gg<-gg+geom_bar(stat="identity")
+gg
 
 gg<-ggplot(data=at_sum,aes(x=fct_reorder(as.factor(EducationField),mean_income),
                                         y=mean_income,fill=Gender))
