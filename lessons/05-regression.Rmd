@@ -194,7 +194,15 @@ cex<-cex%>%mutate(pred1=predict(mod1)) #predict using data in memory
  
 rmse_1<-with(cex, rmse(dine_out,pred1)) ; rmse_1
 
+mod1b<-lm(dine_out~grocery_food,data=cex); summary(mod1b)
+
+cex<-cex%>%mutate(pred1b=predict(mod1b)) #predict using data in memory
+ 
+rmse_1b<-with(cex, rmse(dine_out,pred1b)) ; rmse_1b
+
 mod1a<-lm(dine_out~inclass,data=cex); summary(mod1a)
+
+
 
 ```
 
