@@ -27,7 +27,6 @@ library(ModelMetrics)
 load("cex.RData")
 
 
-
 ## Create training and testing datasets
 
 ##---------------------------------------
@@ -93,8 +92,8 @@ codebook<-data.frame(my.vals, explanation)
 
 cex<-cex%>%mutate(pov_cym=ifelse(pov_cym=="",NA,pov_cym))
 cex<-cex%>%mutate(pov_cym=fct_recode(as.factor(pov_cym),
-                                     "In Poverty"="2",
-                                     "Not in Poverty"="3"))
+                                     "In Poverty"="1",
+                                     "Not in Poverty"="2"))
 
 cex<-filter(cex,is.na(pov_cym)==FALSE)
 
@@ -280,7 +279,7 @@ gg
 mod4<-lm(log(dine_out+1)~ #log of dining out, plus one for zeros
            +log(grocery+1)+ #log of groceries, plus one again
            pov_cym+ #poverty
-           fam_size+#family size
+           fam_size #family size
          ,data=cex, na.action = "na.exclude")
 
 
@@ -389,11 +388,11 @@ r_predict<-(predict(mod5,newdata = cex_test[1,]));r_predict
 
 ## Comparing test and training rmse
 
-rmse_5_test<-exp(rmse(log(cex_test$dine_out+1),cex_test$pred5))
+rmsle_5_test<-modelr::rmse(mod5,cex_test)
 
-rmse_5;rmse_5_test
+rmsle_5;rmsle_5_test
 ```
-Why is the value from the testing dataset so much larger? 
+Why is the value from the testing dataset larger? 
 
 *Quick exercise*
 
