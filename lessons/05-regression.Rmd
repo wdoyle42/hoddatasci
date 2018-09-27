@@ -267,41 +267,46 @@ _Quick Exercise_ Use a subset of the cex data with reasonable bounds on both din
 The big issue as you can see with this data is that the outcome variable isn't normally distributed: most people spend very little on dining out, while some people spend quite a lot. In situations like this, which are VERY common when dealing with monetary values, we want to take the natural log of the outcome variable. A natural log is the power by which we would have to raise $e$, Euler's constant, to be that value: $e^{ln(x)}=x$, or 
 $ln(e^x)=x$.
 
-Economists just basically take the natural log of everything that's denominated in dollar terms, which you probably should do as well. You'll notice in the equations below that I specify the `log()` of both dining out and grocery spending. 
+Economists just basically take the natural log of everything that's denominated in dollar terms, which you probably should do as well. You'll notice in the equations below that I specify the `log()` of both dining out and grocery spending. The log transform won't work with values of 0, so the transformation also includes a `+1` to add a dollar to each 0. 
 
 
 ```{r}
+
+gg<-ggplot(cex,aes(x=log(dine_out+1)))
+gg<-gg+geom_density()
+gg
 
 #Part 4: Working with transformations
 mod4<-lm(log(dine_out+1)~ #log of dining out, plus one for zeros
            +log(grocery+1)+ #log of groceries, plus one again
            pov_cym+ #poverty
            fam_size+#family size
-           log(booze_out+1) 
          ,data=cex, na.action = "na.exclude")
 
-gg<-ggplot(cex,aes(x=log(booze_out+1)))
-gg<-gg+geom_density()
-gg
 
 summary(mod4)
 
 cex<-cex%>%mutate(pred4=predict(mod4))
 
-## Getting set up for rmse function
-compare_data<-data.frame(cex$dine_out,cex$pred4)%>%filter(is.na(cex.pred4)==FALSE)
-names(compare_data)<-c("dine_out","pred4")
+## Use modelr:: rmse to get predictions
+rmsle_4<-modelr::rmse(mod4,cex)
 
-rmse_4<-with(compare_data,exp(rmse(log(dine_out+1),pred4)));rmse_4
+## get just the data needed to calculate rmse
+rmse_4_data<-cex%>%
+  select(dine_out,pred4)%>%
+  filter(!is.na(pred4))%>%
+  mutate(pred4=exp(pred4))
+
+rmse_4<-ModelMetrics::rmse(rmse_4_data$dine_out,rmse_4_data$pred4); rmse_4
 
 g4<-ggplot(cex, aes(x=grocery,y=exp(pred4),color=pov_cym))
 g4<-g4+geom_point(shape=1)
-
 g4
 
 # Function defined by coefficients
 
 fun_mod4<-function(x) exp(mod4$coefficients[1]+ 
+                            ## This coeff will be allowed to vary
                           (mod4$coefficients[2]*log(x+1))+
                           (mod4$coefficients[3]*1)+
                           (mod4$coefficients[4]*mean(cex$fam_size,na.rm=TRUE))  
@@ -313,7 +318,6 @@ g4a<-g4a+stat_function(fun = fun_mod4,color="blue")+xlim(0,2000)+ylim(0,1000)
 g4a
 ```
 
-When calculating RMSE, I need to work with it in log format. The `prediction` command will give me back a prediction in log format as well. I take the difference between the two in log format, then exponentiate using the `exp` command, which means raising $e$ to the power of $x$, $e^x$.   
 
 ```{r}
 #Part 5: Adding income 
@@ -322,19 +326,21 @@ mod5<-lm(log(dine_out+1)~
            pov_cym+
            fam_size+
            inclass
-         ,data=cex,na.action="na.exclude")
-
-## Predictions from model 5, using testing data
-mod5_predict<-predict(mod5,newdata=cex_test)
-
-exp(rmse(mod5_predict,log(cex_test$dine_out+1)))
-
-summary(mod5)
+         ,data=cex,na.action="na.exclude");summary(mod5)
 
 cex<-cex%>%mutate(pred5=predict(mod5))
 
-rmse_5<-with(cex,exp(rmse(log(dine_out+1),pred5)));rmse_5
+rmsle_5<-modelr::rmse(mod5,cex)
 
+## get just the data needed to calculate rmse
+rmse_5_data<-cex%>%
+  select(dine_out,pred5)%>%
+  filter(!is.na(pred5))%>%
+  mutate(pred5=exp(pred5))
+
+rmse_5<-ModelMetrics::rmse(rmse_5_data$dine_out,rmse_5_data$pred5); rmse_5
+
+## Use log transform to plot
 g5<-ggplot(cex, aes(x=inclass,y=(dine_out+1),group=1))+
            geom_point(shape=1)+
            geom_smooth(method=lm)+

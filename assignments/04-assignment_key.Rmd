@@ -17,7 +17,8 @@ library(readxl)
 1. Panel data for OECD countries. Save as file name `oecd.RData` [http://www.wiley.com/legacy/wileychi/baltagi/supp/Gasoline.dat](http://www.wiley.com/legacy/wileychi/baltagi/supp/Gasoline.dat)
 
 ```{r}
-download.file("http://www.wiley.com/legacy/wileychi/baltagi/supp/Gasoline.dat",destfile="gasoline.dat")
+download.file("http://www.wiley.com/legacy/wileychi/baltagi/supp/Gasoline.dat",
+              destfile="gasoline.dat")
 
 gas<-read_table("gasoline.dat")
 
@@ -36,7 +37,7 @@ download.file("http://www.uta.edu/faculty/story/DataSets/NES2004.sav",
 
 nes<-read_spss("NES2004.sav")
 
-save(nes,"nes.RData")
+save(nes,file="nes.RData")
 
 ```
 
@@ -47,8 +48,9 @@ save(nes,"nes.RData")
 ```{r}
 download.file("http://www.uta.edu/faculty/story/DataSets/GeneralSocialSurvey1996ExcelDataStudentVersion.xls",destfile = "gss.xls")
 
-
 gss<-read_excel("gss.xls")
+
+save(gss,file="gss.RData")
 
 ```
 
@@ -62,7 +64,7 @@ gss<-read_excel("gss.xls")
 
 md<-read_csv("mainData.csv")
 
-save(md,"maindata.RData")
+save(md,file="maindata.RData")
 
 ```
 
@@ -70,7 +72,8 @@ save(md,"maindata.RData")
 
 
 ```{r}
-psid<-read_table("http://users.nber.org/~rdehejia/data/psid_controls.txt",col_names = FALSE)
+psid<-read_table("http://users.nber.org/~rdehejia/data/psid_controls.txt",
+                 col_names = FALSE)
 
 names(psid)<-c("treatment",
                "age",
@@ -83,6 +86,6 @@ names(psid)<-c("treatment",
                "re75",
                "re78")
 
-save(psid,"psid.RData")
+save(psid,file="psid.RData")
 ```
 
