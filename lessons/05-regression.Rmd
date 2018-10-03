@@ -324,7 +324,8 @@ mod5<-lm(log(dine_out+1)~
            +log(grocery+1)+
            pov_cym+
            fam_size+
-           inclass
+           inclass+
+           log(booze_out+1)
          ,data=cex,na.action="na.exclude");summary(mod5)
 
 cex<-cex%>%mutate(pred5=predict(mod5))
@@ -345,8 +346,8 @@ g5<-ggplot(cex, aes(x=inclass,y=(dine_out+1),group=1))+
            geom_smooth(method=lm)+
           scale_y_continuous(trans="log")
 g5
-
 ```
+
 
 ## Testing and Training
 The essence of prediction is discovering the extent to which our models can predict outcomes for data that *does not come from our sample*. Many times this process is temporal. We fit a model to data from one time period, then take predictors from a subsequent time period to come up with a prediction in the future. For instance, we might use data on team performance to predict the likely winners and losers for upcoming soccer games. 
@@ -386,6 +387,7 @@ cex_predict<-sum(cex_test_line%*%cex_coeff);cex_predict
 
 r_predict<-(predict(mod5,newdata = cex_test[1,]));r_predict
 
+
 ## Comparing test and training rmse
 
 rmsle_5_test<-modelr::rmse(mod5,cex_test)
@@ -418,6 +420,18 @@ g4<-ggplot(cex,aes(x=fam_type,y=cigs,group=1))+
   geom_jitter(alpha=.1)
 
 g4
+```
+
+
+```{r}
+cex<-cex%>%mutate(pred1=predict(mod1))
+
+library(modelr)
+cex<-add_predictions(data=cex,model=mod1)
+
+
+cex
+
 ```
 
 ## Thinking about regression for prediction

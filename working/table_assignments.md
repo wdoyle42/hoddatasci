@@ -6,14 +6,14 @@ Table Assignments
 library(tidyverse)
 ```
 
-    ## ── Attaching packages ──────────────────────────────────────────────────────── tidyverse 1.2.1 ──
+    ## ── Attaching packages ──────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──
 
     ## ✔ ggplot2 3.0.0     ✔ purrr   0.2.5
     ## ✔ tibble  1.4.2     ✔ dplyr   0.7.6
     ## ✔ tidyr   0.8.1     ✔ stringr 1.3.1
     ## ✔ readr   1.1.1     ✔ forcats 0.3.0
 
-    ## ── Conflicts ─────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+    ## ── Conflicts ─────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
     ## ✖ dplyr::filter() masks stats::filter()
     ## ✖ dplyr::lag()    masks stats::lag()
 
@@ -33,7 +33,7 @@ class["random"]<-runif(dim(class)[1])
 class<-class%>%arrange(random)
 
 class["index"]<-seq(1:dim(class)[1])
-ngroups<-7
+ngroups<-5
 class<-class%>%mutate(table=cut(index,ngroups,(1:ngroups)))
 
 class$rmse<-NA
@@ -44,21 +44,21 @@ print(select(class,first_name,last_name,table),n=100)
     ## # A tibble: 15 x 3
     ##    first_name last_name  table
     ##    <chr>      <chr>      <fct>
-    ##  1 Veer       Shah       1    
-    ##  2 Carol      Cheng      1    
-    ##  3 Cynthia    Shen       1    
-    ##  4 Jason      Washington 2    
+    ##  1 Alexander  Young      1    
+    ##  2 Veer       Shah       1    
+    ##  3 Lauren     Simkovic   1    
+    ##  4 Melissa    Dunn       2    
     ##  5 Cindy      Ni         2    
-    ##  6 Emily      Saperstone 3    
-    ##  7 Angelina   Xu         3    
-    ##  8 Sydney     Banks      4    
-    ##  9 Stephanie  Zhang      4    
-    ## 10 Melissa    Dunn       5    
-    ## 11 Alexander  Young      5    
-    ## 12 Bingrong   Zhang      6    
-    ## 13 Dmitry     Semenov    6    
-    ## 14 Lauren     Simkovic   7    
-    ## 15 Ruby       Cho        7
+    ##  6 Dmitry     Semenov    2    
+    ##  7 Bingrong   Zhang      3    
+    ##  8 Jason      Washington 3    
+    ##  9 Ruby       Cho        3    
+    ## 10 Sydney     Banks      4    
+    ## 11 Carol      Cheng      4    
+    ## 12 Angelina   Xu         4    
+    ## 13 Emily      Saperstone 5    
+    ## 14 Stephanie  Zhang      5    
+    ## 15 Cynthia    Shen       5
 
 ``` r
 names(class)

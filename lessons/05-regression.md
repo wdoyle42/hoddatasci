@@ -12,21 +12,27 @@ The model we posit for regression is as follows:
 
 It's just a linear, additive model. Y increases or decreases as a function of x, with multiple x's included. *ϵ* is the extent to which an individual value is above or below the line created.
 
-Let's say that you've got some consumer data and you want to target those families that are likely to spend between $100and $500 a month on dining out. We would need to be able to predict which families would spend in that range based on observable characteristics like family size, income and family type.
+Let's say that you've got some consumer data and you want to target those families that are likely to spend between $100 and $500 a month on dining out. We would need to be able to predict which families would spend in that range based on observable characteristics like family size, income and family type.
 
 We're going to be working with expenditure data from the 2012 administration of the consumer expenditure survey. The first bit of code gets the libraries we need, the data we need, and opens up a codebook for the data.
 
-    ## Loading tidyverse: ggplot2
-    ## Loading tidyverse: tibble
-    ## Loading tidyverse: tidyr
-    ## Loading tidyverse: readr
-    ## Loading tidyverse: purrr
-    ## Loading tidyverse: dplyr
+    ## ── Attaching packages ────────────────────────────────────────── tidyverse 1.2.1 ──
 
-    ## Conflicts with tidy packages ----------------------------------------------
+    ## ✔ ggplot2 3.0.0     ✔ purrr   0.2.5
+    ## ✔ tibble  1.4.2     ✔ dplyr   0.7.6
+    ## ✔ tidyr   0.8.1     ✔ stringr 1.3.1
+    ## ✔ readr   1.1.1     ✔ forcats 0.3.0
 
-    ## filter(): dplyr, stats
-    ## lag():    dplyr, stats
+    ## ── Conflicts ───────────────────────────────────────────── tidyverse_conflicts() ──
+    ## ✖ dplyr::filter() masks stats::filter()
+    ## ✖ dplyr::lag()    masks stats::lag()
+
+    ## 
+    ## Attaching package: 'ModelMetrics'
+
+    ## The following object is masked from 'package:base':
+    ## 
+    ##     kappa
 
 Bivariate regression
 --------------------
@@ -38,7 +44,7 @@ summary(cex$dine_out)
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##     0.0    65.0   325.0   462.6   650.0  7800.0
+    ##     0.0    65.0   325.0   470.8   650.0  7800.0
 
 ``` r
 gg<-ggplot(cex,aes(x=dine_out))
@@ -48,7 +54,7 @@ gg
 
     ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 
-![](05-regression_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-2-1.png)
+![](05-regression_files/figure-markdown_github/unnamed-chunk-2-1.png)
 
 ``` r
 gg<-ggplot(cex,aes(x=dine_out))
@@ -56,7 +62,7 @@ gg<-gg+geom_density()
 gg
 ```
 
-![](05-regression_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-2-2.png)
+![](05-regression_files/figure-markdown_github/unnamed-chunk-2-2.png)
 
 Because this variable is pretty non-normally distributed, we may want to think about transforming it. For now, let's just work with it as-is. Let's see if people with bigger families spend more on dining out more than those with smaller families. Before, we would have calculated the conditional mean at every level of family size, or in certain groupings of family size. With regression, we simply specify the relationship.
 
@@ -74,26 +80,26 @@ summary(mod1)
     ## 
     ## Residuals:
     ##    Min     1Q Median     3Q    Max 
-    ## -812.3 -376.6 -140.4  167.2 7276.0 
+    ## -685.2 -387.5 -153.7  158.7 7270.0 
     ## 
     ## Coefficients:
     ##             Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)  359.228     19.166  18.743  < 2e-16 ***
-    ## fam_size      41.192      6.531   6.307 3.21e-10 ***
+    ## (Intercept)  374.923     19.984  18.761  < 2e-16 ***
+    ## fam_size      38.782      6.953   5.578 2.63e-08 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 580.1 on 3412 degrees of freedom
-    ## Multiple R-squared:  0.01152,    Adjusted R-squared:  0.01124 
-    ## F-statistic: 39.78 on 1 and 3412 DF,  p-value: 3.205e-10
+    ## Residual standard error: 596.4 on 3413 degrees of freedom
+    ## Multiple R-squared:  0.009033,   Adjusted R-squared:  0.008743 
+    ## F-statistic: 31.11 on 1 and 3413 DF,  p-value: 2.626e-08
 
 ``` r
 confint(mod1)
 ```
 
     ##                 2.5 %    97.5 %
-    ## (Intercept) 321.64952 396.80727
-    ## fam_size     28.38684  53.99642
+    ## (Intercept) 335.74139 414.10485
+    ## fam_size     25.14935  52.41399
 
 ``` r
 g1<-ggplot(cex, aes(x=fam_size,y=dine_out))+ #specify data and x and y
@@ -102,7 +108,7 @@ g1<-ggplot(cex, aes(x=fam_size,y=dine_out))+ #specify data and x and y
 g1
 ```
 
-![](05-regression_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-3-1.png)
+![](05-regression_files/figure-markdown_github/unnamed-chunk-3-1.png)
 
 ``` r
 cex<-cex%>%mutate(pred1=predict(mod1)) #predict using data in memory
@@ -110,7 +116,38 @@ cex<-cex%>%mutate(pred1=predict(mod1)) #predict using data in memory
 rmse_1<-with(cex, rmse(dine_out,pred1)) ; rmse_1
 ```
 
-    ## [1] 579.9798
+    ## [1] 596.1946
+
+``` r
+mod1b<-lm(dine_out~grocery_food,data=cex); summary(mod1b)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = dine_out ~ grocery_food, data = cex)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -2539.1  -347.3  -144.3   147.8  7367.3 
+    ## 
+    ## Coefficients:
+    ##               Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)  299.80177   17.81393   16.83   <2e-16 ***
+    ## grocery_food   0.14609    0.01257   11.63   <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 587.6 on 3413 degrees of freedom
+    ## Multiple R-squared:  0.03809,    Adjusted R-squared:  0.03781 
+    ## F-statistic: 135.2 on 1 and 3413 DF,  p-value: < 2.2e-16
+
+``` r
+cex<-cex%>%mutate(pred1b=predict(mod1b)) #predict using data in memory
+ 
+rmse_1b<-with(cex, rmse(dine_out,pred1b)) ; rmse_1b
+```
+
+    ## [1] 587.3885
 
 ``` r
 mod1a<-lm(dine_out~inclass,data=cex); summary(mod1a)
@@ -122,27 +159,27 @@ mod1a<-lm(dine_out~inclass,data=cex); summary(mod1a)
     ## 
     ## Residuals:
     ##    Min     1Q Median     3Q    Max 
-    ## -751.4 -299.2 -103.4  155.6 7048.6 
+    ## -776.6 -291.0 -126.6  157.3 7023.4 
     ## 
     ## Coefficients:
     ##             Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)  207.278     47.208   4.391 1.16e-05 ***
-    ## inclass02     24.095     66.637   0.362   0.7177    
-    ## inclass03     -9.634     59.030  -0.163   0.8704    
-    ## inclass04     27.098     58.765   0.461   0.6447    
-    ## inclass05     95.998     54.926   1.748   0.0806 .  
-    ## inclass06    139.306     55.328   2.518   0.0119 *  
-    ## inclass07    169.940     55.704   3.051   0.0023 ** 
-    ## inclass08    252.920     53.007   4.771 1.91e-06 ***
-    ## inclass09    544.090     50.010  10.880  < 2e-16 ***
+    ## (Intercept) 233.2727    48.2887   4.831 1.42e-06 ***
+    ## inclass02   -43.2665    65.2345  -0.663  0.50722    
+    ## inclass03   -61.5216    60.6292  -1.015  0.31031    
+    ## inclass04    -0.5771    60.5810  -0.010  0.99240    
+    ## inclass05    57.7510    56.0517   1.030  0.30294    
+    ## inclass06    91.7693    56.5153   1.624  0.10451    
+    ## inclass07   190.3639    57.3384   3.320  0.00091 ***
+    ## inclass08   237.6704    54.1787   4.387 1.19e-05 ***
+    ## inclass09   543.3264    51.1165  10.629  < 2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 544.4 on 3405 degrees of freedom
-    ## Multiple R-squared:  0.1313, Adjusted R-squared:  0.1293 
-    ## F-statistic: 64.33 on 8 and 3405 DF,  p-value: < 2.2e-16
+    ## Residual standard error: 554.8 on 3406 degrees of freedom
+    ## Multiple R-squared:  0.1441, Adjusted R-squared:  0.1421 
+    ## F-statistic:  71.7 on 8 and 3406 DF,  p-value: < 2.2e-16
 
-What this shows is that as family size increases, the amount spent on dining out increases. For every additional family member, an additional $41 is predicted to be spent on dining out. The rmse of 580 gives us a sense of how wrong the model tends to be when using just this one predictor.
+What this shows is that as family size increases, the amount spent on dining out increases. For every additional family member, an additional $39 is predicted to be spent on dining out. The rmse of 596 gives us a sense of how wrong the model tends to be when using just this one predictor.
 
 *Quick Exercise* Run a regression using a different predictor. Calculate rmse and see if you can beat my score.
 
@@ -167,19 +204,19 @@ summary(mod2)
     ## 
     ## Residuals:
     ##    Min     1Q Median     3Q    Max 
-    ## -846.3 -333.2 -138.2  136.3 7232.0 
+    ## -708.8 -342.8 -147.8  146.5 7228.0 
     ## 
     ## Coefficients:
     ##                       Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)            110.098     29.354   3.751 0.000179 ***
-    ## fam_size                39.756      6.419   6.194 6.58e-10 ***
-    ## pov_cymNot in Poverty  298.869     27.011  11.065  < 2e-16 ***
+    ## (Intercept)            120.006     29.793   4.028 5.75e-05 ***
+    ## fam_size                34.211      6.838   5.003 5.92e-07 ***
+    ## pov_cymNot in Poverty  315.118     27.717  11.369  < 2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 570.1 on 3411 degrees of freedom
-    ## Multiple R-squared:  0.04577,    Adjusted R-squared:  0.04521 
-    ## F-statistic: 81.81 on 2 and 3411 DF,  p-value: < 2.2e-16
+    ## Residual standard error: 585.5 on 3412 degrees of freedom
+    ## Multiple R-squared:  0.0452, Adjusted R-squared:  0.04464 
+    ## F-statistic: 80.77 on 2 and 3412 DF,  p-value: < 2.2e-16
 
 ``` r
 cex<-cex%>%mutate(pred2=predict(mod2))
@@ -187,7 +224,7 @@ cex<-cex%>%mutate(pred2=predict(mod2))
 rmse_2<-with(cex,rmse(dine_out,pred2));rmse_2
 ```
 
-    ## [1] 569.8434
+    ## [1] 585.2126
 
 So, those who are in poverty spend less on dining out. Alert the media!
 
@@ -213,20 +250,20 @@ summary(mod3)
     ## 
     ## Residuals:
     ##     Min      1Q  Median      3Q     Max 
-    ## -2877.8  -324.2  -125.3   138.4  7322.3 
+    ## -2660.1  -330.5  -130.0   146.1  7312.7 
     ## 
     ## Coefficients:
     ##                        Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)            52.22319   28.99130   1.801   0.0717 .  
-    ## fam_size               -1.98415    7.03297  -0.282   0.7779    
-    ## pov_cymNot in Poverty 245.87877   26.67362   9.218   <2e-16 ***
-    ## grocery                 0.14429    0.01105  13.062   <2e-16 ***
+    ## (Intercept)            70.66068   29.54978   2.391   0.0168 *  
+    ## fam_size               -5.33426    7.54028  -0.707   0.4793    
+    ## pov_cymNot in Poverty 266.92307   27.52001   9.699   <2e-16 ***
+    ## grocery                 0.13158    0.01145  11.496   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 556.4 on 3410 degrees of freedom
-    ## Multiple R-squared:  0.09124,    Adjusted R-squared:  0.09044 
-    ## F-statistic: 114.1 on 3 and 3410 DF,  p-value: < 2.2e-16
+    ## Residual standard error: 574.5 on 3411 degrees of freedom
+    ## Multiple R-squared:  0.08082,    Adjusted R-squared:  0.08001 
+    ## F-statistic: 99.97 on 3 and 3411 DF,  p-value: < 2.2e-16
 
 ``` r
 g2<-ggplot(cex, aes(x=grocery,y=dine_out))+
@@ -235,7 +272,7 @@ g2<-ggplot(cex, aes(x=grocery,y=dine_out))+
 g2
 ```
 
-![](05-regression_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-5-1.png)
+![](05-regression_files/figure-markdown_github/unnamed-chunk-5-1.png)
 
 ``` r
 cex<-cex%>%mutate(pred3=predict(mod3))
@@ -243,7 +280,7 @@ cex<-cex%>%mutate(pred3=predict(mod3))
 rmse_3<-with(cex,rmse(dine_out,pred3));rmse_3
 ```
 
-    ## [1] 556.101
+    ## [1] 574.1947
 
 Hmm, what happened here?
 
@@ -254,81 +291,80 @@ Transformations
 
 The big issue as you can see with this data is that the outcome variable isn't normally distributed: most people spend very little on dining out, while some people spend quite a lot. In situations like this, which are VERY common when dealing with monetary values, we want to take the natural log of the outcome variable. A natural log is the power by which we would have to raise *e*, Euler's constant, to be that value: *e*<sup>*l**n*(*x*)</sup> = *x*, or *l**n*(*e*<sup>*x*</sup>)=*x*.
 
-Economists just basically take the natural log of everything that's denominated in dollar terms, which you probably should do as well. You'll notice in the equations below that I specify the `log()` of both dining out and grocery spending.
+Economists just basically take the natural log of everything that's denominated in dollar terms, which you probably should do as well. You'll notice in the equations below that I specify the `log()` of both dining out and grocery spending. The log transform won't work with values of 0, so the transformation also includes a `+1` to add a dollar to each 0.
+
+``` r
+gg<-ggplot(cex,aes(x=log(dine_out+1)))
+gg<-gg+geom_density()
+gg
+```
+
+![](05-regression_files/figure-markdown_github/unnamed-chunk-6-1.png)
 
 ``` r
 #Part 4: Working with transformations
 mod4<-lm(log(dine_out+1)~ #log of dining out, plus one for zeros
            +log(grocery+1)+ #log of groceries, plus one again
            pov_cym+ #poverty
-           fam_size+#family size
-           log(booze_out+1) 
+           fam_size #family size
          ,data=cex, na.action = "na.exclude")
 
-gg<-ggplot(cex,aes(x=log(booze_out+1)))
-gg<-gg+geom_density()
-gg
-```
 
-    ## Warning: Removed 2196 rows containing non-finite values (stat_density).
-
-![](05-regression_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-6-1.png)
-
-``` r
 summary(mod4)
 ```
 
     ## 
     ## Call:
     ## lm(formula = log(dine_out + 1) ~ +log(grocery + 1) + pov_cym + 
-    ##     fam_size + log(booze_out + 1), data = cex, na.action = "na.exclude")
+    ##     fam_size, data = cex, na.action = "na.exclude")
     ## 
     ## Residuals:
     ##     Min      1Q  Median      3Q     Max 
-    ## -7.1537 -0.2717  0.4846  1.1087  5.2133 
+    ## -5.8100 -0.4122  0.9059  1.6076  7.0998 
     ## 
     ## Coefficients:
     ##                       Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)            1.42436    0.50332   2.830  0.00473 ** 
-    ## log(grocery + 1)       0.31284    0.07515   4.163 3.37e-05 ***
-    ## pov_cymNot in Poverty  1.28893    0.20427   6.310 3.91e-10 ***
-    ## fam_size               0.02294    0.04431   0.518  0.60474    
-    ## log(booze_out + 1)     0.25523    0.02414  10.573  < 2e-16 ***
+    ## (Intercept)            0.48699    0.31567   1.543    0.123    
+    ## log(grocery + 1)       0.41758    0.04859   8.594   <2e-16 ***
+    ## pov_cymNot in Poverty  1.55914    0.12081  12.906   <2e-16 ***
+    ## fam_size              -0.01071    0.03181  -0.337    0.736    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 1.971 on 1213 degrees of freedom
-    ##   (2196 observations deleted due to missingness)
-    ## Multiple R-squared:  0.142,  Adjusted R-squared:  0.1391 
-    ## F-statistic: 50.17 on 4 and 1213 DF,  p-value: < 2.2e-16
+    ## Residual standard error: 2.5 on 3411 degrees of freedom
+    ## Multiple R-squared:  0.08441,    Adjusted R-squared:  0.08361 
+    ## F-statistic: 104.8 on 3 and 3411 DF,  p-value: < 2.2e-16
 
 ``` r
 cex<-cex%>%mutate(pred4=predict(mod4))
 
-## Getting set up for rmse function
-compare_data<-data.frame(cex$dine_out,cex$pred4)%>%filter(is.na(cex.pred4)==FALSE)
-names(compare_data)<-c("dine_out","pred4")
+## Use modelr:: rmse to get predictions
+rmsle_4<-modelr::rmse(mod4,cex)
 
-rmse_4<-with(compare_data,exp(rmse(log(dine_out+1),pred4)));rmse_4
+## get just the data needed to calculate rmse
+rmse_4_data<-cex%>%
+  select(dine_out,pred4)%>%
+  filter(!is.na(pred4))%>%
+  mutate(pred4=exp(pred4))
+
+rmse_4<-ModelMetrics::rmse(rmse_4_data$dine_out,rmse_4_data$pred4); rmse_4
 ```
 
-    ## [1] 7.149152
+    ## [1] 675.5858
 
 ``` r
 g4<-ggplot(cex, aes(x=grocery,y=exp(pred4),color=pov_cym))
 g4<-g4+geom_point(shape=1)
-
 g4
 ```
 
-    ## Warning: Removed 2196 rows containing missing values (geom_point).
-
-![](05-regression_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-6-2.png)
+![](05-regression_files/figure-markdown_github/unnamed-chunk-6-2.png)
 
 ``` r
 # Function defined by coefficients
 
 fun_mod4<-function(x) exp(mod4$coefficients[1]+ 
+                            ## This coeff will be allowed to vary
                           (mod4$coefficients[2]*log(x+1))+
                           (mod4$coefficients[3]*1)+
                           (mod4$coefficients[4]*mean(cex$fam_size,na.rm=TRUE))  
@@ -342,9 +378,7 @@ g4a
 
     ## Warning: Removed 875 rows containing missing values (geom_point).
 
-![](05-regression_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-6-3.png)
-
-When calculating RMSE, I need to work with it in log format. The `prediction` command will give me back a prediction in log format as well. I take the difference between the two in log format, then exponentiate using the `exp` command, which means raising *e* to the power of *x*, *e*<sup>*x*</sup>.
+![](05-regression_files/figure-markdown_github/unnamed-chunk-6-3.png)
 
 ``` r
 #Part 5: Adding income 
@@ -353,57 +387,65 @@ mod5<-lm(log(dine_out+1)~
            pov_cym+
            fam_size+
            inclass
-         ,data=cex)
-
-summary(mod5)
+         ,data=cex,na.action="na.exclude");summary(mod5)
 ```
 
     ## 
     ## Call:
     ## lm(formula = log(dine_out + 1) ~ +log(grocery + 1) + pov_cym + 
-    ##     fam_size + inclass, data = cex)
+    ##     fam_size + inclass, data = cex, na.action = "na.exclude")
     ## 
     ## Residuals:
     ##     Min      1Q  Median      3Q     Max 
-    ## -6.1337 -0.5263  0.7961  1.5812  5.6117 
+    ## -6.2587 -0.6162  0.7778  1.5819  6.0125 
     ## 
     ## Coefficients:
     ##                       Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)            1.61025    0.35973   4.476 7.84e-06 ***
-    ## log(grocery + 1)       0.30301    0.05044   6.007 2.09e-09 ***
-    ## pov_cymNot in Poverty  0.37139    0.20602   1.803 0.071519 .  
-    ## fam_size              -0.11940    0.03235  -3.691 0.000227 ***
-    ## inclass02              0.06830    0.29660   0.230 0.817881    
-    ## inclass03             -0.39539    0.27884  -1.418 0.156293    
-    ## inclass04             -0.18622    0.30359  -0.613 0.539646    
-    ## inclass05              0.34456    0.31007   1.111 0.266541    
-    ## inclass06              0.79384    0.32667   2.430 0.015145 *  
-    ## inclass07              0.85767    0.33175   2.585 0.009772 ** 
-    ## inclass08              1.09071    0.32586   3.347 0.000825 ***
-    ## inclass09              1.94051    0.32208   6.025 1.87e-09 ***
+    ## (Intercept)            1.73323    0.34799   4.981 6.65e-07 ***
+    ## log(grocery + 1)       0.27470    0.04790   5.735 1.06e-08 ***
+    ## pov_cymNot in Poverty  0.07074    0.21332   0.332 0.740222    
+    ## fam_size              -0.16963    0.03293  -5.151 2.74e-07 ***
+    ## inclass02              0.04806    0.28333   0.170 0.865312    
+    ## inclass03             -0.24023    0.27920  -0.860 0.389629    
+    ## inclass04              0.24336    0.31001   0.785 0.432510    
+    ## inclass05              0.72180    0.31410   2.298 0.021623 *  
+    ## inclass06              1.14794    0.33113   3.467 0.000533 ***
+    ## inclass07              1.44888    0.33808   4.286 1.87e-05 ***
+    ## inclass08              1.71901    0.33004   5.208 2.02e-07 ***
+    ## inclass09              2.52253    0.32493   7.763 1.09e-14 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 2.421 on 3402 degrees of freedom
-    ## Multiple R-squared:  0.1378, Adjusted R-squared:  0.135 
-    ## F-statistic: 49.42 on 11 and 3402 DF,  p-value: < 2.2e-16
+    ## Residual standard error: 2.407 on 3403 degrees of freedom
+    ## Multiple R-squared:  0.1537, Adjusted R-squared:  0.151 
+    ## F-statistic: 56.19 on 11 and 3403 DF,  p-value: < 2.2e-16
 
 ``` r
 cex<-cex%>%mutate(pred5=predict(mod5))
 
-rmse_5<-with(cex,exp(rmse(log(dine_out+1),pred5)));rmse_5
+rmsle_5<-modelr::rmse(mod5,cex)
+
+## get just the data needed to calculate rmse
+rmse_5_data<-cex%>%
+  select(dine_out,pred5)%>%
+  filter(!is.na(pred5))%>%
+  mutate(pred5=exp(pred5))
+
+rmse_5<-ModelMetrics::rmse(rmse_5_data$dine_out,rmse_5_data$pred5); rmse_5
 ```
 
-    ## [1] 11.20439
+    ## [1] 634.8595
 
 ``` r
-g5<-ggplot(cex, aes(x=inclass,y=dine_out,group=1))+
+## Use log transform to plot
+g5<-ggplot(cex, aes(x=inclass,y=(dine_out+1),group=1))+
            geom_point(shape=1)+
-           geom_smooth(method=lm)
+           geom_smooth(method=lm)+
+          scale_y_continuous(trans="log")
 g5
 ```
 
-![](05-regression_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-7-1.png)
+![](05-regression_files/figure-markdown_github/unnamed-chunk-7-1.png)
 
 Testing and Training
 --------------------
@@ -421,18 +463,67 @@ One very simple approach to this would be to cut our data in half. We could then
 Model 5 is looking pretty good, but let's see how it does using our testing data-- the half that wasn't used to train our model.
 
 ``` r
-load("cex_test.Rdata")
+## Generate a prediction from the testing dataset
+cex_test<-cex_test%>%mutate(pred5=predict(mod5,newdata=cex_test))
 
-rmse_5_test<-exp(rmse(log(cex_test$dine_out+1),cex$pred5))
+## What is this really doing? 
 
-rmse_5;rmse_5_test
+cex_line<-cex_test[1,c("grocery","pov_cym","fam_size","inclass")]
+
+cex_test_line<-c(1, #intercept,
+                 log(cex_test$grocery[1]+1),
+                 0, #poverty,
+                 cex_test$fam_size[1],
+                 1 #income class 8
+                 )
+
+mod5$coefficients
 ```
 
-    ## [1] 11.20439
+    ##           (Intercept)      log(grocery + 1) pov_cymNot in Poverty 
+    ##            1.73323433            0.27469698            0.07073547 
+    ##              fam_size             inclass02             inclass03 
+    ##           -0.16963150            0.04806103           -0.24022698 
+    ##             inclass04             inclass05             inclass06 
+    ##            0.24335849            0.72179982            1.14793773 
+    ##             inclass07             inclass08             inclass09 
+    ##            1.44887617            1.71901423            2.52253292
 
-    ## [1] 16.47113
+``` r
+cex_coeff<-as.double(mod5$coefficients[c(1:4,11)]);cex_coeff;cex_test_line          
+```
 
-Why is the value from the testing dataset so much larger?
+    ## [1]  1.73323433  0.27469698  0.07073547 -0.16963150  1.71901423
+
+    ## [1] 1.000000 7.576097 0.000000 4.000000 1.000000
+
+``` r
+#multiply coeffs by values and sum everythig up
+cex_predict<-sum(cex_test_line%*%cex_coeff);cex_predict
+```
+
+    ## [1] 4.854854
+
+``` r
+r_predict<-(predict(mod5,newdata = cex_test[1,]));r_predict
+```
+
+    ##        1 
+    ## 4.925589
+
+``` r
+## Comparing test and training rmse
+
+rmsle_5_test<-modelr::rmse(mod5,cex_test)
+
+rmsle_5;rmsle_5_test
+```
+
+    ## [1] 2.402563
+
+    ## [1] 2.4392
+
+Why is the value from the testing dataset larger?
 
 *Quick exercise*
 
@@ -463,33 +554,33 @@ summary(mod6)
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -0.67089 -0.22338 -0.14380 -0.05856  0.97050 
+    ## -0.37129 -0.22989 -0.16565 -0.05444  0.97687 
     ## 
     ## Coefficients:
-    ##                      Estimate Std. Error t value Pr(>|t|)   
-    ## (Intercept)           0.68501    0.21719   3.154  0.00163 **
-    ## educ_ref10           -0.51028    0.21925  -2.327  0.02001 * 
-    ## educ_ref11           -0.39660    0.21854  -1.815  0.06966 . 
-    ## educ_ref12           -0.37101    0.21772  -1.704  0.08847 . 
-    ## educ_ref13           -0.46594    0.21787  -2.139  0.03255 * 
-    ## educ_ref14           -0.43834    0.21855  -2.006  0.04499 * 
-    ## educ_ref15           -0.53254    0.21805  -2.442  0.01466 * 
-    ## educ_ref16           -0.58866    0.21896  -2.688  0.00722 **
-    ## educ_ref17           -0.55558    0.22170  -2.506  0.01227 * 
-    ## as.factor(ref_race)2 -0.03201    0.02167  -1.477  0.13978   
-    ## as.factor(ref_race)3  0.21296    0.10106   2.107  0.03517 * 
-    ## as.factor(ref_race)4 -0.01412    0.03473  -0.407  0.68435   
-    ## as.factor(ref_race)5  0.10270    0.10092   1.018  0.30895   
-    ## as.factor(ref_race)6  0.04663    0.05795   0.805  0.42108   
-    ## inc_rank             -0.05430    0.02683  -2.024  0.04307 * 
-    ## as.factor(sex_ref)2  -0.02732    0.01422  -1.921  0.05487 . 
+    ##                      Estimate Std. Error t value Pr(>|t|)  
+    ## (Intercept)           0.21393    0.15376   1.391   0.1642  
+    ## educ_ref10           -0.01112    0.15677  -0.071   0.9435  
+    ## educ_ref11            0.07291    0.15533   0.469   0.6388  
+    ## educ_ref12            0.06570    0.15429   0.426   0.6703  
+    ## educ_ref13            0.05292    0.15446   0.343   0.7319  
+    ## educ_ref14            0.02716    0.15536   0.175   0.8613  
+    ## educ_ref15           -0.07809    0.15467  -0.505   0.6137  
+    ## educ_ref16           -0.10769    0.15597  -0.690   0.4900  
+    ## educ_ref17           -0.11284    0.15985  -0.706   0.4803  
+    ## as.factor(ref_race)2 -0.03669    0.02154  -1.704   0.0886 .
+    ## as.factor(ref_race)3  0.05968    0.09165   0.651   0.5150  
+    ## as.factor(ref_race)4 -0.07175    0.03440  -2.086   0.0371 *
+    ## as.factor(ref_race)5  0.10601    0.12547   0.845   0.3982  
+    ## as.factor(ref_race)6 -0.09305    0.06154  -1.512   0.1306  
+    ## inc_rank             -0.04265    0.02723  -1.566   0.1174  
+    ## as.factor(sex_ref)2  -0.02916    0.01430  -2.039   0.0415 *
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 0.376 on 2844 degrees of freedom
-    ##   (554 observations deleted due to missingness)
-    ## Multiple R-squared:  0.04637,    Adjusted R-squared:  0.04134 
-    ## F-statistic: 9.219 on 15 and 2844 DF,  p-value: < 2.2e-16
+    ## Residual standard error: 0.375 on 2821 degrees of freedom
+    ##   (578 observations deleted due to missingness)
+    ## Multiple R-squared:  0.04147,    Adjusted R-squared:  0.03637 
+    ## F-statistic: 8.136 on 15 and 2821 DF,  p-value: < 2.2e-16
 
 ``` r
 g4<-ggplot(cex,aes(x=fam_type,y=cigs,group=1))+
@@ -498,7 +589,7 @@ g4<-ggplot(cex,aes(x=fam_type,y=cigs,group=1))+
 g4
 ```
 
-![](05-regression_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-9-1.png)
+![](05-regression_files/figure-markdown_github/unnamed-chunk-9-1.png)
 
 Thinking about regression for prediction
 ----------------------------------------
