@@ -13,6 +13,7 @@ The code for today starts with the normal set of preliminaries, opening up the `
 
 library(tidyverse)
 library(forcats)
+library(modelr)
 
 load("cex.RData")
 
@@ -242,33 +243,22 @@ As we add more variables to the model, it can get more difficult to plot relatio
 ```{r}
 #Prediction, then plotting
 
-hypo.data<-data.frame(expand.grid(
-          #range of income
-          inc_rank=seq(min(cex$inc_rank,na.rm=TRUE),
-                       max(cex$inc_rank,na.rm=TRUE),
-                       length=100), 
-          #All levels of childage
-          childage=levels(cex$childage)                                     
-                                      )
-                          )
-head(hypo.data)
+h_data<-cex%>%data_grid(inc_rank=seq_range(inc_rank,n = 100),
+                  childage=levels(cex$childage))
+  
+
+
+
 ```
 
 Now, using my estimates from model 2, I predict what would happen to these hypothetical individuals.  Once I've got my prediction, I transform it back out of the log scale into the "response" level of dollars. 
 
 ```{r}
 #Predict using mod2 on hypothetical data
-hypo.pred<-predict(mod2,
-                   newdata=hypo.data,
-                   interval="prediction",
-                    se.fit=TRUE
-                   )
+h_data<-add_predictions(data = h_data,model = mod2)%>%
+  mutate(spend=exp(pred),
+         childage=fct_reorder(as_factor(childage),.x = -spend ))
 
-hypo.data<-data.frame(hypo.data,hypo.pred$fit) #Add fit to the dataset
-hypo.data$groc.p<-exp(hypo.data$fit) #exponentiate fit
-hypo.data$groc.lwr<-exp(hypo.data$lwr) #exponentiate lower boundary
-hypo.data$groc.upr<-exp(hypo.data$upr) #exponentiate upper boundary
-head(hypo.data)
 ```
 
 
@@ -276,7 +266,11 @@ Now we can plot the result, using the `geom_smooth` layer to give us lines for e
 
 
 ```{r}
-g4<-ggplot(data=hypo.data,aes(x=inc_rank,y=groc.p,color=fct_reorder(f=childage,-groc.p))) #notice color
+g4<-ggplot(data=h_data,
+           aes(x=inc_rank,
+               y=spend,
+               color=childage
+               ))#notice color
 g4<-g4+geom_smooth(method=lm,se=FALSE)
 g4<-g4+theme(legend.position="bottom",legend.title = element_blank())
 g4<-g4+xlab("Income Rank")+ylab("Predicted Grocery Spending")
