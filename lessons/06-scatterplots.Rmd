@@ -68,11 +68,11 @@ Factors in R denote variables that encompass a set of mutually exclusive and exh
 
 ## Get levels of childage right
 
-cex<-cex%>%mutate(childage=fct_recode(f=childage,
+cex<-cex%>%mutate(childage=fct_recode(.f=childage,
                      "No kids"="0", 
-"All < 6"="1",
-"Oldest bt 6 and 11,one <6"="2",
-"All b/t 6 and 11"="3",
+  "All < 6"="1",
+  "Oldest bt 6 and 11,one <6"="2",
+  "All b/t 6 and 11"="3",
  "Oldest b/t 12 and 17 & one child < 12"="4",
  "All b/t 12 and 17"="5",
  "Oldest > 17 and one < 17"="6",
@@ -173,6 +173,9 @@ Notice how different the steps are on the y axis now. But this shows that our li
 
 m1<-lm(log(grocery_food+1)~inc_rank,data=cex);summary(m1)
 
+m1<-lm(log(other_store+1)~inc_rank,data=cex);summary(m1)
+
+
 ```
 
 _Quick Exercise_ Create a similar graphic, but this time use other store expenditures as the dependent variable. Run a regression with store expenditures as the dv and income rank as the only independent variable. 
@@ -203,7 +206,7 @@ g2a<-ggplot(data=filter(cex,as.character(cex$childage)!="No kids"),
             aes(x=inc_rank,y=(grocery_food+1),color=childage)
            )
 g2a<-g2a+scale_y_continuous(trans="log",breaks=my.breaks,limits=c(100,8000)) #Changed overall scale
-g2a<-g2a+geom_point(size=.25) 
+g2a<-g2a+geom_point(size=.5) 
 g2a<-g2a+scale_colour_hue(l=50) #Darker palette
 g2a<-g2a+theme(legend.position = "bottom" , legend.title = element_blank())
 g2a<-g2a+ylab("Grocery Spending")+xlab("Income Rank")
