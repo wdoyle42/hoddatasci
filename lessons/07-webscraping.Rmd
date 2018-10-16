@@ -114,10 +114,10 @@ marathon$date<-mdy(marathon$Date)
 marathon_wiki = "https://en.wikipedia.org/wiki/Marathon_world_record_progression"
 
 # Get the page, pull the tables via html_table
-marathon <- read_html(marathon_wiki)%>%html_table()
+marathon <- read_html(marathon_wiki)%>%html_table(fill=TRUE)
 
 #Men's is the first table
-marathon<-tbl_df(data.frame(marathon[[2]]))
+marathon<-tbl_df(marathon[[1]])
 
 #Convert time to seconds
 marathon<-marathon%>%mutate(Time2=hms(as.character(Time)))%>%mutate(Time2=period_to_seconds(Time2))
@@ -164,6 +164,8 @@ I first plug the web page I'm interested in to a variable called url. This makes
 ```{r}
 ## Web Page: could be lots of different things. 
 url<-"http://www.basketball-reference.com/leagues/NBA_2017_totals.html"
+
+url<-"https://www.pro-football-reference.com/years/2017/#team_stats::none"
 ```
 
 The next step is to download that web page onto my computer. I call this `page` and I use the `read_html()` function to get it. 
@@ -241,13 +243,13 @@ The code below takes the exact same steps, but expands in two directions. First,
 
 #Check: do you really want to get data?
 
-get_nba_data<-FALSE
+get_nba_data<-TRUE
 
 #initialize full dataset
 nba_df_all<-NULL
 
 #What years?
-year_list<-1993:2017
+year_list<-1993:2018
 
 if(get_nba_data==TRUE){
 
@@ -260,109 +262,47 @@ url<-paste0("http://www.basketball-reference.com/leagues/NBA_",year,"_totals.htm
 ## Get Page
 page<-read_html(url)
 
-#select nodes from the table
-my_nodes<-paste0(".right:nth-child(",1,")")
-
-## This code gets the data !
-player_numbers<-page%>%
-  html_nodes(my_nodes)%>%
-  html_text()
-
-#Name
-## Get data frame started: fill in player names
-my_nodes<-paste0(".left:nth-child(",2,")")
-
-## This code gets the data !
-player_name<-page%>%
-  html_nodes(my_nodes)%>%
-  html_text()
-  
-player_name<-player_name[-length(player_name)]
-
-#Age
-#select nodes from the table
-my_nodes<-paste0(".right:nth-child(",4,")")
-
-## This code gets the data !
-player_age<-page%>%
-  html_nodes(my_nodes)%>%
-  html_text()
-
-#Position
-#select nodes from the table
-my_nodes<-paste0(".center:nth-child(3)")
-
-## This code gets the data !
-player_position<-page%>%
-  html_nodes(my_nodes)%>%
-  html_text()
-
-#Fingers crossed on this kludge
-player_position<-player_position[!player_position=="Pos"]
-
-#select nodes from the table
-my_nodes<-paste0(".left:nth-child(5)")
-
-## This code gets the data !
-player_team<-page%>%
-  html_nodes(my_nodes)%>%
-  html_text()
-#  stringr::str_extract("[\\w]+[\\s]+[\\w]+[^/t]") #You can use this too: gets text ONLY
-
-## Create Data Frame
-nba_df<-tibble(player_name,
-                   player_position,
-                   player_age,
-                   player_team)
+nba_df<-url %>% 
+      read_html() %>%                   # parse html
+      html_nodes('#all_totals_stats')%>% # Select total stats table
+      html_node('table')%>% # Grab just the table
+      html_table()%>% # pull the table element in a format readable by R
+      data.frame() #output to data frame
 
 ## Names from the web page
-column_names<-c(1:5,
-  "games",
-  "games_started",
-  "minutes_played",
-  "fg",
-  "fg_attempts",
-  "fg_percent",
-  "three_pointers",
-  "three_point_attempts",
-  "three_point_percent",
-  "two_pointers",
-  "two_point_attempts",
-  "two_point_percent",
-  "effective_fg_percent",
-  "free_throws",
-  "free_throw_attempts",
-  "free_throw_percent",
-  "off_rebound",
-  "def_rebound",
-  "total_rebound",
-  "assists",
-  "steals",
-  "blocks",
-  "turnovers",
-  "fouls",
-  "pts"
+nba_names<-c("rank",
+             "player",
+             "position",
+             "age",
+             "team",
+             "games",
+             "games_started",
+             "minutes_played",
+             "fg",
+             "fg_attempts",
+             "fg_percent",
+             "three_pointers",
+             "three_point_attempts",
+             "three_point_percent",
+             "two_pointers",
+             "two_point_attempts",
+             "two_point_percent",
+             "effective_fg_percent",
+             "free_throws",
+             "free_throw_attempts",
+             "free_throw_percent",
+             "off_rebound",
+             "def_rebound",
+             "total_rebound",
+             "assists",
+             "steals",
+             "blocks",
+             "turnovers",
+             "fouls",
+             "pts"
 )
 
-## We want columns 6:30 from this page
-my_numbers<-6:30
-
-#Repeat over every column in the table
-for (i in my_numbers){
-
-## This is the hardest part: figuring out the part of the page we're interested in    
-my_nodes<-paste0(".right:nth-child(",i,")")
-
-## Take that part, extract it from the page, change it to text
-node_list<-page%>%
-  html_nodes(my_nodes)%>%
-  html_text()
-
-## Add that column to the data frame
-nba_df<-nba_df%>%add_column(node_list)
-names(nba_df)[i-1]<-column_names[i]
-
-}# End column loop
+names(nba_df)<-nba_names
 
 ## Add year, since we'll be including multiple years
 nba_df$year<-year
@@ -377,10 +317,10 @@ print(paste("Completed year", year))
 
 }#end year loop
 
-#Convert numbers back from text to numbers using mutate_at  
-nba_df_all<-nba_df_all%>%mutate_at(vars(c(column_names[6:30])),as.numeric)
-
-nba_df_all<-nba_df_all%>%group_by(player_name,year)%>%mutate_at(vars(c(column_names[6:30])),sum)  
+nba_df_all<-nba_df_all%>%
+  mutate_at(.funs=as.numeric,.vars=names(nba_df_all)[5:31]) %>% #convert all to numeric
+  filter(!(is.na(games))) #drop "marker" rows
+  
 save(nba_df_all,file = "nba.Rdata")
 
 }else{
@@ -396,7 +336,7 @@ Points per minute is one of the key measures of an NBA player's output. Players 
 nba_df_all<-nba_df_all%>%mutate(pts_minute=pts/minutes_played)
 
 gg<-ggplot(filter(nba_df_all,pts>1000,year>1997),aes(y=pts_minute,x=three_pointers,
-                          text=player_name,
+                          text=player,
                           color=as.factor(year)))
 gg<-gg+geom_hline(yintercept=.6,linetype="dashed",alpha=.3)
 gg<-gg+geom_point(size=.5,alpha=.75)
@@ -410,6 +350,136 @@ nba_mod_1998<-lm(pts_minute~I(three_pointers/100),data=filter(nba_df_all,year==1
 #Predicting same in 2017
 nba_mod_2017<-lm(pts_minute~I(three_pointers/100),data=filter(nba_df_all,year==2017));summary(nba_mod_2017)
 ```
+
+
+## Working with NFL Reference
+
+```{r}
+
+nfl_get_data<-TRUE
+
+nfl_df_all<-NULL
+
+if (nfl_get_data==TRUE){
+
+  for (year in 2008:2017){
+url<-paste0("https://www.pro-football-reference.com/years/",year,"/")
+
+## Parse web page
+nfl_df<-url %>% read_html() %>%                   # parse html
+      html_nodes('#all_team_stats')%>%
+      html_nodes(xpath='comment()')%>%
+      html_text()%>%
+      read_html()%>%
+      html_node('table')%>%
+      html_table()
+  
+nfl_names<-c("rank",
+             "team",
+             "games",
+             "points_for_offense",
+             "yards",
+             "plays",
+             "yards/play",
+             "turnovers_lost",
+             "fumbles_lost",
+             "first_downs",
+             "pass_completions",
+             "pass_attempts",
+             "pass_yards",
+             "pass_tds",
+             "pass_interceptions_against",
+             "pass_net_yards_attempt",
+             "pass_first_downs",
+             "rush_attempts",
+             "rush_yards",
+             "rush_tds",
+             "rush_yards_attempt",
+             "rush_first_downs",
+             "penalties_commit",
+             "penalty_yards_commit",
+             "first_downs_by_penaly",
+             "drive_score_pct",
+             "drive_to_pct",
+             "expected_points")
+
+names(nfl_df)<-nfl_names
+
+nfl_df<-nfl_df%>%slice(-1)%>%# drop first row
+    slice(-(33:nrow(nfl_df)))%>% # drop summary data at end
+    mutate(year=year)%>% # add year
+    ## Convert to numeric
+    mutate_at(.funs = as.numeric,.vars=names(nfl_df)[3:dim(nfl_df)[2]])%>%
+    mutate(team=str_remove(team,"[^[:alnum:]]"))
+  
+## Win/loss record
+
+## Parse web page
+nfl_afc<-url %>% read_html() %>%                   # parse html
+      html_nodes('#AFC')%>%
+      html_table()%>%
+      data.frame()%>%
+      slice(-c(seq(1,20,by=5)))
+      
+
+## Parse web page
+nfl_nfc<-url %>% read_html() %>%                   # parse html
+      html_nodes('NFC')%>%
+      html_table()%>%
+      data.frame()%>%
+      slice(-c(seq(1,20,by=5)))
+
+nfl_record<-bind_rows(nfl_afc,nfl_nfc)   
+
+select_vars<-c("Tm","W","L","PF","PA")
+
+nfl_record<-nfl_record%>%select_at(.vars=select_vars)
+
+names(nfl_record)<-c(
+                     "team",
+                     "wins",
+                     "losses",
+                     "points_for",
+                     "points_against")
+
+nfl_record<-as_data_frame(nfl_record)%>%tbl_df()%>%
+  mutate(team=str_remove(team,"[^[:alnum:]]"))%>%
+  mutate_at(.funs=as.numeric,.vars=2:5)
+
+nfl_df<-nfl_df%>%as_data_frame()%>%tbl_df()
+
+nfl_df<-left_join(nfl_df,nfl_record,by="team")
+
+    ## Combine
+    nfl_df_all<-bind_rows(nfl_df_all,nfl_df)
+    
+    ## Wait between 3 and 4 seconds
+    Sys.sleep(runif(1,3,4))
+    
+      print(paste("Finishing year:" ,year))
+  } # End year loop
+  
+  
+  save(nfl_df_all,file="nfl_df_all.Rdata")
+} else{
+    load("nfl_df_all.Rdata")
+  } #end conditional
+```
+
+```{r}
+gg<-ggplot(nfl_df_all,aes(x=rush_yards,
+                          y=wins,
+                          text=team,
+                          color=as.factor(year)))
+gg<-gg+geom_point()
+gg<-gg+facet_wrap(~year)
+gg<-gg+theme(legend.position="none")+xlab("Rush Yards")+ylab("Wins")
+ggplotly(gg)
+
+```
+
+
+
 
 # Interacting via APIs
 
