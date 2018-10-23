@@ -94,7 +94,7 @@ When we talk about "scraping" a web table, we're talking about pulling a table t
 marathon_wiki = "https://en.wikipedia.org/wiki/Marathon_world_record_progression"
 
 # Get the page, pull the tables via html_table
-marathon <- read_html(marathon_wiki)%>%html_table()
+marathon <- read_html(marathon_wiki)%>%html_table(fill=TRUE)
 
 #Men's is the first table
 marathon<-tbl_df(data.frame(marathon[[1]]))
@@ -117,7 +117,7 @@ marathon_wiki = "https://en.wikipedia.org/wiki/Marathon_world_record_progression
 marathon <- read_html(marathon_wiki)%>%html_table(fill=TRUE)
 
 #Men's is the first table
-marathon<-tbl_df(marathon[[1]])
+marathon<-tbl_df(marathon[[2]])
 
 #Convert time to seconds
 marathon<-marathon%>%mutate(Time2=hms(as.character(Time)))%>%mutate(Time2=period_to_seconds(Time2))
@@ -132,7 +132,8 @@ marathon$date<-mdy(marathon$Date)
 ## Progression of World Record Marathon Speed in Meters/Second
 ```{r}
 
-marathon<-marathon%>%mutate(Nationality=fct_reorder(f=as.factor(Nationality),x=-speed,fun = max))
+marathon<-marathon%>%mutate(Nationality=fct_reorder(.f=as.factor(Nationality),
+                                                    .x=-speed,fun = max))
 
 g1<-ggplot(data=marathon,
            aes(y=speed,x=marathon$date,
@@ -259,8 +260,6 @@ for (year in year_list){
 ## Web Page: could be lots of different things. 
 url<-paste0("http://www.basketball-reference.com/leagues/NBA_",year,"_totals.html")
 
-## Get Page
-page<-read_html(url)
 
 nba_df<-url %>% 
       read_html() %>%                   # parse html
@@ -551,7 +550,7 @@ api.key.install(acs_key, file = "key.rda")
 select_zip<-geo.make(zip.code=ziplist)
 
 county_educ=acs.fetch(geography=select_zip,
-                      endyear=2014,
+                      endyear=2016,
                       table.number="B15002",
                       col.names="pretty",verbose=T)
 
@@ -655,12 +654,6 @@ for (i in 1:length(ziplist)) {
   # add element to dataset
   zdemodata$medValSqFt[i]=x3[[1]][1]
 
-# And again, find element, pull it
-  x4=xpathApply(x,"//table[name = 'Affordability Data']/data/attribute[name = 'Median 4-Bedroom Home Value']/values/zip/value",xmlValue)
-  
-  # add element to dataset
-  zdemodata$med4price[i]=x4[[1]][1]
-    
     
   #Add zip code to null dataset
   zdemodata$zip[i]=ziplist[i]
@@ -675,7 +668,7 @@ zdemodata2<-data.frame(
                   as.character(unlist(zdemodata$med4price))
                    )
                    
-names(zdemodata2)<-c("zip","medListPrice","medValSqFt","med4price")
+names(zdemodata2)<-c("zip","medListPrice","medValSqFt")
 
 zdemodata2<-as.tibble(zdemodata2)
 
@@ -691,8 +684,6 @@ save(zdemodata2,file="zdemodata.RData")
 
 head(zdemodata2)
 ```
-
-*Quick Exercise: Get median 4-bedroom home value and add it to the above data frame*
 
 Now we merge these two datasets by zip code:
 ```{r}
@@ -716,11 +707,11 @@ First, we can show values of homes (per square foot) by zip code.
 
 #Need to order zip codes for barplot
 dav_house_df<-dav_house_df%>%mutate(zipfactor=factor(as.character(zip)))
-dav_house_df<-dav_house_df%>%mutate(zipfactor=fct_reorder(f = zipfactor,x=medValSqFt))
+dav_house_df<-dav_house_df%>%mutate(zipfactor=fct_reorder(.f = zipfactor,.x=medValSqFt))
 
 #Bar plot of value by zip code
 g6<-ggplot(data=filter(dav_house_df,medValSqFt>55),
-           aes(x=zipfactor,y=medValSqFt,fill=medValSqFt,text=city))
+           aes(x=zipfactor,y=medValSqFt,fill=medValSqFt,text=zip))
 
 g6<-g6+scale_fill_gradient(low="blue",high="red")
 
@@ -920,6 +911,102 @@ map
 ```
 *Note: Use the box in the upper right corner to select different attributes of neighborhoods*
 
-Nashville is a city with very sharply demarcated neighborhoods. High income, high SES neighborhoods feature very high home prcies and high prices per square foot, while areas with lower levels of education and income have much less robust housing markets. 
+Nashville is a city with very sharply demarcated neighborhoods. High income, high SES neighborhoods feature very high home prices and high prices per square foot, while areas with lower levels of education and income have much less robust housing markets. 
 
-*Quick Exercise: Add the median 4 bedroom home value from above to this map*
+
+## OMDB Data
+The code below first gets the titles of every Studio Ghibli movie, then searches the OMDB for these movies. It
+
+```{r}
+library(omdbapi)
+
+url<-"https://en.wikipedia.org/wiki/List_of_Studio_Ghibli_works"
+
+# Get the page, pull the tables via html_table
+titles<- read_html(url)%>%html_table(fill=TRUE)
+
+# Titles is the second table
+titles<-tbl_df(data.frame(titles[[2]]))%>%
+  dplyr::select(Title)%>%as_vector()
+
+# Search IMDB for each title, add to data frame
+mv<-map_df(titles,search_by_title)%>%
+  filter(Title%in%titles)
+
+# Keep just the first version of each movie (particular to this example) 
+mv<-mv%>%group_by(Title)%>%
+  filter(row_number()==1)
+
+# Send request for these IDs to the database
+mv_df <- map_df(mv$imdbID, find_by_id,include_tomatoes=TRUE)
+
+# pull rating source
+mv_df$rate_source<-mv_df$Ratings%>%map(1)%>%as_vector()
+
+# pull rating
+mv_df$rating<-mv_df$Ratings%>%map(2)%>%as_vector()
+
+# 
+mv_df<-mv_df%>%
+  filter(rate_source=="Rotten Tomatoes")%>%
+    mutate(rating=parse_number(rating),
+           BoxOffice=parse_number(BoxOffice),
+           imdbRating=parse_number(imdbRating))
+
+```
+
+
+```{r}
+gg<-ggplot(mv_df,aes(x=Year,y=imdbRating,text=Title))
+gg<-gg+geom_point()
+ggplotly(gg)
+```
+
+
+```{r}
+
+url<-"https://en.wikipedia.org/wiki/2017_in_film"
+
+# Get the page, pull the tables via html_table
+titles<- read_html(url)%>%html_nodes('table')
+titles<-titles[[7]] %>%html_table(fill=TRUE)
+names(titles)[1]<-"opening2"
+titles<-titles%>%
+  select(Title)%>%as_vector()
+
+
+# Search IMDB for each title, add to data frame
+mv<-map_df(titles,search_by_title)%>%
+  filter(Title%in%titles)%>%
+  filter(Type=="movie")%>%
+  filter(Year==2017)
+
+# Keep just the first version of each movie (particular to this example) 
+mv<-mv%>%group_by(Title)%>%
+  filter(row_number()==1)
+
+# Send request for these IDs to themv_d database
+mv_df <- map_df(mv$imdbID, find_by_id,include_tomatoes=TRUE)
+
+# pull rating source
+mv_df$rate_source<-mv_df$Ratings%>%map(1)%>%as_vector()
+
+# pull rating
+mv_df$rating<-mv_df$Ratings%>%map(2)%>%as_vector()
+
+# 
+mv_df<-mv_df%>%
+  filter(rate_source=="Rotten Tomatoes")%>%
+  mutate(rating=parse_number(rating))%>%
+  mutate(BoxOffice=parse_number(BoxOffice))%>%
+  mutate(imdbRating=parse_number(imdbRating))
+```
+
+
+
+```{r}
+gg<-ggplot(mv_df,aes(x=BoxOffice,y=rating,text=Title))
+gg<-gg+geom_point()
+gg<-gg+scale_x_continuous(trans="log",breaks=pretty_breaks())
+ggplotly(gg)
+```
