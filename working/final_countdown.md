@@ -6,7 +6,7 @@
 
 2018-10-30 Classification
 
-2018-11-01 Classification
+2018-11-01 Classification *THIRD PROGRESS REPORTS DUE*
 
 2018-11-06 Cross Validation
 
@@ -22,7 +22,7 @@
 
 2018-11-27 Databases
 
-2018-11-29 Databases
+2018-11-29 Databases *FOURTH PROGRESS REPORTS (1st DRAFT of FINAL) DUE*
 
 2018-12-04 Presentations
 
