@@ -404,7 +404,8 @@ nfl_names<-c("rank",
 
 names(nfl_df)<-nfl_names
 
-nfl_df<-nfl_df%>%slice(-1)%>%# drop first row
+nfl_df<-nfl_df%>%
+    slice(-1)%>%# drop first row
     slice(-(33:nrow(nfl_df)))%>% # drop summary data at end
     mutate(year=year)%>% # add year
     ## Convert to numeric
@@ -423,12 +424,10 @@ nfl_afc<-url %>% read_html() %>%                   # parse html
 
 ## Parse web page
 nfl_nfc<-url %>% read_html() %>%                   # parse html
-      html_nodes('NFC')%>%
+      html_nodes('#NFC')%>%
       html_table()%>%
       data.frame()%>%
       slice(-c(seq(1,20,by=5)))
-
-nfl_record<-bind_rows(nfl_afc,nfl_nfc)   
 
 select_vars<-c("Tm","W","L","PF","PA")
 
@@ -918,6 +917,7 @@ Nashville is a city with very sharply demarcated neighborhoods. High income, hig
 The code below first gets the titles of every Studio Ghibli movie, then searches the OMDB for these movies. It
 
 ```{r}
+
 library(omdbapi)
 
 url<-"https://en.wikipedia.org/wiki/List_of_Studio_Ghibli_works"
