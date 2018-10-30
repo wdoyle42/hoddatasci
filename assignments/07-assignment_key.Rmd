@@ -1,0 +1,235 @@
+---
+title: "Assignment 7"
+output: github_document
+---
+
+```{r}
+library(tidyverse)
+library(tidycensus)
+library(noncensus)
+library(acs)
+```
+
+
+
+1. Download data for all of the zip codes in Los Angeles county on education levels. 
+
+## NB: This should work but does not
+```{r}
+data("zip_codes")
+data("counties")
+
+
+## Get FIPS code for LA County
+cty_fips<-counties%>%
+  filter(county_name=="Los Angeles County")%>%
+  mutate(cty_fips=paste0(state_fips,county_fips))%>%
+  select(cty_fips)%>%
+  as_vector()
+
+## Get all zip codes for LA county
+ziplist<-zip_codes%>%
+  filter(fips==as.numeric(cty_fips))%>%
+  select(zip)%>%
+  as_vector()
+
+city_zip<-zip_codes%>%
+  filter(fips==as.numeric(cty_fips))%>%
+  select(zip,city)
+
+## OR: http://lmgtfy.com/?q=los+angeles+county+fips
+```
+
+```{r}
+## ACS Data
+
+# Get your own key and save as my_acs_key.txt
+acs_key<-readLines("../lessons/my_acs_key.txt",warn = FALSE)
+api.key.install(acs_key, file = "key.rda")
+
+select_zip<-geo.make(zip.code = as.numeric(ziplist))
+
+# B15002 Education
+county_educ<-acs.fetch(geography=select_zip,
+                      endyear=2015,
+                      table.number="B15002",
+                      col.names="pretty",
+                      verbose=T)
+
+acs.colnames(county_educ)
+
+## Proprtion of individuals at college or above=
+## number with college degree/
+## total number
+prop_coll_above<-divide.acs(numerator=(county_educ[,15]+
+                                      county_educ[,16]+
+                                      county_educ[,17]+
+                                      county_educ[,18]+
+                                      county_educ[,32]+
+                                      county_educ[,33]+
+                                      county_educ[,34]+
+                                      county_educ[,35]),
+                            denominator=county_educ[,1]
+)
+
+
+# B19001-- family income           
+county_income<-acs.fetch(geography=select_zip, 
+                        endyear = 2015,
+                        table.number="B19001", 
+                        col.names="pretty")
+
+acs.colnames(county_income)
+
+#Proportion above 75k-- 
+prop_above_75<-divide.acs(numerator=(county_income[,13]+
+                            county_income[,14]+
+                            county_income[,15]+
+                            county_income[,16]+
+                            county_income[,17]),
+                          denominator=county_income[,1]
+                          )
+                          
+# Convert to tibble
+county_df<-tibble(substr(geography(county_educ)[[1]],7,11),
+                       as.numeric(estimate(prop_coll_above)),
+                       as.numeric(estimate(prop_above_75))
+)
+
+# Give it easy to use names
+names(county_df)<-c("zip","college_educ","income_75")
+
+```
+
+
+## This works but by a different approach than the one I taught you. 
+
+
+1. Download data for all of the zip codes in Los Angeles county on education levels. 
+
+2. Compute the proportion of the population that has a bachelor's degree or above by zip code.
+```{r}
+
+census_api_key(acs_key)
+# Table #B15001 education
+table="B15001"
+
+survey="acs5"
+
+year=2016
+
+acs_table<-get_acs(geography = "zcta",
+                table=table,
+                survey=survey,
+                year=year,
+                cache_table=TRUE
+                )
+acs_table_educ<-acs_table%>%filter(GEOID%in%ziplist)%>%rename_all(.f=tolower)
+
+var_list<-c("B15001_015",
+            "B15001_016",
+            "B15001_017",
+            "B15001_018",
+            "B15001_032",
+            "B15001_033",
+            "B15001_034",
+            "B15001_035")
+
+acs_table_educ<-acs_table_educ%>%
+  group_by(geoid)%>%
+  mutate(total=estimate[variable=="B15001_001"])%>%
+  mutate(bach_plus=sum(estimate[variable %in%var_list]))%>%
+  mutate(bach_plus=bach_plus/total)%>%
+  summarize(bach_plus=mean(bach_plus))
+
+
+```
+
+3. Download data for all of the zip codes in LA county on family income by zip code. 
+4. Compute the proportion of the population that has family income above 75,000. 
+
+```{r}
+
+# Table #B19001  Income
+table="B19001"
+
+acs_table<-get_acs(geography = "zcta",
+                table=table,
+                survey=survey,
+                year=year,
+                cache_table=TRUE
+                )
+
+acs_table_income<-acs_table%>%filter(GEOID%in%ziplist)%>%rename_all(.f=tolower)
+
+var_list<-c("B19001_013",
+"B19001_014",
+"B19001_015",
+"B19001_016",
+"B19001_017")
+
+acs_table_income<-acs_table_income%>%
+  group_by(geoid)%>%
+  mutate(total=estimate[variable=="B19001_001"])%>%
+  mutate(over_75=sum(estimate[variable %in%var_list]))%>%
+  mutate(prop_over_75=over_75/total)%>%
+  summarize(prop_over_75=mean(prop_over_75))
+
+```
+
+
+5. Download data for all of the zip codes in LA county on health insurance coverage status (you'll need to look that table up here:[http://www.census.gov/programs-surveys/acs/technical-documentation/summary-file-documentation.html](http://www.census.gov/programs-surveys/acs/technical-documentation/summary-file-documentation.html).
+Another link: https://www.census.gov/programs-surveys/acs/technical-documentation/table-shells.html
+6. Calculate the proportion of the population in each zip code that is uninsured. 
+
+```{r}
+## Health insurance table"B27001"
+
+table<-"B27001"
+
+acs_table<-get_acs(geography = "zcta",
+                table=table,
+                survey=survey,
+                year=2016,
+                cache_table=TRUE
+                )
+
+acs_table_health<-acs_table%>%filter(GEOID%in%ziplist)%>%rename_all(.f=tolower)
+
+var_list<-paste0("B27001_0",str_pad(c(seq(5,29,by=3),
+                                      seq(33,57,by=3)),
+                                      width=2 ,pad = "0"))
+                  
+acs_table_health<-acs_table_health%>%
+  group_by(geoid)%>%
+  mutate(total=estimate[variable=="B27001_001"])%>%
+  mutate(uninsured=sum(estimate[variable %in%var_list]))%>%
+  mutate(prop_insured=uninsured/total)%>%
+  summarize(uninsured=mean(prop_insured))
+
+```
+
+
+7. Plot the proportion uninsured as a function of education, and then as a function of income.
+
+```{r}
+acs_table_educ<-acs_table_educ%>%rename_all(.f=tolower)
+acs_full<-left_join(acs_table_educ,acs_table_income,by="geoid")
+acs_full<-left_join(acs_full,acs_table_health,by="geoid")
+
+gg<-ggplot(acs_full,aes(x=bach_plus,y=uninsured,color=prop_over_75))
+gg<-gg+geom_point()
+gg
+
+
+gg<-ggplot(acs_full,aes(x=prop_over_75,y=uninsured,color=bach_plus))
+gg<-gg+geom_point()
+gg
+```
+
+8. Model the proportion uninsured as a function of education, income _and one other variable of your choice_. 
+
+```{r}
+mod1<-lm(uninsured~bach_plus+prop_over_75,data=acs_full); summary(mod1)
+```
+
