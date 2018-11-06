@@ -12,6 +12,8 @@
 
 2018-11-08 Classification
 
+2018-11-12 Classification Assignment Due
+
 2018-11-13 Cross Validation
 
 2018-11-15 Cross Validation
@@ -19,6 +21,8 @@
 2018-11-20: No Class, Thanksgiving
 
 2018-11-22: No Class, Thansgiving
+
+2018-11-26 Cross Validation Assignment Due (Last Assignment)
 
 2018-11-27 Databases
 
