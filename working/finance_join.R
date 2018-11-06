@@ -1,4 +1,9 @@
+
+## Most recent version of tidyquant
+
+#devtools:install_github("business-science/tidyquant")
 library(tidyquant)
+library(lubridate)
 
 symbols<-c("GOOG","IBM")
 
@@ -6,15 +11,37 @@ full_df<-NULL #Initialize empty dataset
 
 for (symbol in symbols){
 
-financial<-tq_get(symbol,get="financial",from="2001-01-01")
+key_ratios<-tq_get(symbol,get="key.ratios",from="2001-01-01")
 
 stock_price<-tq_get(symbol,get="stock.prices")
 
 stock_price$name<-symbol
 
-#Just get income statements (IS) others are Balance Sheets (bs) and cash flows (CF)
+stock_price$year<-year(stock_price$date)
+
+#Just get P/E Ratio
+
+
+pe<-key_ratios$data[[7]]%>%
+  filter(category=="Price to Earnings")%>%
+  select(date,value)%>%
+  rename(pe=value)
+
+pe$year<-year(pe$date)  
+
+
+ps<-key_ratios$data[[7]]%>%
+  filter(category=="Price to Sales")
+
+ps$year<-year(ps$date)  
+
+
+
+combined<-left_join(stock_price,pe,by="year")
+combined<-left_join(stock_price,ps,by="year")
+
 fin<-financial %>%
-  filter(type == "IS") %>%
+  filter(data == "GROWTH") %>%
   select(quarter)%>%
   unnest()
 
@@ -31,9 +58,11 @@ fin$name<-symbol
 q_df<-left_join(fin,stock_price,by=c("name","date"))
 
 #Combine with full data frame
-full_df<-rbind(full_df,q_df)
+full_df<-bind_rows(full_df,q_df)
 
 }
+
+oil<-tq_get(x="DCOILWTICO",get = "economic.data",from="2000-01-01")
 
 g1<-ggplot(filter(q_df,category=="Revenue"),aes(x=value,y=close))
 g1<-g1+geom_point()

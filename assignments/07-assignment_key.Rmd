@@ -40,7 +40,7 @@ city_zip<-zip_codes%>%
 ## OR: http://lmgtfy.com/?q=los+angeles+county+fips
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 ## ACS Data
 
 # Get your own key and save as my_acs_key.txt
@@ -109,7 +109,7 @@ names(county_df)<-c("zip","college_educ","income_75")
 
 2. Compute the proportion of the population that has a bachelor's degree or above by zip code.
 ```{r}
-
+acs_key<-readLines("../lessons/my_acs_key.txt",warn = FALSE)
 census_api_key(acs_key)
 # Table #B15001 education
 table="B15001"

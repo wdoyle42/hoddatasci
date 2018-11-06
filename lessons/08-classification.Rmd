@@ -15,13 +15,14 @@ knitr::opts_chunk$set(echo = TRUE)
 Today we'll be working with the pizza dataset, which comes from the subreddit random acts of pizza. Each line represents a post to this subreddit. We have various characteristics of these posts, along with the request text from the post itself. We'll use these characteristics of the posts to predict whether or not the poster received pizza. This lesson is inspired by [this article](http://www.aaai.org/ocs/index.php/ICWSM/ICWSM14/paper/download/8106/8101)
 
 ```{r libraries}
-library(tidyverse)
+library(arm)
 library(knitr)
 library(caret)
 library(forcats)
 library(tidytext)
 library(stringr)
 library(AUC)
+library(tidyverse)
 ```
 
 ```{r data}
@@ -67,7 +68,7 @@ za<-za%>%mutate(prev_raop_post=ifelse(raop_posts>0,1,0))%>%
                                      "Posted Before"="1"))
 
 # Binary variable: word "student" in text
-za<-za%>%mutate(student=ifelse(grepl(x=request_text,pattern="student"),1,0))%>%
+za<-za%>%mutate(student=ifelse(grepl(x=request_text,pattern="student",ignore.case=TRUE),1,0))%>%
         mutate(student=fct_recode(as.factor(student),
                             "Student"="1",
                             "No student"="0"))
@@ -108,7 +109,7 @@ za_expand<-za%>%
   unnest_tokens(input=request_text,output=word,token="words")
 
 ## What this looks like
-za_expand%>%select(word)
+#za_expand%>%select(word)
 ```
 
 Next, we drop what are called ["stop words"](https://en.wikipedia.org/wiki/Stop_words): words unlikely to have content that we are interested in. 
@@ -118,7 +119,7 @@ Next, we drop what are called ["stop words"](https://en.wikipedia.org/wiki/Stop_
 za_expand<-za_expand%>%anti_join(stop_words,by="word")  
 
 ## What this looks like
-za_expand%>%select(word)
+#za_expand%>%select(word)
 ```
 
 Notice how the content of the post has changed after dropping the stop words. 
@@ -136,10 +137,10 @@ za_expand<-za_expand%>%
   mutate(score=ifelse(is.na(score),0,score))
 
 ## Show words and scores
-za_expand%>%select(word,score)
+#za_expand%>%select(word,score)
 
 ## Just score words
-za_expand%>%select(word,score)%>%filter(score>0)%>%print()
+#za_expand%>%select(word,score)%>%filter(score>0)%>%print()
 ```
 
 Now we're ready to bring this back in. We'll sum up the scores for each post to get how positive or negative it is. 
@@ -280,7 +281,7 @@ We're going to do something a bit different with the predictions from this model
 lm_predict<-predict(lm_mod)
 
 ## Convert to binary, 1= >.5
-lm_predict_bin<-ifelse(lm_predict>.5,1,0)
+lm_predict_bin<-ifelse(lm_predict>.3,1,0)
 
 lpm_roc<-roc(lm_predict_bin,as.factor(lm_mod$y))
 
@@ -300,8 +301,8 @@ rownames(pred_table)<-c("Predicted: Yes","Predicted: No")
 colnames(pred_table)<-c("Actual: Yes","Actual: No")
 
 ## Generate confusion matrix
-confusionMatrix(data=lm_predict_bin,
-                reference = lm_mod$y,positive="1")
+confusionMatrix(data=as.factor(lm_predict_bin),
+                reference = as.factor(lm_mod$y),positive="1")
 ```
 
 The confusion matrix generated here is explained [here](https://topepo.github.io/caret/measuring-performance.html#class). 
@@ -331,51 +332,52 @@ logit_mod<-glm(got_pizza~
              pop_request+
              score,
              data=za,
-            na.action=na.exclude,
             family=binomial(link="logit"),
                y=TRUE)
 
 summary(logit_mod)
 ```
 
-With these results in hand we can generate predicted probabilities and see if this model did any better. To get predicted probabilities
+With these results in hand we can generate predicted probabilities and see if this model did any better. To get predicted probabilities we use type="response".
+
+We can convert the predictions to a binary variable by setting a "threshold" of .5. Any prediction above .5 is considered to be a 1, anything below, a 0. 
+
 
 ```{r}
 logit_predict<-predict(logit_mod,type="response")
-```
-
-We can convert the predictions to a binary variable by setting a "threshold" of .5. Any prediction above .5 is considered to be a 1, anything below, a 0. 
-```{r}
 logit_predict_bin<-rep(0,length(logit_predict))
-
-logit_predict_bin[logit_predict>=.5]<-1
-
-logit_table<-table(logit_predict_bin,za$got_pizza)
-
-pcp_logit<-(logit_table[1,1]+logit_table[2,2])/sum(logit_table)
-
-pred_table<-prop.table(lm_table,margin=1)
-
-rownames(pred_table)<-c("Predicted: Yes","Predicted: No")
-
-colnames(pred_table)<-c("Actual: Yes","Actual: No")
-
-confusionMatrix(data=logit_predict_bin,reference=za$got_pizza,positive="1")
+logit_predict_bin[logit_predict>.5]<-1
 ```
+
+```{r}
+confusionMatrix(data=as.factor(lm_predict_bin),
+                reference = as.factor(logit_mod$y),positive="1")
+```
+
 
 ## Area Under the Curve (AUC)
 
 The area under the curve considers both the sensitivity (does the model accurately predict every positive outcome) with the specificity (does the model accurately predict every negative outcome) for a given model, and does so across every possible threshold value. 
 
 ```{r}
-logit_predict_no_na<-na.omit(logit_predict)
+logit_sens_curve<-sensitivity(logit_predict,as.factor(logit_mod$y))
+plot(logit_sens_curve)
 
-logit_roc<-roc(logit_predict_no_na,as.factor(logit_mod$y))
+
+logit_spec_curve<-specificity(logit_predict,as.factor(logit_mod$y))
+plot(logit_spec_curve)
+
+logit_roc<-roc(logit_predict,as.factor(logit_mod$y))
+plot(logit_roc)
+
 
 auc(logit_roc)
  
-plot(logit_roc)
 ```
+
+
+
+
 
 ## Plotting Predicted Probability
 
@@ -383,16 +385,15 @@ Plots of binary models can be weird. To help with this, we can "jitter" the plot
 
 ```{r}
 
-## Tbl of possible predictors
-za_preds<-za%>%select(karma,got_pizza,student,age)
 
 #Prediction
-za_preds$predict<-logit_predict
+za<-za%>%modelr::add_predictions(logit_mod)%>%
+  mutate(pred=arm::invlogit(pred)) ## This transforms to probs
 
-gg<-ggplot(za_preds,aes(x=karma,y=got_pizza))
+gg<-ggplot(za,aes(x=karma,y=got_pizza))
 gg<-gg+geom_jitter(alpha=.25,size=.5,position=position_jitter(height=.4,width=.4))
 gg<-gg+scale_x_continuous(trans="log",breaks=c(0,10,100,1000,3000,10000))
-gg<-gg+geom_smooth(data=za_preds,aes(x=karma,y=predict,color=as.factor(student)))
+gg<-gg+geom_smooth(data=za,aes(x=karma,y=pred,color=as.factor(student)))
 gg
 
 ```

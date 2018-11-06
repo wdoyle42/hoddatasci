@@ -495,10 +495,10 @@ The first step is to create a list of all zip codes in Davidson County. We can d
 
 ```{r}
 ## Look up fips code for county
-lookup_code("TN","Davidson") 
+lookup_code("CA","San Mateo") 
 
-state_fips<-"47"
-county_stub<-"037"
+state_fips<-"06"
+county_stub<-"081"
 
 county_fips<-paste0(state_fips,county_stub)
 
@@ -509,7 +509,8 @@ county_to_zip<-read_csv("http://www2.census.gov/geo/docs/maps-data/data/rel/zcta
 names(county_to_zip)<-tolower(names(county_to_zip))
 
 #Just zip codes in selected county
-county_to_zip<-county_to_zip%>%filter(state==state_fips,county==county_stub)%>%
+county_to_zip<-county_to_zip%>%
+  filter(state%in%as.numeric(state_fips),county==county_stub)%>%
   select(zcta5,state,county)
 
 #list of zip codes
@@ -610,6 +611,7 @@ _Quick Exercise_ Pull table B23001 "Sex by Age by Employment Status for the Popu
 Now, we'll turn to the Zillow API. We'll interact with this API to get average levels of home prices and price per square foot in these zip codes. Notice that I don't download any  dataset if it already exists: this avoids getting too many calls to Zillow-- they won't take more than 1,000 a day (which actually isn't a lot).
 
 We're going to interact directly with the Zillow api, as opposed to using an R "wrapper" like "acs.R". This means we have to have a properly formatted request AND be able to interpret the results when they come back. 
+
 
 ```{r}
 
@@ -918,6 +920,10 @@ The code below first gets the titles of every Studio Ghibli movie, then searches
 
 ```{r}
 
+install.packages("devtools")
+
+devtools::install_github("hrbrmstr/omdbapi")
+
 library(omdbapi)
 
 url<-"https://en.wikipedia.org/wiki/List_of_Studio_Ghibli_works"
@@ -928,6 +934,8 @@ titles<- read_html(url)%>%html_table(fill=TRUE)
 # Titles is the second table
 titles<-tbl_df(data.frame(titles[[2]]))%>%
   dplyr::select(Title)%>%as_vector()
+
+search_by_title("Ponyo")
 
 # Search IMDB for each title, add to data frame
 mv<-map_df(titles,search_by_title)%>%
@@ -966,13 +974,15 @@ ggplotly(gg)
 ```{r}
 
 url<-"https://en.wikipedia.org/wiki/2017_in_film"
-
+"
+url<-https://en.wikipedia.org/wiki/Academy_Award_for_Best_Picture
+"
 # Get the page, pull the tables via html_table
 titles<- read_html(url)%>%html_nodes('table')
 titles<-titles[[7]] %>%html_table(fill=TRUE)
 names(titles)[1]<-"opening2"
 titles<-titles%>%
-  select(Title)%>%as_vector()
+select(Title)%>%as_vector()
 
 
 # Search IMDB for each title, add to data frame
@@ -985,7 +995,8 @@ mv<-map_df(titles,search_by_title)%>%
 mv<-mv%>%group_by(Title)%>%
   filter(row_number()==1)
 
-# Send request for these IDs to themv_d database
+# Send request for these IDs to the omdb database
+possibly_find_by_id
 mv_df <- map_df(mv$imdbID, find_by_id,include_tomatoes=TRUE)
 
 # pull rating source
@@ -994,7 +1005,7 @@ mv_df$rate_source<-mv_df$Ratings%>%map(1)%>%as_vector()
 # pull rating
 mv_df$rating<-mv_df$Ratings%>%map(2)%>%as_vector()
 
-# 
+# Get relevant ino
 mv_df<-mv_df%>%
   filter(rate_source=="Rotten Tomatoes")%>%
   mutate(rating=parse_number(rating))%>%
@@ -1010,3 +1021,23 @@ gg<-gg+geom_point()
 gg<-gg+scale_x_continuous(trans="log",breaks=pretty_breaks())
 ggplotly(gg)
 ```
+
+```{r}
+install.packages("noncensus")
+library(noncensus)
+data("counties")
+View(counties)
+```
+
+```{r}
+my_names<-c("rank",
+         "games",
+         "points_for",
+         "yards",)
+
+names(NFL)<-my_names
+
+NFL<-slice(NFL,-c(33:35))
+
+```
+
