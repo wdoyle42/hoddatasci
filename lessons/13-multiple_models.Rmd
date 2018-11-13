@@ -183,7 +183,7 @@ gg
 
 ## Model Tuning
 
-In model tuning, we try to find the best possible model among various candidates. There are two basic ways to acomplish this. One is using a model that the analyst has identified, either through theory or practice or both, as a good model to predict the outcome. This has been our basic perspective in this class. However, this model can still be refined by choosing the best candidate after having trained it on multiple training datasets, by choosing the model parameters that minimize RMSE. The code below, based on the `train` function from the `caret` library does just that. 
+In model tuning, we try to find the best possible model among various candidates. There are two basic ways to acomplish this. One is using a model that the analyst has identified, either through theory or practice or both, as a good model to predict the outcome. This has been our basic perspective in this class. Below, I use the "train" function from the `caret` library to estimate a model and conduct a cross validation using a model I specify. The other (shown below) allows the computer to choose the best possible subset of variables. Both have advantages and disadvantages. 
 ```{r}
 load("quickfacts.Rdata")
 
@@ -212,10 +212,11 @@ fit1<-train(mod1_formula,
 ```
 ## Machine Learning
 
-Of course, we can also just let the computer choose a model from a set of candidate variables. Below, I use stepqise regression, which involves proposing candidate variables and evaluating their ability to lower RMSE, as the basis for choosing a "best" model. 
+However, this model can still be refined by choosing the best candidate after having trained it on multiple training datasets, by choosing the model parameters that minimize RMSE. The code below, based on the `train` function from the `caret` library does just that. Of course, we can also just let the computer choose a model from a set of candidate variables. Below, I use stepqise regression, which involves proposing candidate variables and evaluating their ability to lower RMSE, as the basis for choosing a "best" model. 
+
+The "tuning" here involves the analyst choosing from different approaches-- stepwise as opposed to pre-specified. In different cases model tuning will involve different decisions from the analyst. 
 
 ```{r}
-#Tuning model parameters
 
 fit2<-train(log_median_home_val~.,
             data=qf,
