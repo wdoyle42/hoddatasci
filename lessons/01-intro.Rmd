@@ -1,5 +1,5 @@
 ---
-output: html_document
+output: github_document
 ---
 # Welcome to Data Science! {#intro}
 
@@ -70,25 +70,23 @@ Now, go to your repo for this class. Everyone's repo is in the `hoddatasci` orga
 
 *N.B. in this class, and generally in programming, when you see* `<text>` *that means that you need to substitute something in.*
 
-Blah Blah Blah
-
-Now go to Github desktop, and click the "clone a repository." Paste in the link you just copied, choose a location on your computer, and proceed. It should show you a link to your repository. 
+Now go to Github desktop, and click the "clone a repository." Paste in the link you just copied, choose a location on your computer, and proceed. Choose a good spot on your computer for the project files-- wherever you usually keep class directories. DO NOT PUT YOUR DIRECTORY ON YOUR DESKTOP OR IN DOWNLOADS. This project will be the only place you need to work for this class the entire semester. 
 
 ## Linking Github and Rstudo
 
 From RStudio, you'll need to click New Project--Existing Directory-- then choose the directory where you just downloaded the gihub repository. 
 
-Name the project "central". Choose a good spot on your computer for the project files-- wherever you usually keep class directories. This project will be the only place you need to work for this class the entire semester. 
+Name the project "central".  
 
-Once you click "create project," you should see a "git" tab in your environment. Open up the file named `college.Rmd` and take a look.  
+Once you click "create project," you should see a "git" tab in your environment. Open up the file named `01-intro.Rmd` and take a look.  
 
 ## Yes We Code! Running R Code
 
-The following code chunk will be our first use of R in this class. We're going to grab some data that's part of the [college scorecard](https://collegescorecard.ed.gov/data/documentation/) and do a bit of analysis on it. 
+The following code chunks will be our first use of R in this class. We're going to grab some data that's part of the [college scorecard](https://collegescorecard.ed.gov/data/documentation/) and do a bit of analysis on it. 
 
 ## .Rmd files
 
-Open the `01-Intro.Rmd` file. In Rstudio, go to File-->Open, then find the `01-Intro.Rmd` file in the directory. 
+Open the `01-intro.Rmd` file. In Rstudio, go to File-->Open, then find the `01-intro.Rmd` file in the directory. 
 
 .Rmd files will be the only file format we work in this class. .Rmd files contain three basic elements:
 
@@ -192,8 +190,6 @@ sc_sub <- sc%>%filter(adm_rate>.3)%>%
   arrange(stabbr,-sat_avg)%>%print(n=100)
 ```
 
-
-
 *Quick Exercise*
 Choose a different college and two different things about that college. 
 
@@ -253,7 +249,6 @@ gg
 ```
 
 *Quick exercise* Replicate the above plots, but put cost of attendance on the y axis. 
-
 
 ## Github: save, stage, commit, push
 
