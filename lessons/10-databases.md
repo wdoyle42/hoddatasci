@@ -40,17 +40,16 @@ We'll also use the Lahman database, which contains information on every single p
 library(tidyverse)
 ```
 
-    ## Loading tidyverse: ggplot2
-    ## Loading tidyverse: tibble
-    ## Loading tidyverse: tidyr
-    ## Loading tidyverse: readr
-    ## Loading tidyverse: purrr
-    ## Loading tidyverse: dplyr
+    ## ── Attaching packages ──────────────────────────────────────────────── tidyverse 1.2.1 ──
 
-    ## Conflicts with tidy packages ----------------------------------------------
+    ## ✔ ggplot2 3.1.0     ✔ purrr   0.2.5
+    ## ✔ tibble  1.4.2     ✔ dplyr   0.7.7
+    ## ✔ tidyr   0.8.2     ✔ stringr 1.3.1
+    ## ✔ readr   1.1.1     ✔ forcats 0.3.0
 
-    ## filter(): dplyr, stats
-    ## lag():    dplyr, stats
+    ## ── Conflicts ─────────────────────────────────────────────────── tidyverse_conflicts() ──
+    ## ✖ dplyr::filter() masks stats::filter()
+    ## ✖ dplyr::lag()    masks stats::lag()
 
 ``` r
 library(DBI)
@@ -65,7 +64,7 @@ library(dbplyr)
     ##     ident, sql
 
 ``` r
-#library(RSQLite)
+library(RSQLite)
 library(nycflights13)
 library(Lahman)
 ```
@@ -157,81 +156,74 @@ req_df<-dbFetch(req,n=-1)
 dbClearResult(req)
 ```
 
+``` r
+#Generate a SQL request to a database
+req_text<-"Select * from weather"
+
+#Send query through connection
+req<-dbSendQuery(con,req_text)
+
+#Generate dataframe from results
+req_df<-dbFetch(req,n=-1)
+
+#Good practice: clear request
+dbClearResult(req)
+```
+
 Let's take a look at the generated data frame.
 
 ``` r
 dim(req_df)
 ```
 
-    ## [1] 336776     19
+    ## [1] 26115    15
 
 ``` r
 head(req_df,20)
 ```
 
-    ##    year month day dep_time sched_dep_time dep_delay arr_time
-    ## 1  2013     1   1      517            515         2      830
-    ## 2  2013     1   1      533            529         4      850
-    ## 3  2013     1   1      542            540         2      923
-    ## 4  2013     1   1      544            545        -1     1004
-    ## 5  2013     1   1      554            600        -6      812
-    ## 6  2013     1   1      554            558        -4      740
-    ## 7  2013     1   1      555            600        -5      913
-    ## 8  2013     1   1      557            600        -3      709
-    ## 9  2013     1   1      557            600        -3      838
-    ## 10 2013     1   1      558            600        -2      753
-    ## 11 2013     1   1      558            600        -2      849
-    ## 12 2013     1   1      558            600        -2      853
-    ## 13 2013     1   1      558            600        -2      924
-    ## 14 2013     1   1      558            600        -2      923
-    ## 15 2013     1   1      559            600        -1      941
-    ## 16 2013     1   1      559            559         0      702
-    ## 17 2013     1   1      559            600        -1      854
-    ## 18 2013     1   1      600            600         0      851
-    ## 19 2013     1   1      600            600         0      837
-    ## 20 2013     1   1      601            600         1      844
-    ##    sched_arr_time arr_delay carrier flight tailnum origin dest air_time
-    ## 1             819        11      UA   1545  N14228    EWR  IAH      227
-    ## 2             830        20      UA   1714  N24211    LGA  IAH      227
-    ## 3             850        33      AA   1141  N619AA    JFK  MIA      160
-    ## 4            1022       -18      B6    725  N804JB    JFK  BQN      183
-    ## 5             837       -25      DL    461  N668DN    LGA  ATL      116
-    ## 6             728        12      UA   1696  N39463    EWR  ORD      150
-    ## 7             854        19      B6    507  N516JB    EWR  FLL      158
-    ## 8             723       -14      EV   5708  N829AS    LGA  IAD       53
-    ## 9             846        -8      B6     79  N593JB    JFK  MCO      140
-    ## 10            745         8      AA    301  N3ALAA    LGA  ORD      138
-    ## 11            851        -2      B6     49  N793JB    JFK  PBI      149
-    ## 12            856        -3      B6     71  N657JB    JFK  TPA      158
-    ## 13            917         7      UA    194  N29129    JFK  LAX      345
-    ## 14            937       -14      UA   1124  N53441    EWR  SFO      361
-    ## 15            910        31      AA    707  N3DUAA    LGA  DFW      257
-    ## 16            706        -4      B6   1806  N708JB    JFK  BOS       44
-    ## 17            902        -8      UA   1187  N76515    EWR  LAS      337
-    ## 18            858        -7      B6    371  N595JB    LGA  FLL      152
-    ## 19            825        12      MQ   4650  N542MQ    LGA  ATL      134
-    ## 20            850        -6      B6    343  N644JB    EWR  PBI      147
-    ##    distance hour minute  time_hour
-    ## 1      1400    5     15 1357016400
-    ## 2      1416    5     29 1357016400
-    ## 3      1089    5     40 1357016400
-    ## 4      1576    5     45 1357016400
-    ## 5       762    6      0 1357020000
-    ## 6       719    5     58 1357016400
-    ## 7      1065    6      0 1357020000
-    ## 8       229    6      0 1357020000
-    ## 9       944    6      0 1357020000
-    ## 10      733    6      0 1357020000
-    ## 11     1028    6      0 1357020000
-    ## 12     1005    6      0 1357020000
-    ## 13     2475    6      0 1357020000
-    ## 14     2565    6      0 1357020000
-    ## 15     1389    6      0 1357020000
-    ## 16      187    5     59 1357016400
-    ## 17     2227    6      0 1357020000
-    ## 18     1076    6      0 1357020000
-    ## 19      762    6      0 1357020000
-    ## 20     1023    6      0 1357020000
+    ##    origin year month day hour  temp  dewp humid wind_dir wind_speed
+    ## 1     EWR 2013     1   1    1 39.02 26.06 59.37      270   10.35702
+    ## 2     EWR 2013     1   1    2 39.02 26.96 61.63      250    8.05546
+    ## 3     EWR 2013     1   1    3 39.02 28.04 64.43      240   11.50780
+    ## 4     EWR 2013     1   1    4 39.92 28.04 62.21      250   12.65858
+    ## 5     EWR 2013     1   1    5 39.02 28.04 64.43      260   12.65858
+    ## 6     EWR 2013     1   1    6 37.94 28.04 67.21      240   11.50780
+    ## 7     EWR 2013     1   1    7 39.02 28.04 64.43      240   14.96014
+    ## 8     EWR 2013     1   1    8 39.92 28.04 62.21      250   10.35702
+    ## 9     EWR 2013     1   1    9 39.92 28.04 62.21      260   14.96014
+    ## 10    EWR 2013     1   1   10 41.00 28.04 59.65      260   13.80936
+    ## 11    EWR 2013     1   1   11 41.00 26.96 57.06      260   14.96014
+    ## 12    EWR 2013     1   1   13 39.20 28.40 69.67      330   16.11092
+    ## 13    EWR 2013     1   1   14 39.02 24.08 54.68      280   13.80936
+    ## 14    EWR 2013     1   1   15 37.94 24.08 57.04      290    9.20624
+    ## 15    EWR 2013     1   1   16 37.04 19.94 49.62      300   13.80936
+    ## 16    EWR 2013     1   1   17 35.96 19.04 49.83      330   11.50780
+    ## 17    EWR 2013     1   1   18 33.98 15.08 45.43      310   12.65858
+    ## 18    EWR 2013     1   1   19 33.08 12.92 42.84      320   10.35702
+    ## 19    EWR 2013     1   1   20 32.00 15.08 49.19      310   14.96014
+    ## 20    EWR 2013     1   1   21 30.02 12.92 48.48      320   18.41248
+    ##    wind_gust precip pressure visib  time_hour
+    ## 1         NA      0   1012.0    10 1357020000
+    ## 2         NA      0   1012.3    10 1357023600
+    ## 3         NA      0   1012.5    10 1357027200
+    ## 4         NA      0   1012.2    10 1357030800
+    ## 5         NA      0   1011.9    10 1357034400
+    ## 6         NA      0   1012.4    10 1357038000
+    ## 7         NA      0   1012.2    10 1357041600
+    ## 8         NA      0   1012.2    10 1357045200
+    ## 9         NA      0   1012.7    10 1357048800
+    ## 10        NA      0   1012.4    10 1357052400
+    ## 11        NA      0   1011.4    10 1357056000
+    ## 12        NA      0       NA    10 1357063200
+    ## 13        NA      0   1010.8    10 1357066800
+    ## 14        NA      0   1011.9    10 1357070400
+    ## 15  20.71404      0   1012.1    10 1357074000
+    ## 16        NA      0   1013.2    10 1357077600
+    ## 17  25.31716      0   1014.1    10 1357081200
+    ## 18        NA      0   1014.4    10 1357084800
+    ## 19        NA      0   1015.2    10 1357088400
+    ## 20  26.46794      0   1016.0    10 1357092000
 
 *Quick Exercise:* Get the weather table and put it in a data frame
 
@@ -293,24 +285,91 @@ delay_summary
 ```
 
     ## # A tibble: 16 x 2
-    ##                           name avg_delay
-    ##                          <chr>     <dbl>
-    ##  1      Hawaiian Airlines Inc.  243.3000
-    ##  2              Virgin America  146.0992
-    ##  3 AirTran Airways Corporation  145.3248
-    ##  4      Frontier Airlines Inc.  144.8767
-    ##  5        Delta Air Lines Inc.  135.8616
-    ##  6      Southwest Airlines Co.  131.9548
-    ##  7           Endeavor Air Inc.  124.1501
-    ##  8      American Airlines Inc.  123.2781
-    ##  9       United Air Lines Inc.  121.1085
-    ## 10        Alaska Airlines Inc.  118.3846
-    ## 11    ExpressJet Airlines Inc.  118.2507
-    ## 12             JetBlue Airways  117.8683
-    ## 13          Mesa Airlines Inc.  117.0253
-    ## 14             US Airways Inc.  115.6619
-    ## 15                   Envoy Air  114.6839
-    ## 16       SkyWest Airlines Inc.  109.2500
+    ##    name                        avg_delay
+    ##    <chr>                           <dbl>
+    ##  1 Hawaiian Airlines Inc.           243.
+    ##  2 Virgin America                   146.
+    ##  3 AirTran Airways Corporation      145.
+    ##  4 Frontier Airlines Inc.           145.
+    ##  5 Delta Air Lines Inc.             136.
+    ##  6 Southwest Airlines Co.           132.
+    ##  7 Endeavor Air Inc.                124.
+    ##  8 American Airlines Inc.           123.
+    ##  9 United Air Lines Inc.            121.
+    ## 10 Alaska Airlines Inc.             118.
+    ## 11 ExpressJet Airlines Inc.         118.
+    ## 12 JetBlue Airways                  118.
+    ## 13 Mesa Airlines Inc.               117.
+    ## 14 US Airways Inc.                  116.
+    ## 15 Envoy Air                        115.
+    ## 16 SkyWest Airlines Inc.            109.
+
+``` r
+#New request: which carriers have longer delays? 
+req1_text<-"SELECT a.carrier, a.name, f.distance 
+            FROM flights f 
+            JOIN airlines a ON a.carrier=f.carrier 
+            WHERE f.distance>1000
+            "
+req1<-dbSendQuery(con,req1_text)
+
+req1_df<-dbFetch(req1,n=-1)
+
+dbClearResult(req1)
+
+head(req1_df)
+```
+
+    ##   carrier                   name distance
+    ## 1      UA  United Air Lines Inc.     1400
+    ## 2      UA  United Air Lines Inc.     1416
+    ## 3      AA American Airlines Inc.     1089
+    ## 4      B6        JetBlue Airways     1576
+    ## 5      B6        JetBlue Airways     1065
+    ## 6      B6        JetBlue Airways     1028
+
+``` r
+table(req1_df$name)
+```
+
+    ## 
+    ##     Alaska Airlines Inc.   American Airlines Inc.     Delta Air Lines Inc. 
+    ##                      714                    23583                    28096 
+    ##        Endeavor Air Inc.                Envoy Air ExpressJet Airlines Inc. 
+    ##                     2720                     2291                     6248 
+    ##   Frontier Airlines Inc.   Hawaiian Airlines Inc.          JetBlue Airways 
+    ##                      685                      342                    30022 
+    ##    SkyWest Airlines Inc.   Southwest Airlines Co.    United Air Lines Inc. 
+    ##                        4                     3832                    41135 
+    ##          US Airways Inc.           Virgin America 
+    ##                     2271                     5162
+
+``` r
+dist_flights<-req1_df%>%
+  group_by(name)%>%
+  tally()%>%
+  arrange(-n)
+
+dist_flights
+```
+
+    ## # A tibble: 14 x 2
+    ##    name                         n
+    ##    <chr>                    <int>
+    ##  1 United Air Lines Inc.    41135
+    ##  2 JetBlue Airways          30022
+    ##  3 Delta Air Lines Inc.     28096
+    ##  4 American Airlines Inc.   23583
+    ##  5 ExpressJet Airlines Inc.  6248
+    ##  6 Virgin America            5162
+    ##  7 Southwest Airlines Co.    3832
+    ##  8 Endeavor Air Inc.         2720
+    ##  9 Envoy Air                 2291
+    ## 10 US Airways Inc.           2271
+    ## 11 Alaska Airlines Inc.       714
+    ## 12 Frontier Airlines Inc.     685
+    ## 13 Hawaiian Airlines Inc.     342
+    ## 14 SkyWest Airlines Inc.        4
 
 *Quick Exercise: Get data on airlines who fly at least 1000km, and number of flights over that length*
 
@@ -336,12 +395,12 @@ head(weather_df)
 ```
 
     ##   year month day distance dep_delay visib wind_speed wind_gust
-    ## 1 2013     1   1      264        21    10   10.35702  11.91865
-    ## 2 2013     1   1      266        21    10   10.35702  11.91865
-    ## 3 2013     1   1      282        21    10   10.35702  11.91865
-    ## 4 2013     1   1      301        21    10   10.35702  11.91865
-    ## 5 2013     1   1     1372        21    10   10.35702  11.91865
-    ## 6 2013     1   1     2475        21    10   10.35702  11.91865
+    ## 1 2013     1   1      264        21    10   13.80936  20.71404
+    ## 2 2013     1   1      266        21    10   13.80936  20.71404
+    ## 3 2013     1   1      282        21    10   13.80936  20.71404
+    ## 4 2013     1   1      301        21    10   13.80936  20.71404
+    ## 5 2013     1   1     1372        21    10   13.80936  20.71404
+    ## 6 2013     1   1     2475        21    10   13.80936  20.71404
 
 ``` r
 weather_summary<-
@@ -349,34 +408,41 @@ weather_summary<-
   group_by(wind_gust)%>%
   summarize(avg_delay=mean(dep_delay,na.rm=TRUE))
 
+
+weather_summary_2<-
+  weather_df%>%
+  group_by(wind_speed)%>%
+  summarize(avg_delay=mean(dep_delay,na.rm=TRUE))
+
+
 weather_summary
 ```
 
-    ## # A tibble: 34 x 2
+    ## # A tibble: 37 x 2
     ##    wind_gust avg_delay
     ##        <dbl>     <dbl>
-    ##  1  0.000000  75.63677
-    ##  2  3.972884  76.08976
-    ##  3  5.297178  74.39672
-    ##  4  6.621473  73.94190
-    ##  5  7.945768  74.43293
-    ##  6  9.270062  74.36868
-    ##  7 10.594357  74.47958
-    ##  8 11.918651  73.36357
-    ##  9 13.242946  72.81420
-    ## 10 14.567241  73.17774
-    ## # ... with 24 more rows
+    ##  1      16.1      73.8
+    ##  2      17.3      68.1
+    ##  3      18.4      74.1
+    ##  4      19.6      69.9
+    ##  5      20.7      72.7
+    ##  6      21.9      69.5
+    ##  7      23.0      71.0
+    ##  8      24.2      70.2
+    ##  9      25.3      69.7
+    ## 10      26.5      70.6
+    ## # ... with 27 more rows
 
 As always, this data can then be plotted to view trends.
 
 ``` r
 #Plot average delay by visibility
-g1<-ggplot(data=weather_summary,aes(x=wind_gust,y=avg_delay))
+g1<-ggplot(data=weather_summary_2,aes(x=wind_speed,y=avg_delay))
 g1<-g1+geom_point()
 g1
 ```
 
-![](10-databases_files/figure-markdown_github-ascii_identifiers/unnamed-chunk-10-1.png)
+![](10-databases_files/figure-markdown_github/unnamed-chunk-12-1.png)
 
 *Quick Exercise* Plot average delay by wind speed.
 
