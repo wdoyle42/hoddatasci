@@ -132,8 +132,6 @@ dbClearResult(req)
 ```
 
 
-
-
 Let's take a look at the generated data frame. 
 ```{r}
 dim(req_df)
@@ -199,6 +197,33 @@ dist_flights
 
 
 *Quick Exercise:  Get data on airlines who fly at least 1000km, and number of flights over that length*
+
+*Which airlines had the longest average departure delays when wind gust were over 24?*
+
+```{r}
+
+#New request: which carriers have longer delays? 
+req1_text<-"SELECT a.carrier, a.name, f.distance, f.dep_delay, w.wind_gust 
+            FROM flights f 
+            JOIN airlines a ON a.carrier=f.carrier 
+            JOIN weather w ON w.origin=f.origin
+                AND f.month=w.month
+                AND f.day=w.day
+                AND f.time_hour=w.time_hour
+            WHERE w.wind_gust>24
+            "
+req1<-dbSendQuery(con,req1_text)
+
+req1_df<-dbFetch(req1,n=-1)
+
+dbClearResult(req1)
+
+req1_df%>%group_by(name)%>%
+  summarize(mean_delay=mean(dep_delay,na.rm=TRUE))%>%
+  arrange(-mean_delay)
+
+```
+
 
 We can combine multiple tables to answer questions about how multiple factors, like weather and carrier, might be related. 
 
@@ -284,7 +309,10 @@ With a table in memory, we can change it to a tibble and do all the fun `dplyr` 
 
 ```{r}
 ## Average flight delay for United
-ua_flight_delay <- tbl(con, "flights")%>%tbl_df()%>%filter(carrier=="UA")%>%summarize(mean(arr_delay,na.rm=TRUE))
+ua_flight_delay <- tbl(con,"flights")%>%
+  tbl_df()%>%
+  filter(carrier=="UA")%>%
+  summarize(mean(arr_delay,na.rm=TRUE))
 ```
 
 
@@ -303,7 +331,7 @@ library(Lahman)
 
 batting<-Batting%>%
   tbl_df%>%
-  filter(yearID==2015,AB>100)%>%
+  filter(yearID==2017,AB>100)%>%
   select(playerID,AB,H)
 
 master<-Master%>%

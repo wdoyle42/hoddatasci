@@ -147,6 +147,18 @@ To incorporate additional information into the mean, we need to calculate averag
 ## Create a variable for quartiles of college education
 pd<-pd%>%mutate(coll_grad_level=ntile(coll_grad_pc,4))
 
+pd_sum<-pd%>%
+  group_by(coll_grad_level)%>%
+  summarize(mean_income=mean(percapinc.2010,na.rm=TRUE))
+
+gg<-ggplot(pd_sum,aes(x=coll_grad_level,y=mean_income,
+                      fill=as.factor(coll_grad_level)))
+gg<-gg+geom_bar(stat="identity")
+gg<-gg+theme(legend.position = "none")
+gg
+```
+
+```{r}
 table(pd$coll_grad_level)
 
 pd<-pd%>%group_by(coll_grad_level)%>% ## Group by predictor

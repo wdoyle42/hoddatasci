@@ -429,6 +429,8 @@ nfl_nfc<-url %>% read_html() %>%                   # parse html
       data.frame()%>%
       slice(-c(seq(1,20,by=5)))
 
+nfl_record<-bind_rows(nfl_afc,nfl_nfc)
+
 select_vars<-c("Tm","W","L","PF","PA")
 
 nfl_record<-nfl_record%>%select_at(.vars=select_vars)

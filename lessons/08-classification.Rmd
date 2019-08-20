@@ -77,6 +77,11 @@ za<-za%>%mutate(student=ifelse(grepl(x=request_text,pattern="student",ignore.cas
 ## Raw count of words in post
 za$words<-str_count(za$request_text,"\\S+")
 
+
+## Raw count of words in post
+za$poor_count<-str_count(za$request_text,"really")
+
+
 # Binary variable: word "poor" or "money" in text
 
 za<-za%>%mutate(poor=ifelse(grepl(x=request_text,pattern="poor"),1,0))%>%
@@ -91,6 +96,9 @@ za<-za%>%mutate(grateful=
                   mutate(grateful=fct_recode(as.factor(grateful),
                   "Grateful in post"="1",
                   "Grateful not in post"="0"))
+
+za<-za%>%mutate(chair=
+                  ifelse(grepl(x = request_text,pattern="chair"),1,0))
                  
 ```
 
@@ -350,7 +358,7 @@ logit_predict_bin[logit_predict>.5]<-1
 ```
 
 ```{r}
-confusionMatrix(data=as.factor(lm_predict_bin),
+confusionMatrix(data=as.factor(logit_predict_bin),
                 reference = as.factor(logit_mod$y),positive="1")
 ```
 
@@ -362,7 +370,6 @@ The area under the curve considers both the sensitivity (does the model accurate
 ```{r}
 logit_sens_curve<-sensitivity(logit_predict,as.factor(logit_mod$y))
 plot(logit_sens_curve)
-
 
 logit_spec_curve<-specificity(logit_predict,as.factor(logit_mod$y))
 plot(logit_spec_curve)
@@ -385,12 +392,12 @@ Plots of binary models can be weird. To help with this, we can "jitter" the plot
 
 ```{r}
 
-
 #Prediction
 za<-za%>%modelr::add_predictions(logit_mod)%>%
   mutate(pred=arm::invlogit(pred)) ## This transforms to probs
 
 gg<-ggplot(za,aes(x=karma,y=got_pizza))
+#gg<-gg+geom_point()
 gg<-gg+geom_jitter(alpha=.25,size=.5,position=position_jitter(height=.4,width=.4))
 gg<-gg+scale_x_continuous(trans="log",breaks=c(0,10,100,1000,3000,10000))
 gg<-gg+geom_smooth(data=za,aes(x=karma,y=pred,color=as.factor(student)))

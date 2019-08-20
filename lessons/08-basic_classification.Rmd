@@ -17,7 +17,6 @@ library(tidyverse)
 (If you want to win, this is where the work will be!)
 ```{r}
 za<-read_csv("pizza.csv")
-
 ```
 
 
