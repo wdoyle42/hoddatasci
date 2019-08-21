@@ -154,7 +154,7 @@ environment (IDE) for R.
 We will also use [git](https://git-scm.com/), a distributed version
 control program, and [Github](https://github.com/), an online hosting
 platform. [Github Desktop](https://desktop.github.com/) will serve as
-our Graphical User Interface to git and GitHub: RStudio is fully
+our Graphical User Interface to git and GitHub. RStudio is fully
 integrated with git and Github, making it an ideal IDE for these
 purposes. Class assignments will be distributed through GitHub and will
 be collected and graded through GitHub as well.
@@ -163,15 +163,15 @@ be collected and graded through GitHub as well.
 
 My office is in 207D Payne, and my phone number is (615) 322-2904.
 Please always feel free to stop by during office hours or to call. You
-can book my office hours at: (wdoyle42.youcanbook.me) If my office hours
-don’t work for you, please make an appointment. Student communications,
-including emails are my priority. However, due to the volume of email I
-receive, I may miss your message. To help with this problem, please
-place the phrase \`\`HOD 3200’’ in your subject line. I will search for
-these messages every time I access my email. You can also use
-Brightspace’s email function, which will automatically do this for you.
-If you have a general question that I can answer for the whole class,
-send me a message on twitter at
+can book my office hours at: <https://wdoyle42.youcanbook.me> If my
+office hours don’t work for you, please make an appointment. Student
+communications, including emails are my priority. However, due to the
+volume of email I receive, I may miss your message. To help with this
+problem, please place the phrase \`\`HOD 3200’’ in your subject line. I
+will search for these messages every time I access my email. You can
+also use Brightspace’s email function, which will automatically do this
+for you. If you have a general question that I can answer for the whole
+class, send me a message on twitter at
 [@wdoyle42](https://twitter.com/wdoyle42), tagged \#hoddatasci, or you
 can send a direct message.
 
