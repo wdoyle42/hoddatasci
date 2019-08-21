@@ -102,8 +102,6 @@ Penguin.
 
 [Amazon](https://www.amazon.com/Signal-Noise-Many-Predictions-Fail-but/dp/0143125087)
 
-[Half.com](http://product.half.ebay.com/The-Signal-and-the-Noise-Why-So-Many-Predictions-Fail-But-Some-Dont-by-Nate-Silver-2015-Paperback/203429545&tg=info)
-
 [Your local
 bookseller](http://www.indiebound.org/indie-bookstore-finder)
 
@@ -203,7 +201,7 @@ arranged BEFORE class, not when I observe you using your mobile phone.
 All assignments for this class, including weekly assignments and the
 final project, are to be conducted under the obligations set out in
 Vanderbilt’s Honor Code. Please click
-[here](http://www.vanderbilt.edu/student_handbook/the-honor-system/)to
+[here](http://www.vanderbilt.edu/student_handbook/the-honor-system/) to
 review the honor code.
 
 There will be two quite different standards for completing the
@@ -223,7 +221,7 @@ away.
 
 # Schedule
 
-## Thursday, August 22 Topic for the Week: Getting Data 1– Tools of the Trade
+## Thursday, August 22 Topic for the Week: Getting Data– Tools of the Trade
 
 *Resources*
 
@@ -238,8 +236,6 @@ R Intro and Resources
 
 [Download R](https://cran.r-project.org/)
 
-[R Basics](https://www.datacamp.com/home)
-
 [Download Rstudio](https://www.rstudio.com/products/rstudio/download3/)
 You want the “Desktop” version, free license
 
@@ -252,7 +248,7 @@ You want the “Desktop” version, free license
 [Github Intro and
 Resources](https://guides.github.com/activities/hello-world/)
 
-## Tuesday, August 27 Getting Data 1: Tools of the Trade
+## Tuesday, August 27 Getting Data: Tools of the Trade
 
 Subtopics: “verbs” of data wrangling, file types, working with git and
 GitHub.
@@ -261,14 +257,13 @@ GitHub.
 
 `01-intro.Rmd`.
 
-## Thursday, August 29 Getting Data 1: Tools of the Trade
+## Thursday, August 29 Tools of the Trade, continued
 
 *Standing meeting*
 
-*Lab Practical* R Basics, “verbs” of data
-wrangling
+*Lab Practical* R Basics, “verbs” of data wrangling
 
-## Tuesday, September 3 Topic for the Week: Analyzing Data 1– Conditional Means
+## Tuesday, September 3 Analyzing Data: Conditional Means
 
 *Resources*
 
@@ -281,16 +276,15 @@ Condtional Means: `02-conditional_means.Rmd`.
 
 *Assignments*
 
-Assignment 1 Due Midnight, Monday, September 3
+Assignment 1 Due Midnight, Sunday, September 1
 
 ## Thursday, September 5 Conditional Means, continued
 
 *Standing Meetings*
 
-*Lab Practical: Conditional
-Means*
+*Lab Practical: Conditional Means*
 
-## Tuesday, September 10 Topic for the Week: Presenting Data 1– Descriptives
+## Tuesday, September 10 Presenting Data: Descriptives
 
 Subtopics: bar plot, density plot, dot plots, histograms
 
@@ -299,8 +293,8 @@ Subtopics: bar plot, density plot, dot plots, histograms
 Wickham: [Data
 visualization](http://r4ds.had.co.nz/data-visualisation.html)
 
-[Data
-transformation](http://r4ds.had.co.nz/exploratory-data-analysis.html)
+Wickham: [Exploratory Data
+Analysis](http://r4ds.had.co.nz/exploratory-data-analysis.html)
 
 [Cookbook for R:Bar and Line
 Graphs](http://www.cookbook-r.com/Graphs/Bar_and_line_graphs_%28ggplot2%29/)
@@ -314,9 +308,9 @@ Plotting Distributions and Condtional Means: `03-plot_means.Rmd`.
 
 *Assignments*
 
-Assignment 2 Due Midnight Monday, September 10
+Assignment 2 Due Midnight Sunday, September 8
 
-## Thursday, September 12 Descriptive Graphics, Continued
+## Thursday, September 12 Descriptive Graphics, continued
 
 *Standing Meeting* Progress Report 1 Due
 
@@ -324,7 +318,7 @@ Assignment 2 Due Midnight Monday, September 10
 density plots, dot plots,
 histograms*
 
-## Tuesday, September 17 Topic for the Week: Getting Data 2–pre-processed data, flat files, basic concepts of “tidy data”
+## Tuesday, September 17 Getting Data: Flat Files, Basic Concepts of “Tidy Data”
 
 *Resources*
 
@@ -337,16 +331,15 @@ Flat Data `04-flat_data.Rmd`
 
 *Assignments*
 
-Assignment 3 Due Midnight Monday, September 17
+Assignment 3 Due Midnight Sunday, September 15
 
-## Thursday, September 19 Pre-processed data, continued
+## Thursday, September 19 Flat Files and Tidy Data, continued
 
 *Standing Meeting*
 
-*Lab Practical: working with various data
-formats*
+*Lab Practical: working with various data formats*
 
-## Tuesday, September 24 Topic for the Week: Analyzing Data 2–linear regression
+## Tuesday, September 24 Analyzing Data: Linear Regression
 
 *Resources*
 
@@ -360,16 +353,15 @@ Linear Regression `05-regression.Rmd`
 
 *Assignments*
 
-Assignment 4 Due Midnight Monday, September 24
+Assignment 4 Due Midnight Sunday, September 22
 
 ## September Thursday, September 26 Linear Regression, continued
 
 *Standing Meetings*
 
-*Lab Practical: linear
-regression*
+*Lab Practical: linear regression*
 
-## Tuesday, October 1 Topic for the Week: Analyzing Data 2–Linear Regression
+## Tuesday, October 1 Analyzing Data: Linear Regression, continued
 
 *Training and Testing Models*
 
@@ -377,7 +369,7 @@ regression*
 
 *Second Progress Report for Final Project Due*
 
-## Tuesday, October 8 Topic for the Week: Presenting data 2–scatterplots
+## Tuesday, October 8 Presenting Data: Scatterplots
 
 *Resources*
 
@@ -396,16 +388,15 @@ Scatterplots `06-scatterplots.Rmd`
 
 *Assignments*
 
-Assignment 5 Due Midnight Monday, October 8
+Assignment 5 Due Midnight Sunday, October 6
 
 ## Thursday, October 10 Scatterplots, continued
 
 *Standing Meetings*
 
-*Lab Practical: Presenting Data via
-Scatterplots*
+*Lab Practical: Presenting Data via Scatterplots*
 
-## Tuesday, October 15 Topic for the week: Getting Data 3– Getting data from the web
+## Tuesday, October 15 Getting Data: Scraping Data from the Web, APIs
 
 *Resources*
 
@@ -424,24 +415,23 @@ Web Scraping and APIs, `07-webscraping.Rmd`
 
 *Assignments*
 
-Assignment 6 Due Midnight Monday, October 15
+Assignment 6 Due Midnight Sunday, October 13
 
-## Thursday, October 17 Web data, continued
+## Thursday, October 17 Web Data, continued
 
 *Standing Meetings*
 
-*Lab
-Practical*
+*Lab Practical*
 
-## Tuesday, October 22 Topic for the Week: Analyzing Data 3–Classification
+## Tuesday, October 22 Analyzing Data: Classification
 
 *Resources*
 
 James, G., Witten, D., Hastie, T., & Tibshirani, R. (2013). An
 introduction to statistical learning (Vol. 6). New York: Springer.
-[Chapter 4](http://www-bcf.usc.edu/~gareth/ISL/ISLR%20Sixth%20Printing.pdf)
+[Chapter 4](http://faculty.marshall.usc.edu/gareth-james/ISL/ISLR%20Seventh%20Printing.pdf)
 , [Chapter 4 Lab R
-Code](http://www-bcf.usc.edu/~gareth/ISL/Chapter%204%20Lab.txt)
+Code](http://faculty.marshall.usc.edu/gareth-james/ISL/Chapter%204%20Lab.txt)
 
 Althoff, T., Danescu-Niculescu-Mizil, C., & Jurafsky, D. (2014, May).
 How to Ask for a Favor: A Case Study on the Success of Altruistic
@@ -454,18 +444,15 @@ Classification, `08-classification.Rmd`
 
 *Assignments*
 
-Assignment 7 Due Midnight Monday, October 22
-
-\#\#Thursday, October 24 Classification, continued
-
-*Standing Meetings*
+Assignment 7 Due Midnight Sunday, October 20
 
 *Lab Practical*
 
-Classifying behavior via text analysis: random acts of
-pizza.
+Classifying behavior via text analysis: random acts of pizza.
 
-## Tuesday, October 29 Topic for The Week: Presenting Data 3– Plots for Classification
+## Thursday, October 24 No Class, Fall Break
+
+## Tuesday, October 29 Presenting Data: Plots for Classification
 
 *Resources*
 
@@ -475,9 +462,9 @@ Plots for Classification `09-plots_classification.Rmd`
 
 *Assignments*
 
-Assignment 8 Due Midnight Monday, October 29
+Assignment 8 Due Midnight Sunday, October 27
 
-\#\#Thursday, October 31 Plots for Classification, continued
+## Thursday, October 31 Plots for Classification, continued
 
 *Standing Meetings*
 
@@ -485,14 +472,17 @@ Assignment 8 Due Midnight Monday, October 29
 
 *Lab Practical*
 
-Plots for understanding
-classification
+Plots for understanding classification
 
-## Tuesday, November 5 Topic for the Week: Training and testing multiple models, Cross Validation
+## Tuesday, November 5 Analyzing Data: Cross Validation
 
 *Resources*
 
 Wickham [Many Models](http://r4ds.had.co.nz/many-models.html)
+
+James, G., Witten, D., Hastie, T., & Tibshirani, R. (2013). An
+introduction to statistical learning (Vol. 6). New York: Springer.
+[Chapter 5](http://faculty.marshall.usc.edu/gareth-james/ISL/ISLR%20Seventh%20Printing.pdf)
 
 *Lecture Notes*
 
@@ -500,7 +490,7 @@ Wickham [Many Models](http://r4ds.had.co.nz/many-models.html)
 
 *Assignments*
 
-Assignment 9 Due Midnight Monday, November 5
+Assignment 9 Due Midnight Sunday, November 3
 
 ## Thursday, November 7 Cross Validation, continued
 
@@ -508,16 +498,15 @@ Assignment 9 Due Midnight Monday, November 5
 
 *Lab Practical*
 
-Lab Practical: Cross
-Validation
+Lab Practical: Cross Validation
 
-## Tuesday, November 12 Topic for the Week: Getting Data 4–databases and relational data
+## Tuesday, November 12 Getting Data: Databases and Relational Data
 
 *Resources* Wickham [Relational
 Data](http://r4ds.had.co.nz/relational-data.html)
 
 Working with Databases in R, available:
-<https://cran.r-project.org/web/packages/dplyr/vignettes/databases.html>
+<https://dbplyr.tidyverse.org/articles/dbplyr.html>
 
 *Lecture Notes*
 
@@ -525,7 +514,7 @@ Chapter 11, Databases `11-databases.Rmd`
 
 *Assignments*
 
-Assignment 10 Due Midnight Monday, November 12
+Assignment 10 Due Midnight Sunday, November 10
 
 ## Thursday, November 14 Databases, continued
 
@@ -533,17 +522,7 @@ Assignment 10 Due Midnight Monday, November 12
 
 *Lab Practical* Databases and relational data, collaborating via github
 
-## Tuesday, November 19 Thanksgiving Break: No Class
-
-Check out the lecture notes on interactive graphics,
-`13-interactive_graphics.Rmd`
-
-## Thursday, November 21 Thanksgiving Break
-
-*No Standing meetings, but feel free to talk about Data Science at
-dinner*
-
-## Tuesday, November 26 Topic for the Week: Analyzing Data 4–Unsupervised learning
+## Tuesday, November 19 Analyzing Data: Unsupervised learning
 
 Subtopics: k-means, nearest neighbor clustering
 
@@ -561,9 +540,9 @@ Chapter 12, Unsupervised Learning `12-unsupervised.Rmd`
 
 *Assignments*
 
-Assignment 12 Due Midnight Monday, November 26
+Assignment 11 Due Midnight Sunday, November 17
 
-## Thursday, November 28 Unsupervised Learning, continued
+## Thursday, November 21 Unsupervised Learning, continued
 
 *Standing Meetings*
 
@@ -571,13 +550,23 @@ Assignment 12 Due Midnight Monday, November 26
 
 *Lab Practical:* K-means clustering, nearest neighbor classification
 
+## Tuesday, November 26 Thanksgiving Break: No Class
+
+Check out the lecture notes on interactive graphics,
+`13-interactive_graphics.Rmd`
+
+## Thursday, November 28 Thanksgiving Break: No Class
+
+*No Standing meetings, but feel free to talk about Data Science at
+dinner*
+
 ## Tuesday, December 3 Class Presentations
 
 Group 1
 
 *Assignments*
 
-Assignment 13 Due Midnight Monday, December 3
+Assignment 13 Due Midnight Sunday, December 1
 
 ## Thursday, December 5 Class Presentations
 
