@@ -1,0 +1,14 @@
+---
+title: "Presentation Schedule"
+output: github_document
+---
+```{r}
+library(tidyverse)
+library(knitr)
+classlist<-read_csv("classlist.csv")
+classlist$group<-1
+classlist$group[8:15]<-2
+classlist%>%kable()
+```
+
+
