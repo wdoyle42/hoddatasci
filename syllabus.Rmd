@@ -1,7 +1,7 @@
 ---
 title: "Introduction to Data Science"
 output:
-  github_document: default
+  pdf_document: default
 ---
 
 ```{r echo=FALSE,warning=FALSE,results=FALSE,message=FALSE}
@@ -40,10 +40,10 @@ second_week_days<-seq(second_week_days_start,second_week_days_end,by=7)
 ## Defines a sequence of days for the homeworks
 
 #Start Day
-hw_days_start<-as_date("2018-08-27")
+hw_days_start<-as_date("2019-08-25")
 
 #End day
-hw_days_end<-as_date("2018-12-05")  
+hw_days_end<-as_date("2019-12-01")  
 
 ## Sequence of hw days
 hw_days<-seq(hw_days_start,hw_days_end,by=7)
@@ -142,8 +142,6 @@ Silver,N. (2012). *The signal and the noise: Why so many predictions fail-but so
 
 [Amazon](https://www.amazon.com/Signal-Noise-Many-Predictions-Fail-but/dp/0143125087) 
 
-[Half.com](http://product.half.ebay.com/The-Signal-and-the-Noise-Why-So-Many-Predictions-Fail-But-Some-Dont-by-Nate-Silver-2015-Paperback/203429545&tg=info) 
-
 [Your local bookseller](http://www.indiebound.org/indie-bookstore-finder)
 
 *Reserve*
@@ -195,7 +193,7 @@ Mobile phone use is never appropriate in class. I will ask you to leave if you a
 Honor Code Statement
 ===============
 
-All assignments for this class, including weekly assignments and the final project, are to be conducted under the obligations set out in Vanderbilt's Honor Code. Please click [here](http://www.vanderbilt.edu/student_handbook/the-honor-system/)to review the honor code.
+All assignments for this class, including weekly assignments and the final project, are to be conducted under the obligations set out in Vanderbilt's Honor Code. Please click [here](http://www.vanderbilt.edu/student_handbook/the-honor-system/) to review the honor code.
 
 There will be two quite different standards for completing the
 assignments and the final project. 
@@ -215,7 +213,7 @@ Schedule
 ```{r echo=FALSE,warning=FALSE,results=FALSE,message=FALSE}
 i<-1
 ```
-## `r nice_date(second_week_days[i]-7)` Topic for the Week: Getting Data 1-- Tools of the Trade
+## `r nice_date(second_week_days[i]-7)` Topic for the Week: Getting Data-- Tools of the Trade
 
 *Resources*
 
@@ -226,8 +224,6 @@ Silver, Chapters 1-4
 R Intro and Resources
 
 [Download R](https://cran.r-project.org/)
-
-[R Basics](https://www.datacamp.com/home)
 
 [Download Rstudio](https://www.rstudio.com/products/rstudio/download3/)
 You want the "Desktop" version, free license
@@ -240,7 +236,7 @@ You want the "Desktop" version, free license
 
 [Github Intro and Resources](https://guides.github.com/activities/hello-world/)
 
-## `r nice_date(first_week_days[i])`  Getting Data 1: Tools of the Trade
+## `r nice_date(first_week_days[i])`  Getting Data: Tools of the Trade
 
 Subtopics: "verbs" of data wrangling, file types, working with git and GitHub. 
 
@@ -248,7 +244,7 @@ Subtopics: "verbs" of data wrangling, file types, working with git and GitHub.
 
 `01-intro.Rmd`.
 
-## `r nice_date(second_week_days[i])`  Getting Data 1: Tools of the Trade
+## `r nice_date(second_week_days[i])`  Tools of the Trade, continued
 
 *Standing meeting*
 
@@ -258,7 +254,7 @@ Subtopics: "verbs" of data wrangling, file types, working with git and GitHub.
 i<-i+1
 ```
 
-## `r nice_date(first_week_days[i])` Topic for the Week: Analyzing Data 1-- Conditional Means
+## `r nice_date(first_week_days[i])` Analyzing Data: Conditional Means
 
 *Resources*
   
@@ -284,7 +280,7 @@ i<-i+1
 ```
 
 
-## `r nice_date(first_week_days[i])` Topic for the Week: Presenting Data 1-- Descriptives
+## `r nice_date(first_week_days[i])` Presenting Data: Descriptives
 
 Subtopics: bar plot, density plot, dot plots, histograms 
 
@@ -292,7 +288,7 @@ Subtopics: bar plot, density plot, dot plots, histograms
 
 Wickham: [Data visualization](http://r4ds.had.co.nz/data-visualisation.html)
 
-[Data transformation](http://r4ds.had.co.nz/exploratory-data-analysis.html)
+Wickham: [Exploratory Data Analysis](http://r4ds.had.co.nz/exploratory-data-analysis.html)
 
 [Cookbook for R:Bar and Line Graphs](http://www.cookbook-r.com/Graphs/Bar_and_line_graphs_%28ggplot2%29/)
 
@@ -306,7 +302,7 @@ Plotting Distributions and Condtional Means: `03-plot_means.Rmd`.
 
 Assignment `r i-1` Due Midnight `r nice_date(hw_days[i])`
 
-## `r nice_date(second_week_days[i])` Descriptive Graphics, Continued
+## `r nice_date(second_week_days[i])` Descriptive Graphics, continued
 
 *Standing Meeting*
 Progress Report 1 Due
@@ -317,7 +313,7 @@ Progress Report 1 Due
 i<-i+1
 ```
 
-## `r nice_date(first_week_days[i])` Topic for the Week: Getting Data 2--pre-processed data, flat files, basic concepts of "tidy data"
+## `r nice_date(first_week_days[i])` Getting Data: Flat Files, Basic Concepts of "Tidy Data"
 
 *Resources*
 
@@ -331,7 +327,7 @@ Flat Data `04-flat_data.Rmd`
 
 Assignment `r i-1` Due Midnight `r nice_date(hw_days[i])`
 
-## `r nice_date(second_week_days[i])`  Pre-processed data, continued
+## `r nice_date(second_week_days[i])`  Flat Files and Tidy Data, continued
 
 *Standing Meeting*
 
@@ -340,7 +336,7 @@ Assignment `r i-1` Due Midnight `r nice_date(hw_days[i])`
 i<-i+1
 ```
 
-## `r nice_date(first_week_days[i])` Topic for the Week: Analyzing Data 2--linear regression
+## `r nice_date(first_week_days[i])` Analyzing Data: Linear Regression
 
 *Resources*
 
@@ -364,7 +360,7 @@ Assignment `r i-1` Due Midnight `r nice_date(hw_days[i])`
 i<-i+1
 ```
 
-## `r nice_date(first_week_days[i])` Topic for the Week: Analyzing Data 2--Linear Regression
+## `r nice_date(first_week_days[i])` Analyzing Data: Linear Regression, continued
 
 *Training and Testing Models*
 
@@ -376,7 +372,7 @@ i<-i+1
 i<-i+1
 ```
 
-## `r nice_date(first_week_days[i])` Topic for the Week: Presenting data 2--scatterplots
+## `r nice_date(first_week_days[i])` Presenting Data: Scatterplots
 
 *Resources*
 
@@ -404,7 +400,7 @@ Assignment `r i-2` Due Midnight `r nice_date(hw_days[i])`
 i<-i+1
 ```
 
-## `r nice_date(first_week_days[i])` Topic for the week: Getting Data 3-- Getting data from the web
+## `r nice_date(first_week_days[i])` Getting Data: Scraping Data from the Web, APIs
 
 *Resources*
 
@@ -422,7 +418,7 @@ Web Scraping and APIs, `07-webscraping.Rmd`
 
 Assignment `r i-2` Due Midnight `r nice_date(hw_days[i])`
 
-## `r nice_date(second_week_days[i])` Web data, continued
+## `r nice_date(second_week_days[i])` Web Data, continued
 
 *Standing Meetings*
 
@@ -431,12 +427,12 @@ Assignment `r i-2` Due Midnight `r nice_date(hw_days[i])`
 ```{r echo=FALSE,warning=FALSE,results=FALSE,message=FALSE}
 i<-i+1
 ```
-## `r nice_date(first_week_days[i])` Topic for the Week: Analyzing Data 3--Classification
+## `r nice_date(first_week_days[i])`  Analyzing Data: Classification
 
 *Resources*
 
-James, G., Witten, D., Hastie, T., & Tibshirani, R. (2013). An introduction to statistical learning (Vol. 6). New York: Springer. [Chapter 4](http://www-bcf.usc.edu/~gareth/ISL/ISLR%20Sixth%20Printing.pdf) , 
-[Chapter 4 Lab R Code](http://www-bcf.usc.edu/~gareth/ISL/Chapter%204%20Lab.txt)
+James, G., Witten, D., Hastie, T., & Tibshirani, R. (2013). An introduction to statistical learning (Vol. 6). New York: Springer. [Chapter 4](http://faculty.marshall.usc.edu/gareth-james/ISL/ISLR%20Seventh%20Printing.pdf) , 
+[Chapter 4 Lab R Code](http://faculty.marshall.usc.edu/gareth-james/ISL/Chapter%204%20Lab.txt)
 
 Althoff, T., Danescu-Niculescu-Mizil, C., & Jurafsky, D. (2014, May). How to Ask for a Favor: A Case Study on the Success of Altruistic Requests. In ICWSM. (Available Here)[http://www.aaai.org/ocs/index.php/ICWSM/ICWSM14/paper/download/8106/8101]
 
@@ -448,19 +444,18 @@ Classification, `08-classification.Rmd`
 
 Assignment `r i-2` Due Midnight `r nice_date(hw_days[i])`
 
-##`r nice_date(second_week_days[i])` Classification, continued
-
-*Standing Meetings*
-
 *Lab Practical*
 
 Classifying behavior via text analysis: random acts of pizza.
+
+## `r nice_date(second_week_days[i])` No Class, Fall Break
+
 
 ```{r echo=FALSE,warning=FALSE,results=FALSE,message=FALSE}
 i<-i+1
 ```
 
-## `r nice_date(first_week_days[i])` Topic for The Week: Presenting Data 3-- Plots for Classification
+## `r nice_date(first_week_days[i])` Presenting Data: Plots for Classification
 
 *Resources* 
 
@@ -472,7 +467,7 @@ Plots for Classification `09-plots_classification.Rmd`
 
 Assignment `r i-2` Due Midnight `r nice_date(hw_days[i])`
 
-##`r nice_date(second_week_days[i])` Plots for Classification, continued
+## `r nice_date(second_week_days[i])` Plots for Classification, continued
 
 *Standing Meetings*
 
@@ -482,17 +477,19 @@ Assignment `r i-2` Due Midnight `r nice_date(hw_days[i])`
 
 Plots for understanding classification
 
-
 ```{r echo=FALSE,warning=FALSE,results=FALSE,message=FALSE}
 i<-i+1
 ```
 
 
-## `r nice_date(first_week_days[i])` Topic for the Week: Training and testing multiple models, Cross Validation
+## `r nice_date(first_week_days[i])` Analyzing Data: Cross Validation
 
 *Resources*
 
 Wickham [Many Models](http://r4ds.had.co.nz/many-models.html)
+
+
+James, G., Witten, D., Hastie, T., & Tibshirani, R. (2013). An introduction to statistical learning (Vol. 6). New York: Springer. [Chapter 5](http://faculty.marshall.usc.edu/gareth-james/ISL/ISLR%20Seventh%20Printing.pdf) 
 
 *Lecture Notes*
 
@@ -516,12 +513,12 @@ i<-i+1
 ```
 
 
-## `r nice_date(first_week_days[i])` Topic for the Week: Getting Data 4--databases and relational data
+## `r nice_date(first_week_days[i])` Getting Data: Databases and Relational Data
 
 *Resources*
 Wickham [Relational Data](http://r4ds.had.co.nz/relational-data.html)
 
-Working with Databases in R, available: [https://cran.r-project.org/web/packages/dplyr/vignettes/databases.html](https://cran.r-project.org/web/packages/dplyr/vignettes/databases.html)
+Working with Databases in R, available: [https://dbplyr.tidyverse.org/articles/dbplyr.html](https://dbplyr.tidyverse.org/articles/dbplyr.html)
 
 *Lecture Notes*
 
@@ -543,19 +540,7 @@ i<-i+1
 
 
 
-## `r nice_date(first_week_days[i])` Thanksgiving Break: No Class
-
-Check out the lecture notes on interactive graphics,  `13-interactive_graphics.Rmd`
-
-## `r nice_date(second_week_days[i])` Thanksgiving Break
-
-*No Standing meetings, but feel free to talk about Data Science at dinner*
-
-```{r echo=FALSE,warning=FALSE,results=FALSE,message=FALSE}
-i<-i+1
-```
-
-## `r nice_date(first_week_days[i])` Topic for the Week: Analyzing Data 4--Unsupervised learning 
+## `r nice_date(first_week_days[i])`  Analyzing Data: Unsupervised learning 
 
 Subtopics: k-means, nearest neighbor clustering
 
@@ -572,7 +557,8 @@ Chapter 12, Unsupervised Learning `12-unsupervised.Rmd`
 
 Assignment `r i-2` Due Midnight `r nice_date(hw_days[i])`
 
-## `r nice_date(second_week_days[i])` Unsupervised Learning, continued
+
+## `r nice_date(second_week_days[i])`  Unsupervised Learning, continued
 
 *Standing Meetings*
 
@@ -582,6 +568,18 @@ Assignment `r i-2` Due Midnight `r nice_date(hw_days[i])`
 *Lab Practical:* K-means clustering, nearest neighbor classification
 
 
+
+```{r echo=FALSE,warning=FALSE,results=FALSE,message=FALSE}
+i<-i+1
+```
+
+## `r nice_date(first_week_days[i])` Thanksgiving Break: No Class
+
+Check out the lecture notes on interactive graphics,  `13-interactive_graphics.Rmd`
+
+## `r nice_date(second_week_days[i])` Thanksgiving Break: No Class
+
+*No Standing meetings, but feel free to talk about Data Science at dinner*
 ```{r echo=FALSE,warning=FALSE,results=FALSE,message=FALSE}
 i<-i+1
 ```
@@ -592,7 +590,7 @@ Group 1
 
 *Assignments*
 
-Assignment `r i-2` Due Midnight `r nice_date(hw_days[i])`
+Assignment `r i-3` Due Midnight `r nice_date(hw_days[i])`
 
 ## `r nice_date(second_week_days[i])` Class Presentations 
 
