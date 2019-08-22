@@ -146,12 +146,12 @@ source](https://opensource.org/osd-annotated) software in this course.
 We will use [R](https://cran.r-project.org/), an open-source data
 analytic platform for all analysis. R appears to be the most widely used
 data analysis software in data science. We will utilize
-[Rstudio](https://www.rstudio.com/home/) as our integrated development
+[RStudio](https://www.rstudio.com/home/) as our integrated development
 environment (IDE) for R.
 
 We will also use [git](https://git-scm.com/), a distributed version
-control program, and [Github](https://github.com/), an online hosting
-platform. [Github Desktop](https://desktop.github.com/) will serve as
+control program, and [GitHub](https://github.com/), an online hosting
+platform. [GitHub Desktop](https://desktop.github.com/) will serve as
 our Graphical User Interface to git and GitHub. RStudio is fully
 integrated with git and Github, making it an ideal IDE for these
 purposes. Class assignments will be distributed through GitHub and will
