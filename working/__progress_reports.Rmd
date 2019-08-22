@@ -10,7 +10,6 @@ knitr::opts_chunk$set(echo = FALSE)
 ```
 
 
-
 ## Three Questions
 
 - What did you work on last week?
@@ -19,10 +18,10 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ## Progress Reports
 
-- Progress Report 1: 2018-09-13
-- Progress Report 2: 2018-10-04
-- Progress Report 3: 2018-11-01
-- Progress Report 4: 2018-11-29
+- Progress Report 1: 2019-09-12
+- Progress Report 2: 2019-10-03
+- Progress Report 3: 2019-10-31
+- Progress Report 4: 2019-11-21
 
-### Final Project Due: 2018-12-11
+### Final Project Due: 2019-12-10
 
