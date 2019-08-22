@@ -1,12 +1,13 @@
 ---
 title: "What Predicts Family Spending on Groceries?"
 output:
-  html_document: default
+  word_document: default
   pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE,warning=FALSE,results ='hide',include=TRUE)
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, results ='hide',include=TRUE)
 library(tidyverse)
 library(forcats)
 library(ggplot2)
@@ -40,9 +41,8 @@ cex<-cex%>%filter(is.na(childage)==FALSE)
 
 ```
 
-
 ## Will Doyle
-## 10/5/2016
+
 
 ## The Problem
 
@@ -56,7 +56,7 @@ The data for this analysis come from the Consumer Expenditure Survey, a quarterl
 The figure below shows the distribution of family spending on groceries. 
 
 ### Spending on Groceries
-```{r density_plot}
+```{r density_plot,results="asis"}
 gg<-ggplot(data=cex,aes(x=grocery_food,color=grocery_food))
 gg<-gg+geom_freqpoly(binwidth=200,color="blue")
 gg<-gg+xlab("Spending on Food Groceries")+ylab("Density")
@@ -97,7 +97,7 @@ cex_sum<-cex%>%group_by(fam_income_level)%>%summarize(groc_fam=mean(grocery_food
 cex_sum<-cex_sum%>%mutate(fam_income_level=as.factor(as.character(fam_income_level)))
 
 
-gg<-ggplot(cex_sum,aes(x=fct_reorder(f=fam_income_level,groc_fam),y=groc_fam,fill=fam_income_level))
+gg<-ggplot(cex_sum,aes(x=fct_reorder(.f=as.factor(fam_income_level),groc_fam),y=groc_fam,fill=fam_income_level))
 
 gg<-gg+geom_bar(stat="identity")
 
@@ -113,7 +113,7 @@ Another reason why families spend more on groceries is becuase they have more ch
 
 cex_sum<-cex%>%group_by(childage)%>%summarize(groc_fam=mean(grocery_food))
 
-gg<-ggplot(cex_sum,aes(x=fct_reorder(f=childage,groc_fam),y=groc_fam,fill=fct_reorder(f=childage,groc_fam)))
+gg<-ggplot(cex_sum,aes(x=fct_reorder(.f=as.factor(childage),groc_fam),y=groc_fam,fill=fct_reorder(.f=as.factor(childage),groc_fam)))
 
 gg<-gg+geom_bar(stat="identity")
 ##Print
