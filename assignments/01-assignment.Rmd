@@ -1,7 +1,6 @@
 ---
 title: "Untitled"
 author: "Will Doyle"
-date: "August 31, 2016"
 output: md_document
 ---
 
