@@ -1,0 +1,145 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r}
+
+library(rvest)
+library(forcats)
+library(tidyverse)
+```
+
+
+## Working with NFL Reference
+
+```{r}
+
+nfl_get_data<-TRUE
+
+nfl_df_all<-NULL
+
+if (nfl_get_data==TRUE){
+
+  for (year in 2008:2017){
+url<-paste0("https://www.pro-football-reference.com/years/",year,"/")
+
+## Parse web page
+nfl_df<-url %>% read_html() %>%                   # parse html
+      html_nodes('#all_team_stats')%>%
+      html_nodes(xpath='comment()')%>%
+      html_text()%>%
+      read_html()%>%
+      html_node('table')%>%
+      html_table()
+  
+nfl_names<-c("rank",
+             "team",
+             "games",
+             "points_for_offense",
+             "yards",
+             "plays",
+             "yards/play",
+             "turnovers_lost",
+             "fumbles_lost",
+             "first_downs",
+             "pass_completions",
+             "pass_attempts",
+             "pass_yards",
+             "pass_tds",
+             "pass_interceptions_against",
+             "pass_net_yards_attempt",
+             "pass_first_downs",
+             "rush_attempts",
+             "rush_yards",
+             "rush_tds",
+             "rush_yards_attempt",
+             "rush_first_downs",
+             "penalties_commit",
+             "penalty_yards_commit",
+             "first_downs_by_penaly",
+             "drive_score_pct",
+             "drive_to_pct",
+             "expected_points")
+
+names(nfl_df)<-nfl_names
+
+nfl_df<-nfl_df%>%
+    slice(-1)%>%# drop first row
+    slice(-(33:nrow(nfl_df)))%>% # drop summary data at end
+    mutate(year=year)%>% # add year
+    ## Convert to numeric
+    mutate_at(.funs = as.numeric,.vars=names(nfl_df)[3:dim(nfl_df)[2]])%>%
+    mutate(team=str_remove(team,"[^[:alnum:]]"))
+  
+
+
+## Defense
+url<-paste0("https://www.pro-football-reference.com/years/",year,
+"/opp.htm")
+
+
+## Parse web page
+nfl_defense<-url %>% read_html() %>%
+      html_table()
+## Add names here 
+
+
+##  simple, just for now
+nfl_defense<-data.frame(nfl_defense[1])
+names(nfl_defense)<-nfl_defense[1,]
+nfl_defense<-nfl_defense%>%slice(-1)
+
+nfl_all_stats<-left_join(nfl_df,nfl_defense)
+## Win/loss record
+
+## Parse web page
+nfl_afc<-url %>% read_html() %>%                   # parse html
+      html_nodes('#AFC')%>%
+      html_table()%>%
+      data.frame()%>%
+      slice(-c(seq(1,20,by=5)))
+      
+
+
+## Parse web page
+nfl_nfc<-url %>% read_html() %>%                   # parse html
+      html_nodes('#NFC')%>%
+      html_table()%>%
+      data.frame()%>%
+      slice(-c(seq(1,20,by=5)))
+
+select_vars<-c("Tm","W","L","PF","PA")
+
+nfl_record<-nfl_record%>%select_at(.vars=select_vars)
+
+names(nfl_record)<-c(
+                     "team",
+                     "wins",
+                     "losses",
+                     "points_for",
+                     "points_against")
+
+nfl_record<-as_data_frame(nfl_record)%>%tbl_df()%>%
+  mutate(team=str_remove(team,"[^[:alnum:]]"))%>%
+  mutate_at(.funs=as.numeric,.vars=2:5)
+
+nfl_df<-nfl_df%>%as_data_frame()%>%tbl_df()
+
+nfl_df<-left_join(nfl_df,nfl_record,by="team")
+
+    ## Combine
+    nfl_df_all<-bind_rows(nfl_df_all,nfl_df)
+    
+    ## Wait between 3 and 4 seconds
+    Sys.sleep(runif(1,3,4))
+    
+      print(paste("Finishing year:" ,year))
+  } # End year loop
+  
+  
+  save(nfl_df_all,file="nfl_df_all.Rdata")
+} else{
+    load("nfl_df_all.Rdata")
+  } #end conditional
+```

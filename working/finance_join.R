@@ -2,20 +2,16 @@
 ## Most recent version of tidyquant
 
 #devtools:install_github("business-science/tidyquant")
+
 library(tidyquant)
 library(lubridate)
+library(tidyverse)
 
 symbols<-c("GOOG","IBM")
 
-full_df<-NULL #Initialize empty dataset
+prices<-symbols%>%
+  tq_get(get=c("stock.prices","key.ratios",from="2001-01-01"))
 
-for (symbol in symbols){
-
-key_ratios<-tq_get(symbol,get="key.ratios",from="2001-01-01")
-
-stock_price<-tq_get(symbol,get="stock.prices")
-
-stock_price$name<-symbol
 
 stock_price$year<-year(stock_price$date)
 
