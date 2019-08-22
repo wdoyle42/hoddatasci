@@ -20,7 +20,7 @@ load("../lessons/pd.Rdata")
 
 pd%>%mutate(`College Graduate Quintile`=ntile(coll_grad_pc,n=5))%>%
   group_by(`College Graduate Quintile`)%>%
-  summarize(`Mean Home Value`=mean(median_home_val))%>%
+  summarize(`Mean Home Valuer`=mean(median_home_val))%>%
   mutate(`Mean Home Value`=prettyNum(round(`Mean Home Value`,0),
          big.mark=","))%>%
   kable()
