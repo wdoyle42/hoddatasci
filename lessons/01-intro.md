@@ -162,6 +162,8 @@ single quotes in a row, like so: ` ``` ` This indicates the start of a
 “code chunk” in our file. The first code chunk that we load will
 include a set of programs that we will need all semester long.
 
+## Using R Libraries
+
 When we say that R is extensible, we mean that people in the community
 can write programs that everyone else can use. These are called
 “packages.” In these first few lines of code, I load a set of packages
@@ -190,16 +192,18 @@ library(tidyverse)
     ##   c.quosures     rlang
     ##   print.quosures rlang
 
-    ## ── Attaching packages ───────────────────────────────────────────────── tidyverse 1.2.1 ──
+    ## ── Attaching packages ──────────────────────────────────────────────────── tidyverse 1.2.1 ──
 
     ## ✔ ggplot2 3.1.1     ✔ purrr   0.3.2
     ## ✔ tibble  2.1.3     ✔ dplyr   0.8.3
     ## ✔ tidyr   0.8.3     ✔ stringr 1.4.0
     ## ✔ readr   1.3.1     ✔ forcats 0.4.0
 
-    ## ── Conflicts ──────────────────────────────────────────────────── tidyverse_conflicts() ──
+    ## ── Conflicts ─────────────────────────────────────────────────────── tidyverse_conflicts() ──
     ## ✖ dplyr::filter() masks stats::filter()
     ## ✖ dplyr::lag()    masks stats::lag()
+
+## Loading Datasets
 
 Now we’re ready to load in data. The data frame will be our basic way of
 interacting with everything in this class. The `sc` data frame contains
@@ -209,7 +213,13 @@ univeristies.
 However, we first need to make sure that R is looking in the right
 place. When you opened up your project, Rstudio automagically took you
 to the directory for that project. But because we keep lessons in a
-separate directory, we need to
+separate directory, we need to point R to the right place. This is
+called setting the working directory, and can be done either by using
+the command `setwd` or in RStudio by going to “Session–\>Set Working
+Directory–\>Choose Directory.” Choose the directory where the file
+currently resides on your computer. Make sure to always set the working
+directory at the beginning of each session—not doing so causes a lot of
+headaches for new users.
 
 ``` r
 ## Load in the data
@@ -218,7 +228,9 @@ load("college.Rdata")
 
 Here are the variables in the `college.Rdata` dataset:
 
-*Variable Name* :*Definition* unitid: Unit ID
+*Variable Name* :*Definition*
+
+unitid: Unit ID
 
 instnm: Institution Name
 
@@ -245,13 +257,11 @@ debt\_mdn: Median debt of graduates
 md\_earn\_ne\_pg: Earnings of graduates who are not enrolled in higher
 education, six years after graduation
 
-*Looking at datasets*
+## Looking at datasets
 
 We can look at the first few rows and columns of `sc` by typing in the
-data name.
-
-We can look at the whole dataset using
-View.
+data
+name.
 
 ``` r
 ## What does this data look like? Look at the first few rows, first few variables
@@ -274,11 +284,23 @@ sc
     ## # … with 115 more rows, and 3 more variables: debt_mdn <dbl>,
     ## #   md_earn_wne_p6 <int>, ugds <int>
 
+We can look at the whole dataset using View. Just delete the `#` sign
+below to make the code work. That `#` sign is a comment in R code, which
+indicates to the computer that everything on that line should be
+ignored.
+
 ``` r
 #View(sc)
 ```
 
-*Filter, Select, Arrange*
+You’ll notice that this data is arranged in a rectangular format, with
+each row showing a different college, and each column representing a
+different characteristic of that college. Datasets are always structured
+this way— cases (or units) will form the rows, and the characteristics
+of those cases– or variables— will form the columns. Unlike working with
+spreadsheets, this structure is always assumed for datasets.
+
+## Filter, Select, Arrange
 
 In exploring data, many times we want to look at smaller parts of the
 dataset. There are three commands we’ll use today that help with this.
@@ -295,11 +317,13 @@ For more on these, please see this
 [vignette](https://cran.rstudio.com/web/packages/dplyr/vignettes/introduction.html).
 
 Let’s grab just the data for Vanderbilt, then look only at the average
-test scores and admit rate.
+test scores and admit rate. We can use filter to look at all of the
+variables for Vanderbilt:
 
 ``` r
 ## Where are we?
-sc%>%filter(instnm=="Vanderbilt University")
+sc%>%
+  filter(instnm=="Vanderbilt University")
 ```
 
     ## # A tibble: 1 x 12
@@ -309,8 +333,15 @@ sc%>%filter(instnm=="Vanderbilt University")
     ## # … with 3 more variables: debt_mdn <dbl>, md_earn_wne_p6 <int>,
     ## #   ugds <int>
 
+Many times, though we don’t want to see everything, we just want to
+choose a few variables. `select` allows us to select only the variables
+we want. In this case, the institution name, its admit rate, and the
+average SAT scores of entering students.
+
 ``` r
-sc%>%filter(instnm=="Vanderbilt University")%>%select(instnm,adm_rate,sat_avg )
+sc%>%
+  filter(instnm=="Vanderbilt University")%>%
+  select(instnm,adm_rate,sat_avg )
 ```
 
     ## # A tibble: 1 x 3
@@ -318,9 +349,14 @@ sc%>%filter(instnm=="Vanderbilt University")%>%select(instnm,adm_rate,sat_avg )
     ##   <chr>                    <dbl>   <dbl>
     ## 1 Vanderbilt University    0.202    1430
 
+Next, we can use `filter` to look at colleges with low admissions rates,
+say less than 10% ( or .1 in the proportion scale used in the dataset).
+
 ``` r
-## Just colleges with low admit rates: show admit rate and sat scores, arrange in a pleasing way
-sc%>%filter(adm_rate<.1)%>%select(instnm,adm_rate,sat_avg)%>%arrange(sat_avg,adm_rate)
+sc%>%
+  filter(adm_rate<.1)%>%
+  select(instnm,adm_rate,sat_avg)%>%
+  arrange(sat_avg,adm_rate)
 ```
 
     ## # A tibble: 6 x 3
@@ -333,9 +369,14 @@ sc%>%filter(adm_rate<.1)%>%select(instnm,adm_rate,sat_avg)%>%arrange(sat_avg,adm
     ## 5 Dell'Arte International School of Physical Theatre    0           NA
     ## 6 The Juilliard School                                  0.0711      NA
 
+Now let’s look at colleges with low admit rates: order by sat scores (-
+sat\_avg gives descending)
+
 ``` r
-## Just colleges with low admit rates: order by sat scores (- sat_avg gives descending)
-sc%>%filter(adm_rate<.1)%>%select(instnm,adm_rate,sat_avg)%>%arrange(-sat_avg)
+sc%>%
+  filter(adm_rate<.1)%>%
+  select(instnm,adm_rate,sat_avg)%>%
+  arrange(-sat_avg)
 ```
 
     ## # A tibble: 6 x 3
@@ -348,11 +389,17 @@ sc%>%filter(adm_rate<.1)%>%select(instnm,adm_rate,sat_avg)%>%arrange(-sat_avg)
     ## 5 Dell'Arte International School of Physical Theatre    0           NA
     ## 6 The Juilliard School                                  0.0711      NA
 
+And one last operation: all colleges that admit over 30 percent of
+students, looking at their SAT scores, earnings of attendees six years
+letter, and what state they are in, then arranging by state and SAT
+score.
+
 ``` r
-## New cut
-sc_sub <- sc%>%filter(adm_rate>.3)%>%
+sc%>%
+  filter(adm_rate>.3)%>%
   select(instnm,sat_avg,md_earn_wne_p6,stabbr)%>%
-  arrange(stabbr,-sat_avg)%>%print(n=100)
+  arrange(stabbr,-sat_avg)%>%
+  print(n=100)
 ```
 
     ## # A tibble: 71 x 4
@@ -433,10 +480,15 @@ sc_sub <- sc%>%filter(adm_rate>.3)%>%
 *Quick Exercise* Choose a different college and two different things
 about that college.
 
-*Summarizing Data*
+## Summarizing Data
+
+To summarize data, we use the summarize command. Inside that command, we
+tell R two things: what to call the new object (a data frame, really)
+that we’re creating, and what numerical summary we would like. The code
+below summarizes median debt for the colleges in the dataset by
+calculating the average of median debt for all institutions.
 
 ``` r
-## What's the average median debt?
 sc%>%summarize(mean_debt=mean(debt_mdn,na.rm=TRUE))
 ```
 
@@ -448,12 +500,14 @@ sc%>%summarize(mean_debt=mean(debt_mdn,na.rm=TRUE))
 *Quick Exercise* Summarize the average entering SAT scores in this
 dataset.
 
-*Combining Commands* We can also combine commands, so that summaries are
-done on only a part of the dataset. Below, I summarize median debt for
-selective schools, and not very selective schools.
+## Combining Commands
+
+We can also combine commands, so that summaries are done on only a part
+of the dataset. Below, we summarize median debt for selective schools,
+and not very selective
+schools.
 
 ``` r
-## What's the average median debt for very selective schools?
 sc%>%filter(adm_rate<.1)%>%summarize(mean_debt=mean(debt_mdn,na.rm=TRUE))
 ```
 
@@ -462,8 +516,10 @@ sc%>%filter(adm_rate<.1)%>%summarize(mean_debt=mean(debt_mdn,na.rm=TRUE))
     ##       <dbl>
     ## 1     9336.
 
+What about for not very selective
+schools?
+
 ``` r
-## And for not very selective schools?
 sc%>%filter(adm_rate>.3)%>%summarize(mean_debt=mean(debt_mdn,na.rm=TRUE))
 ```
 
@@ -477,22 +533,27 @@ sc%>%filter(adm_rate>.3)%>%summarize(mean_debt=mean(debt_mdn,na.rm=TRUE))
 *Grouping Data* Another powerful tool is being able to calculate
 characteristics for various groups. For example, what are the average
 earnings for the three different types of colleges (public, private
-non-profit, private for-profit) in the
-dataset?
+non-profit, private for-profit) in the dataset?
 
 ``` r
-sc%>%group_by(control)%>%summarize(mean_earnings=mean(md_earn_wne_p6,na.rm=TRUE))
+sc%>%
+  group_by(control)%>%
+  summarize(mean_earnings=mean(md_earn_wne_p6))
 ```
 
     ## # A tibble: 3 x 2
     ##   control mean_earnings
     ##     <int>         <dbl>
-    ## 1       1        34840 
-    ## 2       2        41642.
-    ## 3       3        35583.
+    ## 1       1         34840
+    ## 2       2            NA
+    ## 3       3            NA
+
+What about debt by type of college?
 
 ``` r
-sc%>%group_by(control)%>%summarize(mean_debt=mean(debt_mdn,na.rm=TRUE))
+sc%>%
+  group_by(control)%>%
+  summarize(mean_debt=mean(debt_mdn))
 ```
 
     ## # A tibble: 3 x 2
@@ -502,19 +563,11 @@ sc%>%group_by(control)%>%summarize(mean_debt=mean(debt_mdn,na.rm=TRUE))
     ## 2       2    11887.
     ## 3       3    10061.
 
-``` r
-sc%>%group_by(control)%>%summarize(mean(debt_mdn,na.rm=TRUE))
-```
-
-    ## # A tibble: 3 x 2
-    ##   control `mean(debt_mdn, na.rm = TRUE)`
-    ##     <int>                          <dbl>
-    ## 1       1                         10072.
-    ## 2       2                         11887.
-    ## 3       3                         10061.
+*Quick exercise* Calculate average admission rate by type of college.
 
 *Plotting Data* The last basic tool for looking at a dataset is plotting
-the data.
+the data. The code below creates a scatterplot of admission rates by
+average SAT scores
 
 ``` r
 ## Plotting: bivariate
@@ -531,16 +584,6 @@ gg
     ## Warning: Removed 27 rows containing missing values (geom_point).
 
 ![](01-intro_files/figure-gfm/plotting-1.png)<!-- -->
-
-``` r
-## Univariate descriptives
-
-gg<-ggplot(data=sc,aes(adm_rate))
-gg<-gg+geom_density()
-gg
-```
-
-![](01-intro_files/figure-gfm/plotting-2.png)<!-- -->
 
 *Quick exercise* Replicate the above plots, but put cost of attendance
 on the y axis.
