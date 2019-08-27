@@ -13,7 +13,7 @@ Here’s what we need to get done today:
 4.  Installing git
 5.  Getting set up on GitHub
 6.  Initializing everyone’s github repos
-7.  hello\_world.Rmd
+7.  Starting assignment 1, “hello, world\!”
 
 ## Introductions
 
@@ -168,8 +168,8 @@ When we say that R is extensible, we mean that people in the community
 can write programs that everyone else can use. These are called
 “packages.” In these first few lines of code, I load a set of packages
 using the library command in R. The set of packages, called `tidyverse`
-were written by Hadley Wickham and play a key role in his book. To
-install this set of packages, simply type in
+were written by Hadley Wickham and others and play a key role in his
+book. To install this set of packages, simply type in
 `install.packages("tidyverse")` at the R command prompt.
 
 To run the code below in R, you can:
@@ -192,14 +192,14 @@ library(tidyverse)
     ##   c.quosures     rlang
     ##   print.quosures rlang
 
-    ## ── Attaching packages ──────────────────────────────────────────────────── tidyverse 1.2.1 ──
+    ## ── Attaching packages ─────────────────────────────── tidyverse 1.2.1 ──
 
     ## ✔ ggplot2 3.1.1     ✔ purrr   0.3.2
     ## ✔ tibble  2.1.3     ✔ dplyr   0.8.3
     ## ✔ tidyr   0.8.3     ✔ stringr 1.4.0
     ## ✔ readr   1.3.1     ✔ forcats 0.4.0
 
-    ## ── Conflicts ─────────────────────────────────────────────────────── tidyverse_conflicts() ──
+    ## ── Conflicts ────────────────────────────────── tidyverse_conflicts() ──
     ## ✖ dplyr::filter() masks stats::filter()
     ## ✖ dplyr::lag()    masks stats::lag()
 
@@ -260,11 +260,9 @@ education, six years after graduation
 ## Looking at datasets
 
 We can look at the first few rows and columns of `sc` by typing in the
-data
-name.
+data name.
 
 ``` r
-## What does this data look like? Look at the first few rows, first few variables
 sc
 ```
 
@@ -321,7 +319,6 @@ test scores and admit rate. We can use filter to look at all of the
 variables for Vanderbilt:
 
 ``` r
-## Where are we?
 sc%>%
   filter(instnm=="Vanderbilt University")
 ```
@@ -332,6 +329,11 @@ sc%>%
     ## 1 221999 Vande… TN      2009       2       3    0.202    1430    52303
     ## # … with 3 more variables: debt_mdn <dbl>, md_earn_wne_p6 <int>,
     ## #   ugds <int>
+
+What’s that weird looking `%>%` thing? That’s called a pipe. This is how
+we chain commands together in R. Think of it as saying “and then” to R.
+In the above case, we said, take the data *and then* filter it to be
+just the data where the institution name is Vanderbilt University.
 
 Many times, though we don’t want to see everything, we just want to
 choose a few variables. `select` allows us to select only the variables
@@ -369,8 +371,8 @@ sc%>%
     ## 5 Dell'Arte International School of Physical Theatre    0           NA
     ## 6 The Juilliard School                                  0.0711      NA
 
-Now let’s look at colleges with low admit rates: order by sat scores (-
-sat\_avg gives descending)
+Now let’s look at colleges with low admit rates, and order them by SAT
+scores (`-sat_avg` gives descending order).
 
 ``` r
 sc%>%
@@ -478,7 +480,7 @@ sc%>%
     ## 71 DigiPen Institute of Technology               1194          63100 WA
 
 *Quick Exercise* Choose a different college and two different things
-about that college.
+about that college. Have R print the output.
 
 ## Summarizing Data
 
@@ -489,7 +491,8 @@ below summarizes median debt for the colleges in the dataset by
 calculating the average of median debt for all institutions.
 
 ``` r
-sc%>%summarize(mean_debt=mean(debt_mdn,na.rm=TRUE))
+sc%>%
+  summarize(mean_debt=mean(debt_mdn,na.rm=TRUE))
 ```
 
     ## # A tibble: 1 x 1
@@ -516,11 +519,12 @@ sc%>%filter(adm_rate<.1)%>%summarize(mean_debt=mean(debt_mdn,na.rm=TRUE))
     ##       <dbl>
     ## 1     9336.
 
-What about for not very selective
-schools?
+What about for not very selective schools?
 
 ``` r
-sc%>%filter(adm_rate>.3)%>%summarize(mean_debt=mean(debt_mdn,na.rm=TRUE))
+sc%>%
+  filter(adm_rate>.3)%>%
+  summarize(mean_debt=mean(debt_mdn,na.rm=TRUE))
 ```
 
     ## # A tibble: 1 x 1
@@ -530,10 +534,12 @@ sc%>%filter(adm_rate>.3)%>%summarize(mean_debt=mean(debt_mdn,na.rm=TRUE))
 
 *Quick Exercise* Calculate average earnings for schools where SAT\>1200
 
-*Grouping Data* Another powerful tool is being able to calculate
-characteristics for various groups. For example, what are the average
-earnings for the three different types of colleges (public, private
-non-profit, private for-profit) in the dataset?
+## Grouping Data
+
+Another powerful tool is being able to calculate characteristics for
+various groups. For example, what are the average earnings for the three
+different types of colleges (public, private non-profit, private
+for-profit) in the dataset?
 
 ``` r
 sc%>%
@@ -565,9 +571,11 @@ sc%>%
 
 *Quick exercise* Calculate average admission rate by type of college.
 
-*Plotting Data* The last basic tool for looking at a dataset is plotting
-the data. The code below creates a scatterplot of admission rates by
-average SAT scores
+## Plotting Data
+
+The last basic tool for looking at a dataset is plotting the data. The
+code below creates a scatterplot of admission rates by average SAT
+scores
 
 ``` r
 ## Plotting: bivariate
@@ -615,7 +623,7 @@ you can take when using Git as your version control.
     button in the Git tab in Rstudio. You should do this everytime you
     finish a working session, at an absolute minimum.
 
-## Your first commit: `hello_world.Rmd`
+## Your first commit: Hello, World\!
 
 For today, I want you to create a file called
 `01-assignment_<lastname>.Rmd` in your github repo for assignments. It

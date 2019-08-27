@@ -13,7 +13,7 @@ Here's what we need to get done today:
 4. Installing git
 5. Getting set up on GitHub
 6. Initializing everyone's github repos
-7. hello_world.Rmd
+7. Starting assignment 1, "hello, world!"
 
 ## Introductions
 
@@ -100,7 +100,7 @@ In the `01-Intro.Rmd` file you'll notice that there are three open single quotes
 
 ## Using R Libraries
 
-When we say that R is extensible, we mean that people in the community can write programs that everyone else can use. These are called "packages." In these first few lines of code, I load a set of packages using the library command in R. The set of packages, called `tidyverse` were written by Hadley Wickham and play a key role in his book.  To install this set of packages, simply type in `install.packages("tidyverse")` at the R command prompt. 
+When we say that R is extensible, we mean that people in the community can write programs that everyone else can use. These are called "packages." In these first few lines of code, I load a set of packages using the library command in R. The set of packages, called `tidyverse` were written by Hadley Wickham and others and play a key role in his book.  To install this set of packages, simply type in `install.packages("tidyverse")` at the R command prompt. 
 
 To run the code below in R, you can:
 
@@ -156,7 +156,6 @@ md_earn_ne_pg: Earnings of graduates who are not enrolled in higher education, s
 We can look at the first few rows and columns of `sc` by typing in the data name. 
 
 ```{r look_at_data}
-## What does this data look like? Look at the first few rows, first few variables
 sc
 ```
 
@@ -166,7 +165,6 @@ We can look at the whole dataset using View. Just delete the `#` sign below to m
 ```
 
 You'll notice that this data is arranged in a rectangular format, with each row showing a different college, and each column representing a different characteristic of that college. Datasets are always structured this way--- cases (or units) will form the rows, and the characteristics of those cases-- or variables--- will form the columns. Unlike working with spreadsheets, this structure is always assumed for datasets. 
-
 
 ## Filter, Select, Arrange
 
@@ -183,10 +181,12 @@ For more on these, please see this [vignette](https://cran.rstudio.com/web/packa
 Let's grab just the data for Vanderbilt, then look only at the average test scores and admit rate. We can use filter to look at all of the variables for Vanderbilt:
 
 ```{r filter_select_arrange}
-## Where are we?
 sc%>%
   filter(instnm=="Vanderbilt University")
 ```
+
+
+What's that weird looking `%>%` thing? That's called a pipe. This is how we chain commands together in R. Think of it as saying "and then" to R. In the above case, we said, take the data *and then* filter it to be just the data where the institution name is Vanderbilt University. 
 
 Many times, though we don't want to see everything, we just want to choose a few variables. `select` allows us to select only the variables we want. In this case, the institution name, its admit rate, and the average SAT scores of entering students. 
 ```{r}
@@ -205,7 +205,7 @@ sc%>%
 ```
 
 
-Now let's look at colleges with low admit rates: order by sat scores (- sat_avg gives descending)
+Now let's look at colleges with low admit rates, and order them by SAT scores (`-sat_avg` gives descending order). 
 ```{r}
 sc%>%
   filter(adm_rate<.1)%>%
@@ -223,14 +223,15 @@ sc%>%
 ```
 
 *Quick Exercise*
-Choose a different college and two different things about that college. 
+Choose a different college and two different things about that college. Have R print the output. 
 
 ## Summarizing Data
 
 To summarize data, we use the summarize command. Inside that command, we tell R two things: what to call the new object (a data frame, really) that we're creating, and what numerical summary we would like. The code below summarizes median debt for the colleges in the dataset by calculating the average of median debt for all institutions.
 
 ```{r summarize}
-sc%>%summarize(mean_debt=mean(debt_mdn,na.rm=TRUE))
+sc%>%
+  summarize(mean_debt=mean(debt_mdn,na.rm=TRUE))
 ```
 
 *Quick Exercise*
@@ -246,13 +247,15 @@ sc%>%filter(adm_rate<.1)%>%summarize(mean_debt=mean(debt_mdn,na.rm=TRUE))
 
 What about for not very selective schools?
 ```{r}
-sc%>%filter(adm_rate>.3)%>%summarize(mean_debt=mean(debt_mdn,na.rm=TRUE))
+sc%>%
+  filter(adm_rate>.3)%>%
+  summarize(mean_debt=mean(debt_mdn,na.rm=TRUE))
 ```
 
 
 *Quick Exercise* Calculate average earnings for schools where SAT>1200
 
-*Grouping Data*
+## Grouping Data
 Another powerful tool is being able to calculate characteristics for various groups. For example, what are the average earnings for the three different types of colleges (public, private non-profit, private for-profit) in the dataset?
 
 ```{r grouping}
@@ -270,7 +273,7 @@ sc%>%
 
 *Quick exercise*  Calculate average admission rate by type of college. 
 
-*Plotting Data*
+## Plotting Data
 The last basic tool for looking at a dataset is plotting the data. The code below creates a scatterplot of admission rates by average SAT scores
 
 ```{r plotting}
@@ -282,7 +285,6 @@ gg
 ```
 
 *Quick exercise* Replicate the above plots, but put cost of attendance on the y axis. 
-
 
 ## Github: save, stage, commit, push
 
@@ -296,7 +298,7 @@ When working with files in your directory, there are three basic steps you can t
 
 - Pushing means that you will send the file and the record of all of the changes made to the file to GitHub. To push, click the "push" button in the Git tab in Rstudio.  You should do this everytime you finish a working session, at an absolute minimum. 
 
-## Your first commit: `hello_world.Rmd`
+## Your first commit: Hello, World!
 
 For today, I want you to create a file called `01-assignment_<lastname>.Rmd` in your github repo for assignments. It should contain the following elements:
 
