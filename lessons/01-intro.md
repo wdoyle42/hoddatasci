@@ -123,7 +123,7 @@ wherever you usually keep class directories. DO NOT PUT YOUR DIRECTORY
 ON YOUR DESKTOP OR IN DOWNLOADS. This project will be the only place you
 need to work for this class the entire semester.
 
-## Linking Github and Rstudo
+## Linking Github and RStudio
 
 From RStudio, you’ll need to click New Project–Existing Directory– then
 choose the directory where you just downloaded the gihub repository.
@@ -192,14 +192,14 @@ library(tidyverse)
     ##   c.quosures     rlang
     ##   print.quosures rlang
 
-    ## ── Attaching packages ─────────────────────────────── tidyverse 1.2.1 ──
+    ## ── Attaching packages ─────────────────────────────────────── tidyverse 1.2.1 ──
 
     ## ✔ ggplot2 3.1.1     ✔ purrr   0.3.2
     ## ✔ tibble  2.1.3     ✔ dplyr   0.8.3
     ## ✔ tidyr   0.8.3     ✔ stringr 1.4.0
     ## ✔ readr   1.3.1     ✔ forcats 0.4.0
 
-    ## ── Conflicts ────────────────────────────────── tidyverse_conflicts() ──
+    ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
     ## ✖ dplyr::filter() masks stats::filter()
     ## ✖ dplyr::lag()    masks stats::lag()
 
@@ -288,7 +288,7 @@ indicates to the computer that everything on that line should be
 ignored.
 
 ``` r
-#View(sc)
+View(sc)
 ```
 
 You’ll notice that this data is arranged in a rectangular format, with
@@ -351,6 +351,19 @@ sc%>%
     ##   <chr>                    <dbl>   <dbl>
     ## 1 Vanderbilt University    0.202    1430
 
+`filter` takes logical tests as its argument. The code
+`insntnm=="Vanderbilt University"` is a logical statement that will be
+true of just one case in the dataset– when institution name is
+Vanderbilt University. The `==` is a logical test, asking if this is
+equal to that. Other common logical and relational operators for R
+include
+
+  - `>`, `<`: greater than, less than
+  - `>=`, `<=`: greater than or equal to, less than or equal to
+  - `!` :not, as in `!=` not equal to
+  - `&` AND
+  - `|` OR
+
 Next, we can use `filter` to look at colleges with low admissions rates,
 say less than 10% ( or .1 in the proportion scale used in the dataset).
 
@@ -391,93 +404,43 @@ sc%>%
     ## 5 Dell'Arte International School of Physical Theatre    0           NA
     ## 6 The Juilliard School                                  0.0711      NA
 
-And one last operation: all colleges that admit over 30 percent of
-students, looking at their SAT scores, earnings of attendees six years
-letter, and what state they are in, then arranging by state and SAT
-score.
+And one last operation: all colleges that admit between 20 and 30
+percent of students, looking at their SAT scores, earnings of attendees
+six years letter, and what state they are in, then arranging by state,
+and then SAT score.
 
 ``` r
 sc%>%
-  filter(adm_rate>.3)%>%
+  filter(adm_rate>.2&adm_rate<.3)%>%
   select(instnm,sat_avg,md_earn_wne_p6,stabbr)%>%
   arrange(stabbr,-sat_avg)%>%
-  print(n=100)
+  print(n=20)
 ```
 
-    ## # A tibble: 71 x 4
+    ## # A tibble: 32 x 4
     ##    instnm                                     sat_avg md_earn_wne_p6 stabbr
     ##    <chr>                                        <dbl>          <int> <chr> 
-    ##  1 Henderson State University                    1048          29200 AR    
-    ##  2 University of Arkansas at Pine Bluff           784          22300 AR    
-    ##  3 University of Advancing Technology              NA          34800 AZ    
-    ##  4 Scripps College                               1336          34800 CA    
-    ##  5 University of California-San Diego            1247          42500 CA    
-    ##  6 Pepperdine University                         1230          48100 CA    
-    ##  7 California Polytechnic State University-S…    1205          49200 CA    
-    ##  8 San Diego State University                    1050          39300 CA    
-    ##  9 Hope International University                  975          33200 CA    
-    ## 10 Argosy University-The Art Institute of Ca…      NA          30800 CA    
-    ## 11 Colorado College                              1326          28500 CO    
-    ## 12 Connecticut College                             NA          39900 CT    
-    ## 13 George Washington University                  1276          51700 DC    
-    ## 14 Delaware State University                      868          28300 DE    
-    ## 15 Ave Maria University                          1104             NA FL    
-    ## 16 Florida International University              1102          37100 FL    
-    ## 17 Brenau University                              965          37900 GA    
-    ## 18 National Louis University                       NA          39600 IL    
-    ## 19 Grambling State University                     851          21200 LA    
-    ## 20 Brandeis University                           1367          40100 MA    
-    ## 21 Boston College                                1343          54700 MA    
-    ## 22 The New England Conservatory of Music           NA          20300 MA    
-    ## 23 The Boston Conservatory                         NA          22100 MA    
-    ## 24 College for Creative Studies                   970          27400 MI    
-    ## 25 Rocky Mountain College                        1042          29700 MT    
-    ## 26 University of North Carolina at Chapel Hi…    1305          42900 NC    
-    ## 27 Campbell University                           1018          36900 NC    
-    ## 28 Wake Forest University                          NA          43100 NC    
-    ## 29 Shaw University                                 NA          23500 NC    
-    ## 30 Nebraska Methodist College of Nursing & A…    1030          47400 NE    
-    ## 31 New Jersey City University                     835          37500 NJ    
-    ## 32 Colgate University                            1357          44500 NY    
-    ## 33 University of Rochester                       1334          45300 NY    
-    ## 34 New York University                           1317          46000 NY    
-    ## 35 SUNY College at Geneseo                       1310          37400 NY    
-    ## 36 SUNY at Binghamton                            1265          45300 NY    
-    ## 37 Stony Brook University                        1193          42800 NY    
-    ## 38 Marist College                                1161          41200 NY    
-    ## 39 State University of New York at New Paltz     1115          35100 NY    
-    ## 40 SUNY Oneonta                                  1098          33000 NY    
-    ## 41 SUNY Polytechnic Institute                    1086          42500 NY    
-    ## 42 CUNY Queens College                           1060          37300 NY    
-    ## 43 CUNY Brooklyn College                         1035          34700 NY    
-    ## 44 CUNY City College                             1015          35000 NY    
-    ## 45 CUNY Lehman College                            910          35500 NY    
-    ## 46 Bard College                                    NA          23500 NY    
-    ## 47 Manhattan School of Music                       NA          16300 NY    
-    ## 48 St Lawrence University                          NA          35900 NY    
-    ## 49 Oberlin College                               1360          24400 OH    
-    ## 50 Ohio Christian University                      901          25400 OH    
-    ## 51 Central State University                       759          19400 OH    
-    ## 52 Wilberforce University                          NA          29500 OH    
-    ## 53 Carnegie Mellon University                    1392          63600 PA    
-    ## 54 Lehigh University                             1300          63100 PA    
-    ## 55 Lincoln University                             812          29400 PA    
-    ## 56 University of Puerto Rico-Rio Piedras         1206          16400 PR    
-    ## 57 Universidad Central de Bayamon                  NA          16500 PR    
-    ## 58 Universidad del Sagrado Corazon                 NA          16100 PR    
-    ## 59 Universidad Central Del Caribe                  NA          28500 PR    
-    ## 60 Inter American University of Puerto Rico-…      NA          16700 PR    
-    ## 61 Inter American University of Puerto Rico-…      NA          16700 PR    
-    ## 62 Inter American University of Puerto Rico-…      NA          16700 PR    
-    ## 63 Rhode Island School of Design                 1244          31800 RI    
-    ## 64 Claflin University                             895          21500 SC    
-    ## 65 Hardin-Simmons University                     1047          35300 TX    
-    ## 66 Southwestern Assemblies of God University       NA          27200 TX    
-    ## 67 South University-The Art Institute of Dal…      NA          27500 TX    
-    ## 68 College of William and Mary                   1339          41500 VA    
-    ## 69 University of Virginia-Main Campus            1332          49000 VA    
-    ## 70 University of Richmond                        1261          47700 VA    
-    ## 71 DigiPen Institute of Technology               1194          63100 WA
+    ##  1 University of Southern California             1360          55300 CA    
+    ##  2 University of California-Berkeley             1318          47100 CA    
+    ##  3 University of California-Los Angeles          1266          44100 CA    
+    ##  4 California State University-San Bernardino     894          37300 CA    
+    ##  5 California Institute of the Arts                NA          24000 CA    
+    ##  6 The National Hispanic University                NA          32900 CA    
+    ##  7 Colorado Christian University                   NA          33300 CO    
+    ##  8 Wesleyan University                           1388          35700 CT    
+    ##  9 Emory University                              1403          51500 GA    
+    ## 10 Albany State University                        876          24900 GA    
+    ## 11 Northwestern University                       1427          52800 IL    
+    ## 12 University of Chicago                         1425          52500 IL    
+    ## 13 Saint Xavier University                       1052          38200 IL    
+    ## 14 University of Notre Dame                      1433          55600 IN    
+    ## 15 Union College                                  910          28200 KY    
+    ## 16 Kentucky State University                      823          24500 KY    
+    ## 17 Tulane University of Louisiana                1320          46900 LA    
+    ## 18 Tufts University                              1450          49000 MA    
+    ## 19 Williams College                              1424          41900 MA    
+    ## 20 Johns Hopkins University                      1395          61900 MD    
+    ## # … with 12 more rows
 
 *Quick Exercise* Choose a different college and two different things
 about that college. Have R print the output.
@@ -503,15 +466,26 @@ sc%>%
 *Quick Exercise* Summarize the average entering SAT scores in this
 dataset.
 
+``` r
+sc%>%
+  summarize(mean_sat_avg=mean(sat_avg,na.rm=TRUE))
+```
+
+    ## # A tibble: 1 x 1
+    ##   mean_sat_avg
+    ##          <dbl>
+    ## 1        1200.
+
 ## Combining Commands
 
 We can also combine commands, so that summaries are done on only a part
 of the dataset. Below, we summarize median debt for selective schools,
-and not very selective
-schools.
+and not very selective schools.
 
 ``` r
-sc%>%filter(adm_rate<.1)%>%summarize(mean_debt=mean(debt_mdn,na.rm=TRUE))
+sc%>%
+  filter(adm_rate<.1)%>%
+  summarize(mean_debt=mean(debt_mdn,na.rm=TRUE))
 ```
 
     ## # A tibble: 1 x 1
@@ -533,6 +507,17 @@ sc%>%
     ## 1    11684.
 
 *Quick Exercise* Calculate average earnings for schools where SAT\>1200
+
+``` r
+sc%>%
+  filter(sat_avg>1200)%>%
+  summarize(mean_earnings=mean(md_earn_wne_p6,na.rm=TRUE))
+```
+
+    ## # A tibble: 1 x 1
+    ##   mean_earnings
+    ##           <dbl>
+    ## 1         50220
 
 ## Grouping Data
 
@@ -598,8 +583,12 @@ on the y axis.
 
 ## Github: save, stage, commit, push
 
-When working with files in your directory, there are three basic steps
-you can take when using Git as your version control.
+When working with files in your directory, there are several basic steps
+you will take when using Git as your version control.
+
+  - You should pull at the beginning of every session. You can do this
+    by clicking pull–the down arrrow– in the upper right hand corner of
+    the git tab in RStudio.
 
   - Saving the file means it is only available to you, on your computer.
     You should save files as you are working on them.
@@ -622,6 +611,13 @@ you can take when using Git as your version control.
     the changes made to the file to GitHub. To push, click the “push”
     button in the Git tab in Rstudio. You should do this everytime you
     finish a working session, at an absolute minimum.
+
+So every session should go like this:
+
+pull–\>do work–\>save–\>stage(if new file)–\>commit
+
+By far the most useful guide to working with R and git/GitHub is [Jenny
+Bryan’s guide](https://happygitwithr.com/).
 
 ## Your first commit: Hello, World\!
 
