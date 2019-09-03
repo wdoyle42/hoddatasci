@@ -1,0 +1,88 @@
+---
+title: "Assignment 1 Key"
+author: "Will Doyle"
+date: "September 4, 2018"
+output: github_document
+---
+
+*1. A sentence that says "Hello, World"*
+
+Hello, world!
+
+<OR>
+
+```{r}
+print("Hello, World!")
+```
+
+
+*2. R output that summarizes one of the variables in the `colllege.Rdata` dataset*
+
+```{r}
+library(tidyverse)
+
+# I left the college.Rdata in the lessons folder, so I will find it there
+load("../lessons/college.Rdata")
+
+sc%>%summarize(mean_cost=mean(costt4_a,na.rm=TRUE))
+
+```
+
+
+*3. R output that shows a scatterplot for two of the variables in the `college.Rdata` dataset.*
+
+```{r}
+gg<-ggplot(data=sc,aes(x=costt4_a,y=debt_mdn))
+gg<-gg+geom_point()
+gg<-gg+geom_smooth()
+gg
+```
+
+
+## Stretch items
+
+
+*1. Calculate the average earnings for individuals at the most selective colleges, then compare that with individuals at the least selective colleges in the dataset. *
+
+
+```{r}
+sc%>%filter(adm_rate<.1)%>%summarize(mean_earnings=mean(md_earn_wne_p6,na.rm=TRUE))
+
+sc%>%filter(adm_rate>.3)%>%summarize(mean_earnings=mean(md_earn_wne_p6,na.rm=TRUE))
+
+```
+
+
+*2. Find a way to determine whether colleges with very high SAT scores tend to be larger or smaller than colleges with low SAT scores. *
+
+```{r}
+sc%>%filter(sat_avg>1400)%>%summarize(mean_enroll=mean(ugds, na.rm=TRUE))
+sc%>%filter(sat_avg<1000)%>%summarize(mean_enroll=mean(ugds, na.rm=TRUE))
+```
+
+
+*3. Plot the relationship between cost and debt. What do you see? Does this surprise you?*
+
+```{r}
+
+
+gg<-ggplot(data=sc,aes(x=costt4_a,y=debt_mdn))
+gg<-gg+geom_point()
+gg<-gg+geom_smooth()
+gg
+```
+*4. Now, provide separate plots for cost and debt by control of the institution. *
+
+```{r}
+
+gg<-ggplot(data=(sc%>%filter(control==1)),aes(x=costt4_a,y=debt_mdn))
+gg<-gg+geom_point()
+gg<-gg+geom_smooth()
+gg
+
+
+gg<-ggplot(data=(sc%>%filter(control==2)),aes(x=costt4_a,y=debt_mdn))
+gg<-gg+geom_point()
+gg<-gg+geom_smooth()
+gg
+```

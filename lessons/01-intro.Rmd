@@ -282,7 +282,7 @@ Another powerful tool is being able to calculate characteristics for various gro
 ```{r grouping}
 sc%>%
   group_by(control)%>%
-  summarize(mean_earnings=mean(md_earn_wne_p6))
+  summarize(mean_earnings=mean(md_earn_wne_p6,na.rm=TRUE))
 ```
  
 What about debt by type of college?  
@@ -293,6 +293,13 @@ sc%>%
 ```
 
 *Quick exercise*  Calculate average admission rate by type of college. 
+
+```{r}
+sc%>%
+  group_by(control)%>%
+  summarize(mean_adm_rate=mean(adm_rate))
+```
+
 
 ## Plotting Data
 The last basic tool for looking at a dataset is plotting the data. The code below creates a scatterplot of admission rates by average SAT scores
@@ -306,6 +313,17 @@ gg
 ```
 
 *Quick exercise* Replicate the above plots, but put cost of attendance on the y axis. 
+
+```{r}
+gg<-ggplot(data=sc,aes(x=sat_avg,y=costt4_a))
+gg<-gg+geom_point()
+gg<-gg+geom_smooth()
+gg<-gg+facet_wrap(~control)
+gg
+
+ggplotly(gg)
+```
+
 
 ## GitHub: save, stage, commit, push
 
