@@ -1,6 +1,7 @@
 ---
 title: "Conditional Means"
-output: html_document
+output: github_document
+always_allow_html: yes
 ---
 
 # Analyzing Data, Part 1: Conditional Means
@@ -140,6 +141,8 @@ rmse_uncond_mean
 ##Conditional Means With One Predictor Variable
 
 To incorporate additional information into the mean, we need to calculate averages at levels of other predictors. Let's calculate the average per capita income at different levels of college education. The code below will calculate average income across counties at four different levels of college education-- the four quantiles of college education in the dataset. 
+
+What we're doing here is "grouping" the data at levels of college education. If we had a categorical variable (like region) we wouldn't need to do this step. But since we have a continuous variable (percent of the population with a bachelor's degree) we need to convert it into an ordinal variable, with one group for each range of college attainment.
 
 ```{r condtl_mean_single}
 ##Condtional Average across a single variable
