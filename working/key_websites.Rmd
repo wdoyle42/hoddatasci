@@ -1,7 +1,6 @@
 ---
 title: "Key Websites"
 author: "Will Doyle"
-date: "August 23, 2017"
 output: github_document
 ---
 
@@ -9,17 +8,12 @@ output: github_document
 
 Your copy of syllabus, lecture notes and assignments. Also where you will turn in assignments. 
 
-https://github.com/hoddatascifall17
-
+https://github.com/hoddatascifall19
 
 # Class Github Repo
 My copy of syllabus, lecture notes and assignments
 
-https://github.com/wdoyle42/hoddatasci_fall17
-
-# My Lecture Notes
-
-http://willdoyle.us/data_step
+https://github.com/wdoyle42/hoddatasci
 
 # R Cookbook: Graphics
 
@@ -28,3 +22,14 @@ http://www.cookbook-r.com/Graphs/
 # Wickham: r4ds
 
 http://r4ds.had.co.nz/
+
+# STAT 545 at UBC
+
+https://stat545guidebook.netlify.com/
+
+# Open Data Science
+
+http://ohi-science.org/data-science-training/
+
+
+

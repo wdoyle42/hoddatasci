@@ -3,10 +3,10 @@ title: "Table Assignments"
 output: github_document
 ---
 
-
-```{r}
+```{r echo=FALSE,results='hide',message=FALSE}
 # R script to randomize class and place them at tables
 library(tidyverse)
+library(knitr)
 
 class<-read_csv("classlist.csv")
 
@@ -15,12 +15,14 @@ class["random"]<-runif(dim(class)[1])
 class<-class%>%arrange(random)
 
 class["index"]<-seq(1:dim(class)[1])
-ngroups<-4
+
+ngroups<-5
+
 class<-class%>%mutate(table=cut(index,ngroups,(1:ngroups)))
 
 class$rmse<-NA
+```
 
-print(select(class,first_name,last_name,table),n=100)
-
-names(class)
+```{r,echo=FALSE}
+class%>%select(first_name,last_name,table)%>%kable()
 ```
