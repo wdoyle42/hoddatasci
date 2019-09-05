@@ -48,10 +48,6 @@ lab_explain
 
 *Quick Exercise: Find the per capita income and the percent of the population with a bachelor's degree for the county you're from.*
 
-```{r}
-pd%>%filter(fips=="06085")%>%select(per_capita_inc,coll_grad_pc)
-```
-
 ## Dependent Variable
 
 Our working example will be based on predicting income in a given county. Suppose we want to know what income level we can expect for a geographic area based on observed characteristics, such as the proportion of the population with a bachelor's degree. How would we predict the income based on what we know about the geographic area? 
@@ -138,7 +134,7 @@ rmse_uncond_mean<-rmse(pd$percapinc.2010,pd$mean_percapinc.2010)
 rmse_uncond_mean
 ```
 
-##Conditional Means With One Predictor Variable
+## Conditional Means With One Predictor Variable
 
 To incorporate additional information into the mean, we need to calculate averages at levels of other predictors. Let's calculate the average per capita income at different levels of college education. The code below will calculate average income across counties at four different levels of college education-- the four quantiles of college education in the dataset. 
 
@@ -192,7 +188,7 @@ gg3<-gg
 
 Our notation for this predictor will be:
 
-$$\hat{Y}=(\bar{Y}|X=x) $$
+$$ \hat{Y}=(\bar{Y}|X=x) $$
 
 That is, the predicted value of y, $\bar{Y}$ is equal to the mean value of $Y$ given our predictor $X$ (college graduate levels in this case) is equal to a given value of $X$, denoted by $x$. 
 
@@ -213,7 +209,7 @@ The next step is to then incorporate more information from additional variables.
 ##Condtional average across multiple variables
 
 ## Calculate quartiles of home value
-pd<-pd%>%mutate(median_home_level=ntile(median_home_val,4))
+pd%>%mutate(median_home_level=ntile(median_home_val,4))->pd
 
 table(pd$median_home_level)
 
