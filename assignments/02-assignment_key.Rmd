@@ -1,0 +1,94 @@
+---
+title: "02-assignment"
+author: "Doyle"
+date: "9/10/2019"
+output: html_document
+---
+
+
+```{r  include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(plotly)
+library(gridExtra)
+library(ModelMetrics)
+```
+
+```{r}
+load("../lessons/pd.RData")
+```
+
+
+1.  Calculate the mean of the outcome.
+
+```{r}
+pd%>%summarize(mean_homeown=mean(homeown_rate,na.rm=TRUE))
+```
+
+
+
+2.  Use your mean as a prediction: Create a new variable that consists    of the mean of the outcome.
+
+
+```{r}
+pd%>%
+  mutate(mean_homeown=mean(homeown_rate,na.rm=TRUE))->pd
+```
+
+3.  Calculate a summary measure of the errors for each observation—the
+    difference between your prediction and the outcome.
+    
+```{r}
+rmse_uncond<-rmse(pd$homeown_rate,pd$mean_homeown);rmse_uncond
+```
+    
+4.  Calculate the mean of the outcome at levels of a predictor
+    variable.  
+    
+```{r}
+pd%>%
+  mutate(coll_grad_level=ntile(coll_grad_pc,4))%>%
+  group_by(coll_grad_level)%>%
+  summarize(mean_homeown_coll=mean(homeown_rate,na.rm=TRUE))
+```
+    
+    
+5.  Use these conditional means as a prediction: for every county, use
+    the conditional mean to provide a ‘’best guess’’ as to that county’s
+    level of the outcome.
+
+
+```{r}
+pd%>%
+  mutate(coll_grad_level=ntile(coll_grad_pc,4))%>%
+  group_by(coll_grad_level)%>%
+  mutate(mean_homeown_coll=mean(homeown_rate,na.rm=TRUE))->pd
+```
+        
+    
+6.  Calculate a summary measure of the error in your predictions.
+
+```{r}
+rmse_one<-rmse(pd$homeown_rate,pd$mean_homeown_coll)
+rmse_one
+```
+
+
+7.  Repeat the above process using the tool of conditional means, try to
+    find 3-4 variables that predict the outcome with better (closer to
+    0) summary measures of error. Report the summary measures of error
+    and the variables (as text in your `.Rmd` file).
+    
+```{r}
+pd%>%
+  mutate(percap_level=ntile(percapinc.2010,4))%>%
+  group_by(coll_grad_level,percap_level)%>%
+  mutate(mean_homeown_2=mean(homeown_rate,na.rm=TRUE))->pd
+```
+
+```{r}
+rmse_two<-rmse(pd$homeown_rate,pd$mean_homeown_2)
+rmse_two
+```
+    
+    
