@@ -23,7 +23,7 @@ Next we load in the data, using the `readr` package. Note that this data is save
 
 ## Loading Data 
 ```{r}
-at<-read_csv("https://community.watsonanalytics.com/wp-content/uploads/2015/03/WA_Fn-UseC_-HR-Employee-Attrition.csv")
+at<-read_csv("WA_Fn-UseC_-HR-Employee-Attrition.csv")
 
 ## Save for later
 save(at,file="at.Rdata")
