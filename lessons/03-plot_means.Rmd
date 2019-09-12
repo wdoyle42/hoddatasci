@@ -23,10 +23,10 @@ Next we load in the data, using the `readr` package. Note that this data is save
 
 ## Loading Data 
 ```{r}
-at<-read_csv("WA_Fn-UseC_-HR-Employee-Attrition.csv")
+#at<-read_csv("WA_Fn-UseC_-HR-Employee-Attrition.csv")
 
 ## Save for later
-save(at,file="at.Rdata")
+#save(at,file="at.Rdata")
 
 ## Load the saved version (not necessary, just showing we can!)
 load("at.Rdata")
@@ -61,7 +61,7 @@ The next univariate graphic you should know is for continuous variables. The fir
 
 ```{r}
 gg<-ggplot(at,aes(x=DistanceFromHome))
-gg<-gg+geom_histogram(binwidth = 1,fill="lightblue")
+gg<-gg+geom_histogram(binwidth = .1,fill="lightblue")
 gg
 ``` 
 Density plots provide a continous graphic of the distribution of a variable:
@@ -71,7 +71,7 @@ gg<-gg+geom_density()
 gg
 
 ## Changing bandwidth-- not recommended, just showing you how. 
-gg<-gg+geom_density(bw=10,color="blue")
+gg<-gg+geom_density(bw=.1,color="blue")
 gg
 ```
 
@@ -121,15 +121,17 @@ gg<-gg+xlab("Amount of Travel")+ylab("Yearly Attrition")
 gg
 ```
 
-*Quick Exercise: Create a bar plot showing average attrition by department instead of travel*
+*Quick Exercise: Create a bar plot showing average attrition by job satisfaction instead of travel*
 
 ```{r}
-at_sum<-at%>%group_by(Department)%>%
+at_sum<-at%>%group_by(JobSatisfaction)%>%
   summarize(mean_attrit=mean(attrit))
 
+at_sum<-at_sum%>%
+  mutate(JobSatisfaction=as_factor(JobSatisfaction))
 
 ## Bar Plot with aesthetics: mean attrition as height, business travel as cateogry
-gg<-ggplot(at_sum,aes(x=Department,y=mean_attrit))
+gg<-ggplot(at_sum,aes(x=JobSatisfaction,y=mean_attrit))
 ## Use bar plot geometry, height of bars set by level observed in dataset
 gg<-gg+geom_bar(stat="Identity")
 ## Print
@@ -179,6 +181,7 @@ at_sum<-at%>%
   summarize(attr_avg=mean(attrit))
 
 at_sum
+
 ## Now a dot plot
 gg<-ggplot(at_sum,aes(x=reorder(BusinessTravel,-attr_avg),y=attr_avg))
 gg<-gg+geom_point()
@@ -297,7 +300,9 @@ at_sum$grouping<-paste0(at_sum$BusinessTravel,
                        ", Work/Life:",
                        at_sum$WorkLifeBalance)
 
-at_sum$grouping<-as.factor(at_sum$grouping)
+at_sum$grouping<-at_sum$grouping
+
+at_sum$grouping<-str_replace(at_sum$grouping,"_"," ")
 
 at_sum%>%select(grouping,attr_avg)
 
