@@ -125,7 +125,7 @@ First, let's git rid of unwanted columns by selecting a list of things we don't 
 free2<-free%>%select(-c(3,6,9,12,15,18))
 
 #Get rid of unwanted rows
-free2<-free2%>%filter(is.na(X__1)==FALSE)
+free2<-free2%>%filter(is.na(free[,1])==FALSE)
 ```
 
 Now we're going to select some things we DO want, by using the `number_1:number_x` setup. 
@@ -156,6 +156,15 @@ names(free2)<-c("state",
                 "pc_frl_2011",
                 "pc_frl_2012")
 ```
+
+And clean up the state names:
+
+```{r}
+free2<-free2%>%
+  mutate(state=str_replace_all(state,"([/.])",""))%>%
+  mutate(state=str_trim(state,side="right"))
+```
+
 
 *Quick Exercise: Read in this file: http://nces.ed.gov/programs/digest/d14/tables/xls/tabn302.10.xls*
 
@@ -283,6 +292,6 @@ write_xlsx(free_tidy,path="free_tidy.xlsx")
 
 
 
-## Databses and flat files
+## Databases and flat files
 
 As we'll discuss later, databases are linked collections of flat files, usually stored in `.csv` format. If you're working with a database technician and would like a flat file for analysis, the way to ask for it is to request a flat file in csv format. Most database analysts will know what you mean by this. We'll cover databases in much more data later. 
