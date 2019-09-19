@@ -29,7 +29,8 @@ at_sum<-at%>%
   group_by(EducationField)%>%
   summarize(mean_income=mean(MonthlyIncome))
 
-gg<-ggplot(data=at_sum,aes(x=fct_reorder(as.factor(EducationField),mean_income),
+gg<-ggplot(data=at_sum,aes(x=fct_reorder(as.factor(EducationField),
+                                         mean_income),
                                         y=mean_income,
                            fill=EducationField))
 gg<-gg+geom_bar(stat="identity")
