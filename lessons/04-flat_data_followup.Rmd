@@ -181,13 +181,31 @@ if(file.exists("free.xls")==FALSE){
   download.file("http://nces.ed.gov/programs/digest/d14/tables/xls/tabn302.10.xls",destfile="coll_rates.xls")
 
   coll<-read_excel("coll_rates.xls",skip=21,col_names=FALSE)  
+  
 }else{
-  free<-read_excel("free.xls",skip=4,col_names=FALSE)
+  coll<-read_excel("coll_rates.xls",skip=21,col_names=FALSE)
 }
 
-head(free)
+head(coll)
+
+
 
 ```
+
+## Drop blank rows
+```{r}
+
+
+#Get rid of unwanted rows
+coll2<-coll%>%filter(is.na(coll[,1])==FALSE)
+
+
+##Only years we eant
+coll2<-coll2%>%slice(1:41)
+
+
+```
+
 
 
 ## Tidy data

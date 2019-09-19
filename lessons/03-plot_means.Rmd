@@ -286,7 +286,7 @@ at_sum<-at%>%
   group_by(BusinessTravel,Gender,MaritalStatus,WorkLifeBalance)%>%
   summarize(attr_avg=mean(attrit))%>%
   ungroup()%>%
-  arrange(attr_avg)
+  arrange(-attr_avg)
 
 at_sum
 
@@ -300,11 +300,10 @@ at_sum$grouping<-paste0(at_sum$BusinessTravel,
                        ", Work/Life:",
                        at_sum$WorkLifeBalance)
 
-at_sum$grouping<-at_sum$grouping
 
 at_sum$grouping<-str_replace(at_sum$grouping,"_"," ")
 
-at_sum%>%select(grouping,attr_avg)
+at_sum%>%select(grouping,attr_avg)->atr_sum
 
 ## Drop the groups with 0 or very low attrition. 
 at_sum<-at_sum%>%filter(attr_avg>.01)
