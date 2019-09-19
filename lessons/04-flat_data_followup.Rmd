@@ -331,7 +331,6 @@ write_xlsx(free_tidy,path="free_tidy.xlsx")
 ```
 
 
-
 ## Databases and flat files
 
 As we'll discuss later, databases are linked collections of flat files, usually stored in `.csv` format. If you're working with a database technician and would like a flat file for analysis, the way to ask for it is to request a flat file in csv format. Most database analysts will know what you mean by this. We'll cover databases in much more data later. 
