@@ -5,7 +5,7 @@ Listed below are a series of data files stored on the web. Figure out which type
 
 * School-level SAT results, New York City: https://data.cityofnewyork.us/api/views/f9bf-2cp4/rows.csv?accessType=DOWNLOAD
 
-* Stumbleupon Kaggle challenge (get the train.tsv file):
+* Stumbleupon Kaggle challenge (get the train.tsv file). You will need to register for Kaggle (it's free) to do this:
 https://www.kaggle.com/c/stumbleupon/data 
 
 * Crime dataset from UCLA statistical computing website:
