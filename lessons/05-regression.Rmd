@@ -5,7 +5,7 @@ output: github_document
 
 ## Overview
 
-So far, we've been using just the simple mean to make predictions. Today, we'll continue using the simple mean to make predictions, but now in a complicated way. Before, when we calculated conditional means, we did so in certain "groupings" of variables. When we run linear regression, we no longer need to do so. Instead, linear regression allows us to calculate the conditional mean of the outcome at _every_ value of the predictor. If the predictor takes on just a few values, then that's the number of conditional means that will be calculated. If the predictor is continuous and takes on a large number of values, we'll still be able to calculate the conditional mean at every one of those values. 
+So far, we've been using just the simple mean to make predictions. Today, we'll continue using the simple mean to make predictions, but now in a complicated way. Before, when we calculated conditional means, we did so in certain "groupings" of variables. When we run linear regression, we no longer need to do so. Instead, linear regression allows us to calculate the conditional mean of the outcome at _every_ value of the predictor. If the predictor takes on just a few values, then that's the number of conditional means that will be calculated. If the predictor is continuous and takes on a large number of values, we'statll still be able to calculate the conditional mean at every one of those values. 
 
 The model we posit for regression is as follows:
 
@@ -13,219 +13,118 @@ $$Y=\beta_0+\beta_1 x_1 +\beta_2 x_2+ ... \beta_k x_k + \epsilon$$
 
 It's just a linear, additive model. Y increases or decreases as a function of x, with multiple x's included. $\epsilon$ is the extent to which an individual value is above or below the line created. 
 
-Let's say that you've got some consumer data and you want to target those families that are likely to spend between  \$100 and \$500 a month on dining out. We would need to be able to predict which families would spend in that range based on observable characteristics like family size, income and family type. 
+Let's say that you've got some student data and you want to target those students that may struggle in math. The intervention could be targeted based on what we know about students, much of which reflects broader inequalities in our education system, such as the relationship between SES and parental education and test scores. By intervening early we may help to reduce those inequalities. 
 
-We're going to be working with expenditure data from the 2012 administration of the consumer expenditure survey. The first bit of code gets the libraries we need, the data we need, and opens up a codebook for the data. 
+We're going to be working with data on high school students from the Educational Longitudinal Study. Our goal will be to predict their math scores based on student characteristics. 
 
 ```{r,echo=FALSE}
 rm(list=ls())
-
 library(tidyverse)
 library(forcats)
+library(ModelMetrics)
 library(modelr)
+```
 
-load("cex_train.RData")
-load("cex_codebook.Rdata")
+The ELS dataset is called `els_train`. I'll explain the "train" part in a bit-- it refers to a "training" dataset.
+
+```{r}
+load("els_train.RData")
 ```
 
 ## Bivariate regression
 
-Our first dependent variable will be dining out. Let's take a look at that variable: 
+Our dependent variable will be math scores, stored in this dataset as `bynels2m`. Let's take a look at this variable
 
 ```{r}
+els_train%>%summarize(mean(bynels2m,na.rm=TRUE))
 
-summary(cex$dine_out)
-
-gg<-ggplot(cex,aes(x=dine_out))
+gg<-ggplot(els_train,aes(x=bynels2m))
 gg<-gg+geom_histogram()
 gg
+```
 
-gg<-ggplot(cex,aes(x=dine_out))
+```{r}
+gg<-ggplot(els_train,aes(x=bynels2m))
 gg<-gg+geom_density()
 gg
-
-
 ```
 
 
-Because this variable is pretty non-normally distributed, we may want to think about transforming it. For now, let's just work with it as-is. Let's see if people with bigger families spend more on dining out more than those with smaller families. Before, we would have calculated the conditional mean at every level of family size, or in certain groupings of family size. With regression, we simply specify the relationship. 
+This variable has a nice symmetric distribution. It looks approximately normal, which will help in interpreting the results. 
 
 ```{r}
 
 #Model 1: simple bivariate regression
 
-mod1<-lm(dine_out~fam_size,data=cex) #outcome on left, predictor on right 
+mod1<-lm(bynels2m~byses1,data=els_train) #outcome on left, predictor on right 
 
 summary(mod1)
+confint(mod1)
 
-g1<-ggplot(cex, aes(x=fam_size,y=dine_out))+ #specify data and x and y
+g1<-ggplot(els_train, aes(x=byses1,y=bynels2m))+ #specify data and x and y
            geom_point(shape=1)+ #specify points
            geom_smooth(method=lm) #ask for lm line
 g1
 
-## Add predictions
-cex%>%add_predictions(mod1,var="pred1")->cex
+els_train<-els_train%>%add_predictions(mod1)%>%rename(pred1=pred) #predict using data in memory
+ 
+## RMSE
+rmse_1<-modelr::rmse(mod1,els_train);rmse_1
 
-## Calculate RMSE
-rmse_1<-rmse(mod1,cex)
-
-rmse_1
 ```
 
-What this shows is that as family size increases, the amount spent on dining out increases. For every additional family member, an additional \$`r prettyNum(mod1$coefficients[2],digits=0)` is predicted to be spent on dining out. The rmse of `r  prettyNum(rmse_1,digits=2)` gives us a sense of how wrong the model tends to be when using just this one predictor. 
+What this shows is that as socio-economic status increases, math scores are predicted to increase. For every one unit increase in SES, math scores are predicted to increase by \$`r prettyNum(mod1$coefficients[2],digits=0)`. The rmse of `r  prettyNum(rmse_1,digits=2)` gives us a sense of how wrong the model tends to be when using just this one predictor. 
 
 _Quick Exercise_ Run a regression using a different predictor. Calculate rmse and see if you can beat my score. 
 
-## Multiple Regression
+## Multiple Regression. 
 
-Okay, so we can see that this is somewhat predictive, but we can do better. Let's add in a second variable: whether or not the family is below the poverty line. 
+Okay, so we can see that this is somewhat predictive, but we can do better. Let's add in a second variable: the parent's level of education. 
 
 ```{r}
 #Part 2: Multiple regression
 
-mod2<-lm(dine_out~fam_size+
-           pov_cym, #can only take on two values
-          data=cex)
+mod2<-lm(bynels2m~as.factor(bypared)+
+           byses1,
+          data=els_train)
 
 summary(mod2) 
 
-rmse_2<-rmse(mod2,cex)
+els_train<-els_train%>%add_predictions(mod2)%>%rename(pred2=pred)
 
-rmse_2
+rmse_2<-modelr::rmse(mod2,els_train); rmse_2
+
 ```
 
-So, those who are in poverty spend less on dining out. Alert the media!
+This finding reflects the basic inequity in our education system: lower income students score lower on math scores. This holds true even if we control for parental education. 
 
 _Quick Exercise_ Add another variable to your model from above and see what difference it makes. How is your RMSE? 
 
-Maybe it's the case that those who spend more on groceries dine out less. Let's find out:
-
-```{r}
-#Model 3: predicting dining out using other variables and grocery spending
-
-mod3<-lm(dine_out~
-           fam_size+
-           pov_cym+
-           grocery,
-           data=cex)
-
-summary(mod3)
-
-g2<-ggplot(cex, aes(x=grocery,y=dine_out))+
-           geom_point(shape=1)+ 
-           geom_smooth(method=lm)
-g2
-
-
-rmse_3<-rmse(mod3,cex)
-
-rmse_3
-```
-
-Hmm, what happened here?
-
-_Quick Exercise_ Use a subset of the cex data with reasonable bounds on both dining out and grocery expenditures. See if the results hold. 
-
 ## Transformations
 
-The big issue as you can see with this data is that the outcome variable isn't normally distributed: most people spend very little on dining out, while some people spend quite a lot. In situations like this, which are VERY common when dealing with monetary values, we want to take the natural log of the outcome variable. A natural log is the power by which we would have to raise $e$, Euler's constant, to be that value: $e^{ln(x)}=x$, or 
-$ln(e^x)=x$.
-
-Economists just basically take the natural log of everything that's denominated in dollar terms, which you probably should do as well. You'll notice in the equations below that I specify the `log()` of both dining out and grocery spending. The log transform won't work with values of 0, so the transformation also includes a `+1` to add a dollar to each 0. 
-
+The `byses` variable is a little hard to interpret. It's on a scale from -2 to 2, which you should remember as the scale for a standardized variable or Z score. Let's transform it to be on a percentile scale from 0-100.
 
 ```{r}
-
-#Part 4: Working with transformations
-mod4<-lm(log(dine_out+1)~ #log of dining out, plus one for zeros
-           +log(grocery+1)+ #log of groceries, plus one again
-           pov_cym+ #poverty
-           fam_size #family size
-         ,data=cex, na.action = "na.exclude")
-
-
-summary(mod4)
-
-## Use modelr:: rmse to get rmse (or rmsle in this case)
-rmsle_4<-rmse(mod4,cex)
-
-## Use modelr:: add_predictions for predictions
-cex%>%add_predictions(mod4,var="pred4")->cex
-
-## Use modelr:: add_residuals for residuals
-cex%>%add_residuals(mod4,var="resid4")->cex
-
-# Duan's smearing estimator
-dse<-mean(exp(cex$resid4))
-  
-## get just the data needed to calculate rmse
-rmse_4_data<-cex%>%
-  select(dine_out,pred4)%>%
-  filter(!is.na(pred4))%>%
-  mutate(pred4=exp(pred4)*dse)
-
-rmse_4<-ModelMetrics::rmse(rmse_4_data$dine_out,rmse_4_data$pred4); rmse_4
-
-g4<-ggplot(cex, aes(x=grocery,y=exp(pred4),color=pov_cym))
-g4<-g4+geom_point(shape=1)
-g4
-
-# Function defined by coefficients
-
-fun_mod4<-function(x) exp(mod4$coefficients[1]+ 
-                            ## This coeff will be allowed to vary
-                          (mod4$coefficients[2]*log(x+1))+
-                          (mod4$coefficients[3]*1)+
-                      (mod4$coefficients[4]*mean(cex$fam_size,na.rm=TRUE))                            ) 
-
-g4a<-ggplot(cex,aes(x=grocery,y=dine_out))
-g4a<-g4a+geom_point(alpha=.1,size=.1)
-g4a<-g4a+stat_function(fun = fun_mod4,color="blue")+xlim(0,2000)+ylim(0,1000)
-g4a
+els_train<-els_train%>%mutate(byses_p=percent_rank(byses1)*100)
+els_train%>%summarize(mean(byses_p,na.rm=TRUE))
 ```
-
 
 ```{r}
-#Part 5: Adding income 
-mod5<-lm(log(dine_out+1)~
-           +log(grocery+1)+
-           pov_cym+
-           fam_size+
-           inclass+
-           log(booze_out+1)
-         ,data=cex,na.action="na.exclude");summary(mod5)
-
-
-## Use modelr:: add_predictions for predictions
-cex%>%add_predictions(mod5,var="pred5")->cex
-
-## Use modelr:: add_residuals for residuals
-cex%>%add_residuals(mod5,var="resid5")->cex
-
-# Duan's smearing estimator
-dse<-mean(exp(cex$resid5),na.rm=TRUE)
-
-## Standard RMSE on log scale
-rmsle_5<-modelr::rmse(mod5,cex)
-
-## get just the data needed to calculate rmse
-rmse_5_data<-cex%>%
-  select(dine_out,pred5)%>%
-  filter(!is.na(pred5))%>%
-  mutate(pred5=exp(pred5)*dse)
-
-rmse_5<-ModelMetrics::rmse(rmse_5_data$dine_out,rmse_5_data$pred5); rmse_5
-
-## Use log transform to plot
-g5<-ggplot(cex, aes(x=inclass,y=(dine_out+1),group=1))+
-           geom_point(shape=1)+
-           geom_smooth(method=lm)+
-          scale_y_continuous(trans="log")
-g5
+mod3<-lm(bynels2m~byses_p+
+         as.factor(bypared),
+         data=els_train
+         );summary(mod3)
 ```
 
+This changes the coefficient AND its interpretation. Now, for every one percent increase in SES, math scores are predicted to increase by `r round(mod3$coefficients[2],2)`. Linear transformations will not change the statistical significance (t value), but non linear transformations like the one we just did will, as you can see. Does this change the RMSE? 
+
+```{r}
+rmse_3<-modelr::rmse(mod3,els_train)
+```
+ It looks like it actually increases it a bit. 
 
 ## Testing and Training
+
 The essence of prediction is discovering the extent to which our models can predict outcomes for data that *does not come from our sample*. Many times this process is temporal. We fit a model to data from one time period, then take predictors from a subsequent time period to come up with a prediction in the future. For instance, we might use data on team performance to predict the likely winners and losers for upcoming soccer games. 
 
 This process does not have to be temporal. We can also have data that is out of sample because it hadn't yet been collected when our first data was collected, or we can also have data that is out of sample because we designated it as out of sample.
@@ -235,51 +134,27 @@ The data that is used to generate our predictions is known as
 
 That data that is used to validate our predictions is known as *testing* data. With testing data, we take our trained model and see how good it is at predicting outcomes using out of sample data. 
 
-One very simple approach to this would be to cut our data in half. We could then train our model on half the data, then test it on the other half. This would tell us whether our measure of model fit (e.g. rmse, auc) is similar or different when we apply our model to out of sample data. That's what we've done today: we have only been working with half of our data. 
+One very simple approach to this would be to cut our data in half. We could then train our model on half the data, then test it on the other half. This would tell us whether our measure of model fit (e.g. rmse, auc) is similar or different when we apply our model to out of sample data. That's what we've done today: we have only been working with half of our data-- the training half. 
 
-Model 5 is looking pretty good, but let's see how it does using our testing data-- the half that wasn't used to train our model.
+The testing data (which is a random half of the original dataset) is stored as `els_test`. Since we transformed a variable in the training dataset, we'll need to do the same in the testing dataset. 
 
 ```{r}
-load("cex_test.Rdata")
+load("els_test.Rdata")
+els_test<-els_test%>%mutate(byses_p=percent_rank(byses1)*100)
+```
 
+Now we can use the model we trained (model 3) on the testing data.
+
+```{r}
 ## Generate a prediction from the testing dataset
-cex_test<-cex_test%>%mutate(pred5=predict(mod5,newdata=cex_test))
+rmse_test_1<-modelr::rmse(mod1,els_test);rmse_test_1
 
-## Comparing test and training rmse
+rmse_test_2<-modelr::rmse(mod2,els_test);rmse_test_2
 
-rmsle_5_test<-modelr::rmse(mod5,cex_test)
-
-rmsle_5;rmsle_5_test
-```
-Why is the value from the testing dataset different? 
-
-*Quick exercise*
-
-What's the rmse for your model when comparing it with the testing data?
-
-## Regression using a binary outcome
-
-You can also run a regression using a binary variable. Let's recode and then use our cigarettes variable to look at predictors of buying any cigarretes at all.
-
-```{r}
-cex$cigs<-0
-cex$cigs[cex$cigarettes>0]<-1
-
-mod6<-lm(cigs~educ_ref+
-           as.factor(ref_race)+
-           inc_rank+
-           as.factor(sex_ref),
-         data=cex)
-
-summary(mod6)
-
-g4<-ggplot(cex,aes(x=fam_type,y=cigs,group=1))+
-  geom_jitter(alpha=.1)
-
-g4
+rmse_test_3<-modelr::rmse(mod3,els_test);rmse_test_3
 ```
 
-
+Notice that this is different than the value for our training dataset. 
 
 ## Thinking about regression for prediction
 

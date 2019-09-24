@@ -11,9 +11,9 @@ regression, we no longer need to do so. Instead, linear regression
 allows us to calculate the conditional mean of the outcome at *every*
 value of the predictor. If the predictor takes on just a few values,
 then that’s the number of conditional means that will be calculated. If
-the predictor is continuous and takes on a large number of values, we’ll
-still be able to calculate the conditional mean at every one of those
-values.
+the predictor is continuous and takes on a large number of values,
+we’statll still be able to calculate the conditional mean at every one
+of those values.
 
 The model we posit for regression is as follows:
 
@@ -23,410 +23,274 @@ It’s just a linear, additive model. Y increases or decreases as a
 function of x, with multiple x’s included. \(\epsilon\) is the extent to
 which an individual value is above or below the line created.
 
-Let’s say that you’ve got some consumer data and you want to target
-those families that are likely to spend between $100 and $500 a month on
-dining out. We would need to be able to predict which families would
-spend in that range based on observable characteristics like family
-size, income and family type.
+Let’s say that you’ve got some student data and you want to target those
+students that may struggle in math. The intervention could be targeted
+based on what we know about students, much of which reflects broader
+inequalities in our education system, such as the relationship between
+SES and parental education and test scores. By intervening early we may
+help to reduce those inequalities.
 
-We’re going to be working with expenditure data from the 2012
-administration of the consumer expenditure survey. The first bit of code
-gets the libraries we need, the data we need, and opens up a codebook
-for the
-    data.
+We’re going to be working with data on high school students from the
+Educational Longitudinal Study. Our goal will be to predict their math
+scores based on student
+    characteristics.
 
-    ## ── Attaching packages ─────────────────────────────────────── tidyverse 1.2.1 ──
+    ## ── Attaching packages ───────────────────────────────────── tidyverse 1.2.1 ──
 
     ## ✔ ggplot2 3.2.1     ✔ purrr   0.3.2
     ## ✔ tibble  2.1.3     ✔ dplyr   0.8.3
     ## ✔ tidyr   1.0.0     ✔ stringr 1.4.0
     ## ✔ readr   1.3.1     ✔ forcats 0.4.0
 
-    ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+    ## ── Conflicts ──────────────────────────────────────── tidyverse_conflicts() ──
     ## ✖ dplyr::filter() masks stats::filter()
     ## ✖ dplyr::lag()    masks stats::lag()
 
-## Bivariate regression
+    ## 
+    ## Attaching package: 'ModelMetrics'
 
-Our first dependent variable will be dining out. Let’s take a look at
-that variable:
+    ## The following object is masked from 'package:base':
+    ## 
+    ##     kappa
+
+    ## 
+    ## Attaching package: 'modelr'
+
+    ## The following objects are masked from 'package:ModelMetrics':
+    ## 
+    ##     mae, mse, rmse
+
+The ELS dataset is called `els_train`. I’ll explain the “train” part in
+a bit– it refers to a “training” dataset.
 
 ``` r
-summary(cex$dine_out)
+load("els_train.RData")
 ```
 
-    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##     0.0    65.0   325.0   471.1   650.0  7800.0
+## Bivariate regression
+
+Our dependent variable will be math scores, stored in this dataset as
+`bynels2m`. Let’s take a look at this variable
 
 ``` r
-gg<-ggplot(cex,aes(x=dine_out))
+els_train%>%summarize(mean(bynels2m,na.rm=TRUE))
+```
+
+    ## # A tibble: 1 x 1
+    ##   `mean(bynels2m, na.rm = TRUE)`
+    ##                            <dbl>
+    ## 1                           45.3
+
+``` r
+gg<-ggplot(els_train,aes(x=bynels2m))
 gg<-gg+geom_histogram()
 gg
 ```
 
     ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 
-![](05-regression_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+    ## Warning: Removed 164 rows containing non-finite values (stat_bin).
+
+![](05-regression_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 
 ``` r
-gg<-ggplot(cex,aes(x=dine_out))
+gg<-ggplot(els_train,aes(x=bynels2m))
 gg<-gg+geom_density()
 gg
 ```
 
-![](05-regression_files/figure-gfm/unnamed-chunk-2-2.png)<!-- -->
+    ## Warning: Removed 164 rows containing non-finite values (stat_density).
 
-Because this variable is pretty non-normally distributed, we may want to
-think about transforming it. For now, let’s just work with it as-is.
-Let’s see if people with bigger families spend more on dining out more
-than those with smaller families. Before, we would have calculated the
-conditional mean at every level of family size, or in certain groupings
-of family size. With regression, we simply specify the relationship.
+![](05-regression_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+
+This variable has a nice symmetric distribution. It looks approximately
+normal, which will help in interpreting the results.
 
 ``` r
 #Model 1: simple bivariate regression
 
-mod1<-lm(dine_out~fam_size,data=cex) #outcome on left, predictor on right 
+mod1<-lm(bynels2m~byses1,data=els_train) #outcome on left, predictor on right 
 
 summary(mod1)
 ```
 
     ## 
     ## Call:
-    ## lm(formula = dine_out ~ fam_size, data = cex)
+    ## lm(formula = bynels2m ~ byses1, data = els_train)
     ## 
     ## Residuals:
-    ##    Min     1Q Median     3Q    Max 
-    ## -871.1 -386.7 -161.0  164.0 7314.0 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -39.849  -8.930   0.375   9.052  39.206 
     ## 
     ## Coefficients:
     ##             Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)  397.093     19.723  20.133  < 2e-16 ***
-    ## fam_size      29.627      6.761   4.382 1.21e-05 ***
+    ## (Intercept)  44.9912     0.1409  319.20   <2e-16 ***
+    ## byses1        8.1366     0.1893   42.97   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 595.8 on 3409 degrees of freedom
-    ## Multiple R-squared:  0.005601,   Adjusted R-squared:  0.005309 
-    ## F-statistic:  19.2 on 1 and 3409 DF,  p-value: 1.212e-05
+    ## Residual standard error: 12.31 on 7640 degrees of freedom
+    ##   (502 observations deleted due to missingness)
+    ## Multiple R-squared:  0.1946, Adjusted R-squared:  0.1945 
+    ## F-statistic:  1847 on 1 and 7640 DF,  p-value: < 2.2e-16
 
 ``` r
-g1<-ggplot(cex, aes(x=fam_size,y=dine_out))+ #specify data and x and y
+confint(mod1)
+```
+
+    ##                 2.5 %    97.5 %
+    ## (Intercept) 44.714929 45.267526
+    ## byses1       7.765411  8.507759
+
+``` r
+g1<-ggplot(els_train, aes(x=byses1,y=bynels2m))+ #specify data and x and y
            geom_point(shape=1)+ #specify points
            geom_smooth(method=lm) #ask for lm line
 g1
 ```
 
-![](05-regression_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+    ## Warning: Removed 502 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 502 rows containing missing values (geom_point).
+
+![](05-regression_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
 ``` r
-## Add predictions
-cex%>%add_predictions(mod1,var="pred1")->cex
-
-## Calculate RMSE
-rmse_1<-rmse(mod1,cex)
-
-rmse_1
+els_train<-els_train%>%add_predictions(mod1)%>%rename(pred1=pred) #predict using data in memory
+ 
+## RMSE
+rmse_1<-modelr::rmse(mod1,els_train);rmse_1
 ```
 
-    ## [1] 595.6053
+    ## [1] 12.30348
 
-What this shows is that as family size increases, the amount spent on
-dining out increases. For every additional family member, an additional
-$30 is predicted to be spent on dining out. The rmse of 596 gives us a
-sense of how wrong the model tends to be when using just this one
-predictor.
+What this shows is that as socio-economic status increases, math scores
+are predicted to increase. For every one unit increase in SES, math
+scores are predicted to increase by $8. The rmse of 12 gives us a sense
+of how wrong the model tends to be when using just this one predictor.
 
 *Quick Exercise* Run a regression using a different predictor. Calculate
 rmse and see if you can beat my score.
 
-## Multiple Regression
+## Multiple Regression.
 
 Okay, so we can see that this is somewhat predictive, but we can do
-better. Let’s add in a second variable: whether or not the family is
-below the poverty line.
+better. Let’s add in a second variable: the parent’s level of education.
 
 ``` r
 #Part 2: Multiple regression
 
-mod2<-lm(dine_out~fam_size+
-           pov_cym, #can only take on two values
-          data=cex)
+mod2<-lm(bynels2m~as.factor(bypared)+
+           byses1,
+          data=els_train)
 
 summary(mod2) 
 ```
 
     ## 
     ## Call:
-    ## lm(formula = dine_out ~ fam_size + pov_cym, data = cex)
+    ## lm(formula = bynels2m ~ as.factor(bypared) + byses1, data = els_train)
     ## 
     ## Residuals:
-    ##    Min     1Q Median     3Q    Max 
-    ## -895.3 -350.0 -150.3  142.3 7264.6 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -38.782  -9.033   0.339   9.010  38.715 
     ## 
     ## Coefficients:
-    ##                       Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)            122.612     30.157   4.066 4.90e-05 ***
-    ## fam_size                27.685      6.629   4.176 3.04e-05 ***
-    ## pov_cymNot in Poverty  329.687     27.802  11.858  < 2e-16 ***
+    ##                     Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)          46.5216     0.6881  67.609  < 2e-16 ***
+    ## as.factor(bypared)2  -0.5464     0.6733  -0.812 0.417093    
+    ## as.factor(bypared)3  -2.5776     0.7780  -3.313 0.000927 ***
+    ## as.factor(bypared)4  -0.8523     0.8024  -1.062 0.288181    
+    ## as.factor(bypared)5  -1.6261     0.7996  -2.034 0.042018 *  
+    ## as.factor(bypared)6  -2.0766     0.8301  -2.502 0.012383 *  
+    ## as.factor(bypared)7  -1.5467     0.9682  -1.598 0.110172    
+    ## as.factor(bypared)8  -3.5970     1.1014  -3.266 0.001096 ** 
+    ## byses1                8.9059     0.3350  26.584  < 2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 583.9 on 3408 degrees of freedom
-    ## Multiple R-squared:  0.04501,    Adjusted R-squared:  0.04445 
-    ## F-statistic:  80.3 on 2 and 3408 DF,  p-value: < 2.2e-16
+    ## Residual standard error: 12.29 on 7633 degrees of freedom
+    ##   (502 observations deleted due to missingness)
+    ## Multiple R-squared:  0.1975, Adjusted R-squared:  0.1966 
+    ## F-statistic: 234.8 on 8 and 7633 DF,  p-value: < 2.2e-16
 
 ``` r
-rmse_2<-rmse(mod2,cex)
+els_train<-els_train%>%add_predictions(mod2)%>%rename(pred2=pred)
 
-rmse_2
+rmse_2<-modelr::rmse(mod2,els_train); rmse_2
 ```
 
-    ## [1] 583.6849
+    ## [1] 12.28195
 
-So, those who are in poverty spend less on dining out. Alert the media\!
+This finding reflects the basic inequity in our education system: lower
+income students score lower on math scores. This holds true even if we
+control for parental education.
 
 *Quick Exercise* Add another variable to your model from above and see
 what difference it makes. How is your RMSE?
 
-Maybe it’s the case that those who spend more on groceries dine out
-less. Let’s find
-out:
-
-``` r
-#Model 3: predicting dining out using other variables and grocery spending
-
-mod3<-lm(dine_out~
-           fam_size+
-           pov_cym+
-           grocery,
-           data=cex)
-
-summary(mod3)
-```
-
-    ## 
-    ## Call:
-    ## lm(formula = dine_out ~ fam_size + pov_cym + grocery, data = cex)
-    ## 
-    ## Residuals:
-    ##     Min      1Q  Median      3Q     Max 
-    ## -2771.3  -330.5  -127.0   136.6  7328.4 
-    ## 
-    ## Coefficients:
-    ##                        Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)            67.57871   29.94984   2.256   0.0241 *  
-    ## fam_size              -12.03786    7.33827  -1.640   0.1010    
-    ## pov_cymNot in Poverty 279.34638   27.60544  10.119   <2e-16 ***
-    ## grocery                 0.13743    0.01178  11.670   <2e-16 ***
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-    ## 
-    ## Residual standard error: 572.7 on 3407 degrees of freedom
-    ## Multiple R-squared:  0.08172,    Adjusted R-squared:  0.08091 
-    ## F-statistic: 101.1 on 3 and 3407 DF,  p-value: < 2.2e-16
-
-``` r
-g2<-ggplot(cex, aes(x=grocery,y=dine_out))+
-           geom_point(shape=1)+ 
-           geom_smooth(method=lm)
-g2
-```
-
-![](05-regression_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
-
-``` r
-rmse_3<-rmse(mod3,cex)
-
-rmse_3
-```
-
-    ## [1] 572.3566
-
-Hmm, what happened here?
-
-*Quick Exercise* Use a subset of the cex data with reasonable bounds on
-both dining out and grocery expenditures. See if the results hold.
-
 ## Transformations
 
-The big issue as you can see with this data is that the outcome variable
-isn’t normally distributed: most people spend very little on dining out,
-while some people spend quite a lot. In situations like this, which are
-VERY common when dealing with monetary values, we want to take the
-natural log of the outcome variable. A natural log is the power by which
-we would have to raise \(e\), Euler’s constant, to be that value:
-\(e^{ln(x)}=x\), or \(ln(e^x)=x\).
-
-Economists just basically take the natural log of everything that’s
-denominated in dollar terms, which you probably should do as well.
-You’ll notice in the equations below that I specify the `log()` of
-both dining out and grocery spending. The log transform won’t work with
-values of 0, so the transformation also includes a `+1` to add a dollar
-to each 0.
+The `byses` variable is a little hard to interpret. It’s on a scale from
+-2 to 2, which you should remember as the scale for a standardized
+variable or Z score. Let’s transform it to be on a percentile scale from
+0-100.
 
 ``` r
-#Part 4: Working with transformations
-mod4<-lm(log(dine_out+1)~ #log of dining out, plus one for zeros
-           +log(grocery+1)+ #log of groceries, plus one again
-           pov_cym+ #poverty
-           fam_size #family size
-         ,data=cex, na.action = "na.exclude")
+els_train<-els_train%>%mutate(byses_p=percent_rank(byses1)*100)
+els_train%>%summarize(mean(byses_p,na.rm=TRUE))
+```
 
+    ## # A tibble: 1 x 1
+    ##   `mean(byses_p, na.rm = TRUE)`
+    ##                           <dbl>
+    ## 1                          49.8
 
-summary(mod4)
+``` r
+mod3<-lm(bynels2m~byses_p+
+         as.factor(bypared),
+         data=els_train
+         );summary(mod3)
 ```
 
     ## 
     ## Call:
-    ## lm(formula = log(dine_out + 1) ~ +log(grocery + 1) + pov_cym + 
-    ##     fam_size, data = cex, na.action = "na.exclude")
+    ## lm(formula = bynels2m ~ byses_p + as.factor(bypared), data = els_train)
     ## 
     ## Residuals:
     ##     Min      1Q  Median      3Q     Max 
-    ## -5.5830 -0.4068  0.8879  1.5666  6.4368 
+    ## -38.857  -9.055   0.281   9.180  39.208 
     ## 
     ## Coefficients:
-    ##                       Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)            0.24831    0.32269   0.769    0.442    
-    ## log(grocery + 1)       0.44086    0.04948   8.910   <2e-16 ***
-    ## pov_cymNot in Poverty  1.69492    0.12069  14.044   <2e-16 ***
-    ## fam_size              -0.02455    0.03075  -0.798    0.425    
+    ##                      Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)         34.547239   0.573118  60.279   <2e-16 ***
+    ## byses_p              0.222994   0.008538  26.117   <2e-16 ***
+    ## as.factor(bypared)2  0.798336   0.663053   1.204    0.229    
+    ## as.factor(bypared)3 -1.174077   0.760833  -1.543    0.123    
+    ## as.factor(bypared)4  0.471181   0.784935   0.600    0.548    
+    ## as.factor(bypared)5 -0.396732   0.782402  -0.507    0.612    
+    ## as.factor(bypared)6 -1.134680   0.814131  -1.394    0.163    
+    ## as.factor(bypared)7 -0.299730   0.944575  -0.317    0.751    
+    ## as.factor(bypared)8 -1.330383   1.052509  -1.264    0.206    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 2.484 on 3407 degrees of freedom
-    ## Multiple R-squared:  0.09365,    Adjusted R-squared:  0.09285 
-    ## F-statistic: 117.3 on 3 and 3407 DF,  p-value: < 2.2e-16
+    ## Residual standard error: 12.31 on 7633 degrees of freedom
+    ##   (502 observations deleted due to missingness)
+    ## Multiple R-squared:  0.1951, Adjusted R-squared:  0.1942 
+    ## F-statistic: 231.3 on 8 and 7633 DF,  p-value: < 2.2e-16
+
+This changes the coefficient AND its interpretation. Now, for every one
+percent increase in SES, math scores are predicted to increase by 0.22.
+Linear transformations will not change the statistical significance (t
+value), but non linear transformations like the one we just did will, as
+you can see. Does this change the RMSE?
 
 ``` r
-## Use modelr:: rmse to get rmse (or rmsle in this case)
-rmsle_4<-rmse(mod4,cex)
-
-## Use modelr:: add_predictions for predictions
-cex%>%add_predictions(mod4,var="pred4")->cex
-
-## Use modelr:: add_residuals for residuals
-cex%>%add_residuals(mod4,var="resid4")->cex
-
-# Duan's smearing estimator
-dse<-mean(exp(cex$resid4))
-  
-## get just the data needed to calculate rmse
-rmse_4_data<-cex%>%
-  select(dine_out,pred4)%>%
-  filter(!is.na(pred4))%>%
-  mutate(pred4=exp(pred4)*dse)
-
-rmse_4<-ModelMetrics::rmse(rmse_4_data$dine_out,rmse_4_data$pred4); rmse_4
+rmse_3<-modelr::rmse(mod3,els_train)
 ```
 
-    ## [1] 600.0492
-
-``` r
-g4<-ggplot(cex, aes(x=grocery,y=exp(pred4),color=pov_cym))
-g4<-g4+geom_point(shape=1)
-g4
-```
-
-![](05-regression_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
-
-``` r
-# Function defined by coefficients
-
-fun_mod4<-function(x) exp(mod4$coefficients[1]+ 
-                            ## This coeff will be allowed to vary
-                          (mod4$coefficients[2]*log(x+1))+
-                          (mod4$coefficients[3]*1)+
-                      (mod4$coefficients[4]*mean(cex$fam_size,na.rm=TRUE))                            ) 
-
-g4a<-ggplot(cex,aes(x=grocery,y=dine_out))
-g4a<-g4a+geom_point(alpha=.1,size=.1)
-g4a<-g4a+stat_function(fun = fun_mod4,color="blue")+xlim(0,2000)+ylim(0,1000)
-g4a
-```
-
-    ## Warning: Removed 880 rows containing missing values (geom_point).
-
-![](05-regression_files/figure-gfm/unnamed-chunk-6-2.png)<!-- -->
-
-``` r
-#Part 5: Adding income 
-mod5<-lm(log(dine_out+1)~
-           +log(grocery+1)+
-           pov_cym+
-           fam_size+
-           inclass+
-           log(booze_out+1)
-         ,data=cex,na.action="na.exclude");summary(mod5)
-```
-
-    ## 
-    ## Call:
-    ## lm(formula = log(dine_out + 1) ~ +log(grocery + 1) + pov_cym + 
-    ##     fam_size + inclass + log(booze_out + 1), data = cex, na.action = "na.exclude")
-    ## 
-    ## Residuals:
-    ##     Min      1Q  Median      3Q     Max 
-    ## -6.8211 -0.3138  0.4516  1.1483  4.7365 
-    ## 
-    ## Coefficients:
-    ##                       Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)            1.48179    0.63963   2.317  0.02069 *  
-    ## log(grocery + 1)       0.30258    0.08024   3.771  0.00017 ***
-    ## pov_cymNot in Poverty  0.05132    0.39946   0.128  0.89780    
-    ## fam_size              -0.07806    0.04639  -1.683  0.09270 .  
-    ## inclass02              0.52036    0.52535   0.991  0.32213    
-    ## inclass03             -0.17130    0.52561  -0.326  0.74455    
-    ## inclass04              0.24693    0.57298   0.431  0.66658    
-    ## inclass05              1.10797    0.59185   1.872  0.06144 .  
-    ## inclass06              1.17888    0.60310   1.955  0.05085 .  
-    ## inclass07              1.09183    0.61067   1.788  0.07404 .  
-    ## inclass08              1.26447    0.59647   2.120  0.03422 *  
-    ## inclass09              1.69743    0.59276   2.864  0.00426 ** 
-    ## log(booze_out + 1)     0.26188    0.02510  10.433  < 2e-16 ***
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-    ## 
-    ## Residual standard error: 2.004 on 1204 degrees of freedom
-    ##   (2194 observations deleted due to missingness)
-    ## Multiple R-squared:  0.1827, Adjusted R-squared:  0.1746 
-    ## F-statistic: 22.43 on 12 and 1204 DF,  p-value: < 2.2e-16
-
-``` r
-## Use modelr:: add_predictions for predictions
-cex%>%add_predictions(mod5,var="pred5")->cex
-
-## Use modelr:: add_residuals for residuals
-cex%>%add_residuals(mod5,var="resid5")->cex
-
-# Duan's smearing estimator
-dse<-mean(exp(cex$resid5),na.rm=TRUE)
-
-## Standard RMSE on log scale
-rmsle_5<-modelr::rmse(mod5,cex)
-
-## get just the data needed to calculate rmse
-rmse_5_data<-cex%>%
-  select(dine_out,pred5)%>%
-  filter(!is.na(pred5))%>%
-  mutate(pred5=exp(pred5)*dse)
-
-rmse_5<-ModelMetrics::rmse(rmse_5_data$dine_out,rmse_5_data$pred5); rmse_5
-```
-
-    ## [1] 827.9586
-
-``` r
-## Use log transform to plot
-g5<-ggplot(cex, aes(x=inclass,y=(dine_out+1),group=1))+
-           geom_point(shape=1)+
-           geom_smooth(method=lm)+
-          scale_y_continuous(trans="log")
-g5
-```
-
-![](05-regression_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+It looks like it actually increases it a bit.
 
 ## Testing and Training
 
@@ -457,96 +321,39 @@ could then train our model on half the data, then test it on the other
 half. This would tell us whether our measure of model fit (e.g. rmse,
 auc) is similar or different when we apply our model to out of sample
 data. That’s what we’ve done today: we have only been working with half
-of our data.
+of our data– the training half.
 
-Model 5 is looking pretty good, but let’s see how it does using our
-testing data– the half that wasn’t used to train our model.
+The testing data (which is a random half of the original dataset) is
+stored as `els_test`. Since we transformed a variable in the training
+dataset, we’ll need to do the same in the testing dataset.
 
 ``` r
-load("cex_test.Rdata")
+load("els_test.Rdata")
+els_test<-els_test%>%mutate(byses_p=percent_rank(byses1)*100)
+```
 
+Now we can use the model we trained (model 3) on the testing data.
+
+``` r
 ## Generate a prediction from the testing dataset
-cex_test<-cex_test%>%mutate(pred5=predict(mod5,newdata=cex_test))
-
-## Comparing test and training rmse
-
-rmsle_5_test<-modelr::rmse(mod5,cex_test)
-
-rmsle_5;rmsle_5_test
+rmse_test_1<-modelr::rmse(mod1,els_test);rmse_test_1
 ```
 
-    ## [1] 1.993103
-
-    ## [1] 1.963142
-
-Why is the value from the testing dataset different?
-
-*Quick exercise*
-
-What’s the rmse for your model when comparing it with the testing data?
-
-## Regression using a binary outcome
-
-You can also run a regression using a binary variable. Let’s recode and
-then use our cigarettes variable to look at predictors of buying any
-cigarretes at all.
+    ## [1] 12.24225
 
 ``` r
-cex$cigs<-0
-cex$cigs[cex$cigarettes>0]<-1
-
-mod6<-lm(cigs~educ_ref+
-           as.factor(ref_race)+
-           inc_rank+
-           as.factor(sex_ref),
-         data=cex)
-
-summary(mod6)
+rmse_test_2<-modelr::rmse(mod2,els_test);rmse_test_2
 ```
 
-    ## 
-    ## Call:
-    ## lm(formula = cigs ~ educ_ref + as.factor(ref_race) + inc_rank + 
-    ##     as.factor(sex_ref), data = cex)
-    ## 
-    ## Residuals:
-    ##     Min      1Q  Median      3Q     Max 
-    ## -0.4636 -0.2307 -0.1397 -0.0593  0.9555 
-    ## 
-    ## Coefficients:
-    ##                       Estimate Std. Error t value Pr(>|t|)  
-    ## (Intercept)           0.212182   0.167340   1.268   0.2049  
-    ## educ_ref10           -0.070800   0.169790  -0.417   0.6767  
-    ## educ_ref11            0.047102   0.168676   0.279   0.7801  
-    ## educ_ref12            0.036232   0.167607   0.216   0.8289  
-    ## educ_ref13           -0.002575   0.167784  -0.015   0.9878  
-    ## educ_ref14            0.041669   0.168560   0.247   0.8048  
-    ## educ_ref15           -0.115015   0.167967  -0.685   0.4936  
-    ## educ_ref16           -0.146736   0.169001  -0.868   0.3853  
-    ## educ_ref17           -0.125419   0.173375  -0.723   0.4695  
-    ## as.factor(ref_race)2 -0.021274   0.021865  -0.973   0.3306  
-    ## as.factor(ref_race)3  0.216188   0.103703   2.085   0.0372 *
-    ## as.factor(ref_race)4 -0.005414   0.033133  -0.163   0.8702  
-    ## as.factor(ref_race)5  0.058780   0.107966   0.544   0.5862  
-    ## as.factor(ref_race)6  0.021194   0.059431   0.357   0.7214  
-    ## inc_rank             -0.007729   0.027142  -0.285   0.7758  
-    ## as.factor(sex_ref)2  -0.014303   0.014091  -1.015   0.3102  
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-    ## 
-    ## Residual standard error: 0.3722 on 2856 degrees of freedom
-    ##   (539 observations deleted due to missingness)
-    ## Multiple R-squared:  0.03882,    Adjusted R-squared:  0.03377 
-    ## F-statistic:  7.69 on 15 and 2856 DF,  p-value: < 2.2e-16
+    ## [1] 12.24041
 
 ``` r
-g4<-ggplot(cex,aes(x=fam_type,y=cigs,group=1))+
-  geom_jitter(alpha=.1)
-
-g4
+rmse_test_3<-modelr::rmse(mod3,els_test);rmse_test_3
 ```
 
-![](05-regression_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+    ## [1] 12.26706
+
+Notice that this is different than the value for our training dataset.
 
 ## Thinking about regression for prediction
 
