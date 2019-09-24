@@ -1,0 +1,72 @@
+---
+title: "Untitled"
+author: "Doyle"
+date: "9/19/2019"
+output: html_document
+---
+
+
+* School-level SAT results, New York City: https://data.cityofnewyork.us/api/views/f9bf-2cp4/rows.csv?accessType=DOWNLOAD
+
+```{r}
+nysat<-read_csv("https://data.cityofnewyork.us/api/views/f9bf-2cp4/rows.csv?accessType=DOWNLOAD")
+```
+
+
+* Stumbleupon Kaggle challenge (get the train.tsv file). You will need to register for Kaggle (it's free) to do this:
+https://www.kaggle.com/c/stumbleupon/data 
+
+
+```{r}
+stumble<-read_tsv("train.tsv")
+
+```
+
+
+* Crime dataset from UCLA statistical computing website:
+https://stats.idre.ucla.edu/stat/stata/webbooks/reg/crime.dta
+
+```{r}
+crime<-read_dta("https://stats.idre.ucla.edu/stat/stata/webbooks/reg/crime.dta")
+
+```
+
+
+* Data on various nations:
+https://stats.idre.ucla.edu/wp-content/uploads/2016/02/nations.sav
+
+```{r}
+nations<-read_spss("https://stats.idre.ucla.edu/wp-content/uploads/2016/02/nations.sav")
+
+```
+
+
+* Cancer prevalence data http://web1.sph.emory.edu/dkleinb/allDatasets/datasets/cancer.sas7bdat
+
+
+```{r}
+
+cancer_prev<-read_sas("http://web1.sph.emory.edu/dkleinb/allDatasets/datasets/cancer.sas7bdat")
+
+
+```
+
+
+* NCES data on Average Daily Attendance (*This data needs to be converted to be tidy*): http://nces.ed.gov/programs/digest/d13/tables/dt13_203.90.asp
+
+
+```{r}
+ada<-read_xlsx("ada.xlsx",skip=8)
+
+#Get rid of unwanted rows
+ada2<-ada%>%filter(is.na(free[,1])==FALSE)
+
+#Drop unwanted columns
+
+# Rename columns appropriately
+
+
+
+
+```
+
