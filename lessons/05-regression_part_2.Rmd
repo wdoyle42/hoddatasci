@@ -1,0 +1,195 @@
+---
+title: "Getting Started with CES data, and our first Kaggle competion"
+author: "Doyle"
+date: "10/1/2019"
+output: html_document
+---
+
+The Consumer Expenditure Survey includes a wide variety of information on Consumer Units (CUs) which are basically households. Each year they track, on a quarterly basis, how the surveyed units are spending their money.
+
+Your goal is to predict expenditures on entertainment items, which are in the variable `eentrmtp`. Identifying which consumers are likely to spend more on entertainment items would be a very valuable insight for the marketing team of any company in this area. 
+
+```{r}
+library(tidyverse)
+library(modelr)
+```
+
+```{r}
+load("ces_train.Rdata")
+```
+
+
+# Exponential Dependent Variables
+
+The variable of interest is `eentrmtp`,"Total entertainment outlays last quarter including sound systems, sports equipment, toys, cameras, and down payments on boats and campers."
+
+Let's take a look at the distribution of this variable
+```{r}
+gg<-ggplot(ces_train,aes(x=eentrmtp))
+gg<-gg+geom_density()
+gg
+```
+
+As you can see, there's a LOT of variation in spending in this area. 
+
+# Finding and understanding variables
+
+The CES is a huge dataset. As with many such datasets, it includes a codebook in excel format. Below is some code that can help you search through these large codebooks to find the variables you're looking for.
+
+```{r}
+
+dct_1<-readxl::read_xlsx("ce_pumd_interview_diary_dictionary.xlsx",
+                                sheet=2)
+
+
+dct_2<-readxl::read_xlsx("ce_pumd_interview_diary_dictionary.xlsx",
+                               sheet=3)
+
+search_term<-"total expenditure"
+
+
+## Look up variables
+dct_1 %>% filter(grepl(search_term,
+                       `Variable Description`)) 
+#%>%
+#  View()
+
+search_var<-"CHILDAGE"
+## Look up coding
+
+dct_2 %>% filter(grepl(search_var,
+                       `Variable Name`))
+#%>%
+#  View()
+
+```
+
+
+# Basic Model
+
+Let's start with a basic model, looking at spending on entertainment expenses as a function of all spending. 
+
+```{r}
+lm1<-lm(eentrmtp~totexppq,data=ces_train);summary(lm1)
+```
+
+
+# Log transform
+
+
+The problem with this model is that the dependent variable is on an exponential scale. Almost any variable related to money will also be on an exponential scale, as will any variable where the underlying units are on different scales (e.g. number of teachers in a school district, which can vary from 10 to 10 thousand). To deal with this issue, we can use the log transformation, which transforms the variable into the power of $e$ that equals the variable:
+
+$$ln(x)=log_e(x)=y,e^y=x$$
+
+We nearly always just call this the "log" transformation, but it's actually the natural log, or log base $e$.
+
+When we just transform the dependent variable, it's called a log transform in the context of regression:
+```{r}
+lm2<-lm(log(eentrmtp+1)~totexppq,data=ces_train);summary(lm2)
+```
+
+Note that 1 was added to the dependent variable, this is because you can't take the log of 0. 
+
+# Log-log transform
+
+When we transform both the dependent and independent variables, it's called a log-log transform:
+```{r}
+lm3<-lm(log(eentrmtp+1)~log(totexppq+1),data=ces_train);summary(lm3)
+```
+
+
+# Duan's smearing estimator
+
+It would seem to be natural to take the results of a log-transformed regression and simply back transform them, so that the the prediction would just be the exponent $e^y$. This doesn't work, though-- it needs to be adjusted. The adjustment is pretty simply, and it's called Duan's smearing estimator. It involves taking the average of the exponentiated residuals, then multiplying the exponentatied prediction by that average. The steps are below, where `ds` is the smearing estimator.  
+
+```{r}
+ces_train<-ces_train%>%
+  add_residuals(lm3)%>% # Adds residuals
+  add_predictions(lm3) #adds predictions
+
+## Add smearing estimator and adjusted predictions
+ces_train%>%
+  mutate(ds=mean(exp(resid),na.rm=TRUE))%>% #ds= mean of exponentiated resids
+  mutate(pred_raw=exp(pred))%>% # unadjusted exponentiated prediction
+  mutate(adj_pred=exp(pred)*ds)-> # adjusted exp prediction: correct one
+  ces_train
+
+#ces_train%>%select(pred,pred_raw,ds,adj_pred)%>%View()
+```
+
+If you're reporting RMSE based on a model with an exponentiated dependent variable, you need to use the smearing estimator. 
+
+
+# Reporting RMSE from Duan's smearing estimator
+
+```{r}
+## Calculate rmse
+rmse_mod3<-ModelMetrics::rmse(ces_train$eentrmtp,ces_train$adj_pred)
+
+```
+
+
+# Training, testing and submitting predictions
+
+ Kaggle is a very popular site for competing in data science. Organizations submit their data and ask for predictions. The users who submit the best predictions can win prizes, and sometimes are then hired by the companies who submitted their data. This week, we'll run our very own Kaggle competition, predicting entertainment spending from the CES. 
+ 
+```{r}
+lm3<-lm(log(eentrmtp+1)~log(totexppq+1),data=ces_train);summary(lm3)
+```
+
+Check its fit to the training data
+```{r}
+
+## Add smearing estimator and adjusted predictions
+ces_train%>%
+  add_residuals(lm3)%>%
+  add_predictions(lm3)%>%
+  mutate(ds=mean(exp(resid),na.rm=TRUE))%>% # create "smearing" estimator ds
+  mutate(adj_pred=exp(pred)*ds)-> # adjust using smearing estimator
+  ces_train
+
+```
+
+ 
+ # Generate predictions from the testing data
+ 
+```{r}
+load("ces_test.Rdata")
+
+ces_test%>%
+  add_predictions(lm3)%>%
+  mutate(ds=mean(exp(ces_train$resid),na.rm=TRUE))%>% # create "smearing" estimator ds
+  mutate(predict=exp(pred)*ds)-> # adjust using smearing estimator
+  ces_test
+
+```
+ 
+ 
+ # Submit predictions
+ 
+```{r}
+ces_test%>%select(cuid,predict)->ces_submit
+
+write_csv(ces_submit,path="group_x_predictions.csv")
+```
+ 
+# Upload predictions to github repo
+
+I will test your group predictions against my "held out" data, like so:
+
+NB: this code won't work for you because you don't have the held out variable, which includes the actual value of entertainment spending for the 
+
+```{r}
+load("~/hod_datasci_keys/ces_hold.Rdata")
+ces_submit<-read_csv("group_x_predictions.csv")
+ces_hold<-left_join(ces_hold,ces_submit,by="cuid")
+team_rmse<-ModelMetrics::rmse(ces_hold$eentrmtp,ces_hold$predict)
+team_rmse
+```
+
+# Our Kaggle competition
+
+Your group needs to submit predictions based on this dataset that will accurately predict total entertainment expenditures. Submissions need to be made to: 
+
+
+
