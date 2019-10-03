@@ -5,6 +5,12 @@ date: "10/1/2019"
 output: html_document
 ---
 
+
+```{r}
+knitr::opts_chunk$set(dev="CairoPNG")
+```
+
+
 The Consumer Expenditure Survey includes a wide variety of information on Consumer Units (CUs) which are basically households. Each year they track, on a quarterly basis, how the surveyed units are spending their money.
 
 Your goal is to predict expenditures on entertainment items, which are in the variable `eentrmtp`. Identifying which consumers are likely to spend more on entertainment items would be a very valuable insight for the marketing team of any company in this area. 
@@ -14,9 +20,41 @@ library(tidyverse)
 library(modelr)
 ```
 
+## Functions for 
+```{r}
+
+library(Hmisc)
+```
+
+
 ```{r}
 load("ces_train.Rdata")
+load("ces_test.Rdata")
 ```
+
+```{r}
+full_data<-bind_rows(ces_train,ces_test)
+```
+
+```{r}
+full_data%>%
+  mutate(childage=as_factor(childage))->full_data
+
+ces_train<-full_data%>%
+  filter(!is.na(eentrmtp))
+
+ces_test<-full_data%>%
+  filter(is.na(eentrmtp))
+
+```
+
+```{r}
+lm1<-lm(eentrmtp~as.factor(childage) ,
+      data=ces_train)
+
+ces_test%>%add_predictions(lm1)->ces_test
+```
+
 
 
 # Exponential Dependent Variables
@@ -27,6 +65,7 @@ Let's take a look at the distribution of this variable
 ```{r}
 gg<-ggplot(ces_train,aes(x=eentrmtp))
 gg<-gg+geom_density()
+gg<-gg+scale_x_continuous(trans="log")
 gg
 ```
 
@@ -50,17 +89,16 @@ search_term<-"total expenditure"
 
 ## Look up variables
 dct_1 %>% filter(grepl(search_term,
-                       `Variable Description`)) 
-#%>%
-#  View()
+                       `Variable Description`
+                         ) & File=="FMLI") %>%
+  View()
 
 search_var<-"CHILDAGE"
 ## Look up coding
 
 dct_2 %>% filter(grepl(search_var,
-                       `Variable Name`))
-#%>%
-#  View()
+                       `Variable Name`))%>%
+  View()
 
 ```
 
@@ -75,7 +113,6 @@ lm1<-lm(eentrmtp~totexppq,data=ces_train);summary(lm1)
 
 
 # Log transform
-
 
 The problem with this model is that the dependent variable is on an exponential scale. Almost any variable related to money will also be on an exponential scale, as will any variable where the underlying units are on different scales (e.g. number of teachers in a school district, which can vary from 10 to 10 thousand). To deal with this issue, we can use the log transformation, which transforms the variable into the power of $e$ that equals the variable:
 
@@ -114,7 +151,7 @@ ces_train%>%
   mutate(adj_pred=exp(pred)*ds)-> # adjusted exp prediction: correct one
   ces_train
 
-#ces_train%>%select(pred,pred_raw,ds,adj_pred)%>%View()
+ces_train%>%select(pred,pred_raw,ds,adj_pred)%>%View()
 ```
 
 If you're reporting RMSE based on a model with an exponentiated dependent variable, you need to use the smearing estimator. 
@@ -144,6 +181,7 @@ Check its fit to the training data
 ces_train%>%
   add_residuals(lm3)%>%
   add_predictions(lm3)%>%
+  mutate(h_adjust=smearingEst(pred,exp,resid,"mean"))%>% #bulit in version
   mutate(ds=mean(exp(resid),na.rm=TRUE))%>% # create "smearing" estimator ds
   mutate(adj_pred=exp(pred)*ds)-> # adjust using smearing estimator
   ces_train
@@ -154,7 +192,9 @@ ces_train%>%
  # Generate predictions from the testing data
  
 ```{r}
-load("ces_test.Rdata")
+
+
+
 
 ces_test%>%
   add_predictions(lm3)%>%
@@ -177,7 +217,7 @@ write_csv(ces_submit,path="group_x_predictions.csv")
 
 I will test your group predictions against my "held out" data, like so:
 
-NB: this code won't work for you because you don't have the held out variable, which includes the actual value of entertainment spending for the 
+NB: this code won't work for you because you don't have the held out variable, which includes the actual value of entertainment spending for the testing dataset. 
 
 ```{r}
 load("~/hod_datasci_keys/ces_hold.Rdata")
