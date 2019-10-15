@@ -81,8 +81,8 @@ r_home
 # url of Moby Dick (project Gutenberg)
 moby_url = url("http://www.gutenberg.org/files/2701/2701-h/2701-h.htm")
 # reading the content (first 500 lines)
-moby_dick = readLines(moby_url, n = 1500)
-moby_dick[1145:1148]
+moby_dick = readLines(moby_url, n = 5000)
+moby_dick[1200:1210]
 ```
 
 
@@ -110,24 +110,6 @@ marathon$date<-mdy(marathon$Date)
 ```
 
 
-```{r}
-marathon_wiki = "https://en.wikipedia.org/wiki/Marathon_world_record_progression"
-
-# Get the page, pull the tables via html_table
-marathon <- read_html(marathon_wiki)%>%html_table(fill=TRUE)
-
-#Men's is the first table
-marathon<-tbl_df(marathon[[2]])
-
-#Convert time to seconds
-marathon<-marathon%>%mutate(Time2=hms(as.character(Time)))%>%mutate(Time2=period_to_seconds(Time2))
-
-#Marathons are 42,200 meters long
-marathon$speed<-(4.22e4)/marathon$Time2
-
-#Get dates in a usable format usin lubridate::mdy
-marathon$date<-mdy(marathon$Date)
-```
 
 ## Progression of World Record Marathon Speed in Meters/Second
 ```{r}
@@ -164,9 +146,9 @@ I first plug the web page I'm interested in to a variable called url. This makes
 
 ```{r}
 ## Web Page: could be lots of different things. 
-url<-"http://www.basketball-reference.com/leagues/NBA_2017_totals.html"
+url<-"http://www.basketball-reference.com/leagues/NBA_2018_totals.html"
 
-url<-"https://www.pro-football-reference.com/years/2017/#team_stats::none"
+#url<-"https://www.pro-football-reference.com/years/2017/#team_stats::none"
 ```
 
 The next step is to download that web page onto my computer. I call this `page` and I use the `read_html()` function to get it. 
@@ -218,7 +200,7 @@ fg[1:10]
 
 Now I can combine the two into a data frame. Note that I have to drop the last row of player names-- the web page had an ad there. 
 ```{r}
-player_name<-player_name[-length(player_name)]
+#player_name<-player_name[-length(player_name)]
 
 simple_data<-tibble(player_name,points,fg)
 ```
@@ -250,7 +232,7 @@ get_nba_data<-TRUE
 nba_df_all<-NULL
 
 #What years?
-year_list<-1993:2018
+year_list<-1993:2019
 
 if(get_nba_data==TRUE){
 
@@ -347,7 +329,7 @@ ggplotly(gg)
 nba_mod_1998<-lm(pts_minute~I(three_pointers/100),data=filter(nba_df_all,year==1998));summary(nba_mod_1998)
 
 #Predicting same in 2017
-nba_mod_2017<-lm(pts_minute~I(three_pointers/100),data=filter(nba_df_all,year==2017));summary(nba_mod_2017)
+nba_mod_2018<-lm(pts_minute~I(three_pointers/100),data=filter(nba_df_all,year==2018));summary(nba_mod_2018)
 ```
 
 
@@ -497,10 +479,10 @@ The first step is to create a list of all zip codes in Davidson County. We can d
 
 ```{r}
 ## Look up fips code for county
-lookup_code("CA","San Mateo") 
+lookup_code("TN","Davidson") 
 
-state_fips<-"06"
-county_stub<-"081"
+state_fips<-"47"
+county_stub<-"037"
 
 county_fips<-paste0(state_fips,county_stub)
 
@@ -533,7 +515,7 @@ The first step is to get the table from ACS. Below, I submit a request using my 
 
 ```{r}
 # Get your own key and save as my_acs_key.txt
-my_acs_key<-readLines("my_acs_key.txt",warn = FALSE)
+my_acs_key<-readLines("~/hod_datasci_keys/my_acs_key.txt",warn = FALSE)
 acs_key<-my_acs_key
 
 # Or just paste it here.
@@ -618,7 +600,7 @@ We're going to interact directly with the Zillow api, as opposed to using an R "
 ```{r}
 
 # Get your own key and save it as zillow_key.txt
-zwsid<-readLines("zillow_key.txt",warn=FALSE)
+zwsid<-readLines("~/hod_datasci_keys/zillow_key.txt",warn=FALSE)
 
 #Or just paste it here
 #zwsid<-"<your_zillow_key_here"
@@ -632,8 +614,7 @@ if (get_zillow_data==TRUE){
 #Create a blank data frame
 zdemodata<- list(zip = list(as.character()),
                 medListPrice=list(as.numeric()),
-                medValsqFt=list(as.numeric()),
-                med4price=list(as.numeric())
+                medValSqFt=list(as.numeric())
               )
 
 #repeat across all zip codes
@@ -664,16 +645,13 @@ for (i in 1:length(ziplist)) {
 }
 
 #Convert to tiblle
-zdemodata2<-data.frame(
+zdemodata2<-as_tibble(data.frame(
                    as.character(unlist(zdemodata$zip)),
                    as.character(unlist(zdemodata$medListPrice)),
-                   as.character(unlist(zdemodata$medValSqFt)),
-                  as.character(unlist(zdemodata$med4price))
-                   )
+                   as.character(unlist(zdemodata$medValSqFt))
+                   ))
                    
 names(zdemodata2)<-c("zip","medListPrice","medValSqFt")
-
-zdemodata2<-as.tibble(zdemodata2)
 
 zdemodata2<-zdemodata2%>%mutate_at(c("medListPrice","medValSqFt"),as.character)
 
@@ -778,7 +756,7 @@ zip_shapes<-zctas(cb=TRUE,  #simpler and smaller
 zip_shapes<-zip_shapes[zip_shapes$ZCTA5CE10%in%dav_house_df$zip,]
 
 #Add a variable called zip based on ZCTAs
-zip_shapes$zip<-zip_shapes$ZCTA5CE10
+zip_shapes@data$zip<-zip_shapes$ZCTA5CE10
 
 #Save file/load file
 save(zip_shapes, file="zip_shapes.Rdata")
@@ -918,7 +896,7 @@ Nashville is a city with very sharply demarcated neighborhoods. High income, hig
 
 
 ## OMDB Data
-The code below first gets the titles of every Studio Ghibli movie, then searches the OMDB for these movies. It
+The code below first gets the titles of every Studio Ghibli movie, then searches the OMDB for these movies. It uses the "map" function to avoid
 
 ```{r}
 
