@@ -54,6 +54,7 @@ options(tigris_use_cache = TRUE) # save tigris shapefiles
 library(plotly)
 library(ggplot2)
 library(forcats)
+library(tidycensus)
 library(tidyverse)
 ```
 
@@ -97,10 +98,12 @@ marathon_wiki = "https://en.wikipedia.org/wiki/Marathon_world_record_progression
 marathon <- read_html(marathon_wiki)%>%html_table(fill=TRUE)
 
 #Men's is the first table
-marathon<-tbl_df(data.frame(marathon[[1]]))
+marathon<-tbl_df(data.frame(marathon[[2]]))
 
 #Convert time to seconds
-marathon<-marathon%>%mutate(Time2=hms(as.character(Time)))%>%mutate(Time2=period_to_seconds(Time2))
+marathon<-marathon%>%
+  mutate(Time2=hms(as.character(Time)))%>%
+  mutate(Time2=period_to_seconds(Time2))
 
 #Marathons are 42,200 meters long
 marathon$speed<-(4.22e4)/marathon$Time2
@@ -226,7 +229,7 @@ The code below takes the exact same steps, but expands in two directions. First,
 
 #Check: do you really want to get data?
 
-get_nba_data<-TRUE
+get_nba_data<-FALSE
 
 #initialize full dataset
 nba_df_all<-NULL
@@ -333,11 +336,24 @@ nba_mod_2018<-lm(pts_minute~I(three_pointers/100),data=filter(nba_df_all,year==2
 ```
 
 
+```{r}
+gg<-ggplot(filter(nba_df_all,pts>500,year>1993),aes(y=pts,x=free_throws,
+                          text=player,
+                          color=as.factor(year)))
+#gg<-gg+geom_hline(yintercept=.6,linetype="dashed",alpha=.3)
+gg<-gg+geom_point(size=.5,alpha=.75)
+gg<-gg+facet_wrap(~year)
+gg<-gg+theme(legend.position="none")+xlab("Free Throws")+ylab("Total Points")
+ggplotly(gg)
+
+```
+
+
 ## Working with NFL Reference
 
 ```{r}
 
-nfl_get_data<-TRUE
+nfl_get_data<-FALSE
 
 nfl_df_all<-NULL
 
@@ -391,8 +407,7 @@ nfl_df<-nfl_df%>%
     slice(-(33:nrow(nfl_df)))%>% # drop summary data at end
     mutate(year=year)%>% # add year
     ## Convert to numeric
-    mutate_at(.funs = as.numeric,.vars=names(nfl_df)[3:dim(nfl_df)[2]])%>%
-    mutate(team=str_remove(team,"[^[:alnum:]]"))
+    mutate_at(.funs = as.numeric,.vars=names(nfl_df)[3:dim(nfl_df)[2]])
   
 ## Win/loss record
 
@@ -425,7 +440,7 @@ names(nfl_record)<-c(
                      "points_against")
 
 nfl_record<-as_data_frame(nfl_record)%>%tbl_df()%>%
-  mutate(team=str_remove(team,"[^[:alnum:]]"))%>%
+  mutate(team=str_remove_all(team,"[*+]"))%>%
   mutate_at(.funs=as.numeric,.vars=2:5)
 
 nfl_df<-nfl_df%>%as_data_frame()%>%tbl_df()
@@ -459,8 +474,6 @@ gg<-gg+theme(legend.position="none")+xlab("Rush Yards")+ylab("Wins")
 ggplotly(gg)
 
 ```
-
-
 
 
 # Interacting via APIs
@@ -513,80 +526,125 @@ Next, we'll turn to the American Community Survey. This includes a large number 
 
 The first step is to get the table from ACS. Below, I submit a request using my key to get table B15002, which contains information on education levels. 
 
+
+## An Alternative: Tidycensus
 ```{r}
-# Get your own key and save as my_acs_key.txt
 my_acs_key<-readLines("~/hod_datasci_keys/my_acs_key.txt",warn = FALSE)
+
 acs_key<-my_acs_key
 
 # Or just paste it here.
 #acs_key<-"<your_acs_key_here>"
 
-#List of tables: https://www.census.gov/programs-surveys/acs/technical-documentation/summary-file-documentation.html under, 1-year appendices
-# b15002: education of pop over 25, by sex 
-# b19001: household income over last 12 months
+census_api_key(acs_key)
 
-get_acs_data<-TRUE
+v17 <- load_variables(2017, "acs5", cache = TRUE)
 
-if (get_acs_data==TRUE){
-  
-api.key.install(acs_key, file = "key.rda")
+#View(v17)
 
-select_zip<-geo.make(zip.code=ziplist)
+var_list<-paste0("B15002_",c("001",
+                            "015",
+                            "016",
+                            "017",
+                            "018",
+                            "032",
+                            "033",
+                            "034",
+                            "035"))
 
-county_educ=acs.fetch(geography=select_zip,
-                      endyear=2016,
-                      table.number="B15002",
-                      col.names="pretty",verbose=T)
+educ<-get_acs("zcta",
+                variables=var_list,
+                output="wide",
+                geometry=TRUE
+                )
 
-acs.colnames(county_educ)
+names(educ)<-tolower(names(educ))
 
-## Proprtion of individuals at college or above=
-## number with college degree/
-## total number
-prop_coll_above<-divide.acs(numerator=(county_educ[,15]+
-                                      county_educ[,16]+
-                                      county_educ[,17]+
-                                      county_educ[,18]+
-                                      county_educ[,32]+
-                                      county_educ[,33]+
-                                      county_educ[,34]+
-                                      county_educ[,35]),
-                            denominator=county_educ[,1]
-)
+educ%>%filter(geoid%in%ziplist)->county_educ
 
+county_educ%>%
+  rename(zip=geoid)%>%
+  group_by(zip)%>%
+  mutate(college_educ=((b15002_015e+
+                         b15002_016e+
+                         b15002_017e+
+                         b15002_018e+
+                         b15002_032e+
+                         b15002_033e+
+                         b15002_034e+
+                         b15002_035e)/b15002_001e)*100) %>%
+    select(zip,college_educ)->
+    county_educ
 
-# 19001-- family income           
-county_income<-acs.fetch(geography=select_zip, 
-                        endyear = 2015,
-                        table.number="B19001", 
-                        col.names="pretty")
-
-acs.colnames(county_income)
-
-#Proportion above 75k-- 
-prop_above_75<-divide.acs(numerator=(county_income[,13]+
-                            county_income[,14]+
-                            county_income[,15]+
-                            county_income[,16]+
-                            county_income[,17]),
-                          denominator=county_income[,1]
-                          )
-                          
-# Convert to tibble
-county_df<-tibble(substr(geography(county_educ)[[1]],7,11),
-                       as.numeric(estimate(prop_coll_above)),
-                       as.numeric(estimate(prop_above_75))
-)
-
-# Give it easy to use names
-names(county_df)<-c("zip","college_educ","income_75")
-save(county_df,file="dav.RData")
-}else{
-  load("dav.RData")
-}
-
-head(county_df)
 ```
+
+```{r}
+var_list<-paste0("B19001_",c("001",
+                             "013",
+                             "014",
+                            "015",
+                            "016",
+                            "017"
+                            ))
+
+income<-get_acs("zcta",
+                variables=var_list,
+                output="wide"
+                )
+
+names(income)<-tolower(names(income))
+
+income%>%filter(geoid%in%ziplist)->county_income
+
+
+county_income %>%
+  rename(zip = geoid)%>%
+group_by(zip) %>%
+  mutate(
+    income_75 = ((
+      b19001_013e +
+        b19001_014e +
+        b19001_015e +
+        b19001_016e +
+        b19001_017e 
+    ) / b19001_001e)*100
+  )%>%
+  select(zip,income_75)->
+  county_income
+
+```
+
+```{r}
+county_df<-geo_join(county_educ,county_income,by="zip")
+county_df%>%
+  select(zip,college_educ,income_75)%>%
+  arrange(zip)->county_df
+```
+
+
+#Map it
+```{r}
+
+pal <- colorQuantile(palette = "viridis", 
+                     domain = county_df$college_educ, n = 10)
+
+county_df%>%
+    st_transform(crs = "+init=epsg:4326") %>%
+    leaflet(width = "100%") %>%
+    addProviderTiles(provider = "CartoDB.Positron") %>%
+    addPolygons(popup = ~ zip, 
+                stroke = FALSE,
+                smoothFactor = 0,
+                fillOpacity = 0.7,
+                color = ~ pal(college_educ)) %>%
+    addLegend("bottomright", 
+              pal = pal, 
+              values = ~ college_educ,
+              title = "Percent with a bachelor's degree",
+              opacity = 1)
+
+```
+
 
 _Quick Exercise_ Pull table B23001 "Sex by Age by Employment Status for the Population 16 and over" from ACS. 
 
@@ -669,17 +727,17 @@ head(zdemodata2)
 Now we merge these two datasets by zip code:
 ```{r}
 #Merge two datasets
-dav_house_df<-left_join(zdemodata2,county_df,by="zip")
+county_df<-tigris::geo_join(county_df,zdemodata2,by="zip")
 
 # Add in city informtion from city_zip
-dav_house_df<-left_join(dav_house_df,city_zip,by="zip")
+county_df<-left_join(county_df,city_zip,by="zip")
 
 #Only reliable data
-dav_house_df<-dav_house_df%>%
+county_df<-county_df%>%
   mutate(medListPrice=ifelse(medListPrice<100000,NA,medListPrice))%>%
   mutate(medValSqFt=ifelse(medValSqFt<100,NA,medValSqFt))
 
-head(dav_house_df)
+head(county_df)
 ```
 
 First, we can show values of homes (per square foot) by zip code. 
@@ -687,11 +745,11 @@ First, we can show values of homes (per square foot) by zip code.
 ```{r}
 
 #Need to order zip codes for barplot
-dav_house_df<-dav_house_df%>%mutate(zipfactor=factor(as.character(zip)))
-dav_house_df<-dav_house_df%>%mutate(zipfactor=fct_reorder(.f = zipfactor,.x=medValSqFt))
+county_df<-county_df%>%mutate(zipfactor=factor(as.character(zip)))
+county_df<-county_df%>%mutate(zipfactor=fct_reorder(.f = zipfactor,.x=medValSqFt))
 
 #Bar plot of value by zip code
-g6<-ggplot(data=filter(dav_house_df,medValSqFt>55),
+g6<-ggplot(data=filter(county_df,medValSqFt>55),
            aes(x=zipfactor,y=medValSqFt,fill=medValSqFt,text=zip))
 
 g6<-g6+scale_fill_gradient(low="blue",high="red")
@@ -711,7 +769,7 @@ We can run a regression predicting value per square foot by income and education
 ```{r}
 
 #Predict square footage by income and education
-mod1<-lm(medValSqFt~college_educ+income_75,data=dav_house_df);summary(mod1)
+mod1<-lm(medValSqFt~college_educ+income_75,data=county_df);summary(mod1)
 
 ```
 
@@ -722,10 +780,10 @@ We can also create a scatterplot that shows median value per square foot as a fu
 ## Home Prices in Davidson County, TN by Education Level
 ```{r}
 #Plot
-g2<-ggplot(data=filter(dav_house_df,medListPrice>0,medValSqFt>55),
+g2<-ggplot(data=filter(county_df,medListPrice>0,medValSqFt>55),
            aes(x=college_educ,y=medValSqFt))
 g2<-g2+geom_point()
-g2<-g2+xlab("Proportion of Population With a College Degree")+ylab("Median Value per Square Foot")
+g2<-g2+xlab("Percent of Population With a College Degree")+ylab("Median Value per Square Foot")
 g2<-g2+geom_smooth(method=lm)
 g2<-g2+theme_igray()
 g2
@@ -742,57 +800,27 @@ The last set of code maps these zip codes. We will use two tools: `tigris` will 
 ## Tigris library and shapefiles
 
 To map something, you need to get the shapefile that's associate with the geogrpahic units we're interested in. We're going to grab the shapefile associated with zip codes in TN. (Zip codes are tehcnically routes and not geographic areas, but shut up, geography nerds.) The code below uses the `tigris` library, which uses yet another API to intereact with the US Census TIGER shapefiles, which contain shapes for a huge number of geographic divisions of the US, including states, counties, cities, census tracts and blocks, school districts and so on. The code below gets just ZCTAs (Zip code tabulation areas) for Tennessee (fips=37). It then subsets that down to just the zip codes associated with Davidson county. 
-```{r}
-get_zip_data=TRUE
-
-if (get_zip_data==TRUE){
-
-  # Get shapes of every zip code in TN
-zip_shapes<-zctas(cb=TRUE,  #simpler and smaller
-                 starts_with =37 #All zip codes in TN start with 37
-                  )
-
-# Limit to just the zip codes in Davidson County
-zip_shapes<-zip_shapes[zip_shapes$ZCTA5CE10%in%dav_house_df$zip,]
-
-#Add a variable called zip based on ZCTAs
-zip_shapes@data$zip<-zip_shapes$ZCTA5CE10
-
-#Save file/load file
-save(zip_shapes, file="zip_shapes.Rdata")
-}else{
-  load("zip_shapes.Rdata")
-}
-
-```
 
 The next step is to merge the geographic data with the Zillow and ACS data using `geo_join`. 
-
-```{r}
-
-davidson_map<-geo_join(zip_shapes,
-                      dav_house_df,
-                      "zip","zip")
-```
 
 For the map we're going to create, I want text to pop up that will show the characteristics of each Zip code in Davidson county. 
 
 ```{r}
-popup <- paste0("Zip: ", davidson_map$zip,
+popup <- paste0("Zip: ", county_df$zip,
                 "<br>",
-                 davidson_map$city,
+                 county_df$city,
                 "<br>",
                 "Median Value per Square Foot: ",
-                round(davidson_map$medValSqFt,2),
+                round(county_df$medValSqFt,2),
                 "<br>",
                 "Median Home Price: ",
-                prettyNum(davidson_map$medListPrice,big.mark = ","),
+                prettyNum(county_df$medListPrice,big.mark = ","),
                 "<br>",
                 "Percent of Pop with A Bachelors: ",
-                round((davidson_map$college_educ*100),1),
+                round((county_df$college_educ),1),
                 "<br>",
                 "Percent of Pop with income > 75: ",
-                round(davidson_map$income_75*100,1)
+                round(county_df$income_75,1)
           )
 ```
 
@@ -802,28 +830,28 @@ Next, we'll need a palette that will map to each of the scales. The `colorNumeri
 #Palette for Square  feet
 sqftpal <- colorNumeric(
   palette = "YlGnBu",
-  domain = davidson_map$medValSqFt,
+  domain = county_df$medValSqFt,
   na.color="gray"
 )
 
 #Palette for home prices
 price_pal <- colorNumeric(
   palette = "YlGnBu",
-  domain = davidson_map$medListPrice,
+  domain = county_df$medListPrice,
     na.color="gray"
 )
 
 #Palette for Education
 educ_pal <- colorNumeric(
   palette = "YlGnBu",
-  domain = davidson_map$college_educ,
+  domain = county_df$college_educ,
     na.color="gray"
 )
 
 #Palette for Income
 income_pal <- colorNumeric(
   palette = "YlGnBu",
-  domain = davidson_map$income_75,
+  domain = county_df$income_75,
     na.color="gray"
 )
 ```
@@ -834,11 +862,15 @@ Leaflet is a powerful tool based on Javascript. It's implemented in R via the le
 
 
 ```{r}
-map<-leaflet() %>%
+county_df%>%
+  st_transform(crs = "+init=epsg:4326")->county_df
+
+map<-
+  leaflet() %>%
   # underlying map from Carto.DB
   addProviderTiles("CartoDB.Positron") %>%
   # Values for median price per square foot
-  addPolygons(data = davidson_map, 
+  addPolygons(data = county_df, 
               fillColor = ~sqftpal(medValSqFt), 
               color = "#b2aeae", # you need to use hex colors
               fillOpacity = 0.7, 
@@ -848,7 +880,7 @@ map<-leaflet() %>%
               group="Price/ Sq Ft"
               ) %>%
   # Values for median home price  
-    addPolygons(data = davidson_map, 
+    addPolygons(data = county_df, 
               fillColor = ~price_pal(medListPrice), 
               color = "#b2aeae", # you need to use hex colors
               fillOpacity = 0.7, 
@@ -858,7 +890,7 @@ map<-leaflet() %>%
               group="Home Price"
               ) %>%
   # Values for education  
-    addPolygons(data = davidson_map, 
+    addPolygons(data = county_df, 
               fillColor = ~educ_pal(college_educ), 
               color = "#b2aeae", # you need to use hex colors
               fillOpacity = 0.7, 
@@ -868,8 +900,8 @@ map<-leaflet() %>%
               group="Education"
               ) %>%
   # Values for income  
-      addPolygons(data = davidson_map, 
-              fillColor = ~income_pal(davidson_map$income_75), 
+      addPolygons(data = county_df, 
+              fillColor = ~income_pal(county_df$income_75), 
               color = "#b2aeae", # you need to use hex colors
               fillOpacity = 0.7, 
               weight = 1, 
@@ -878,13 +910,13 @@ map<-leaflet() %>%
               group="Income"
               ) %>%
   #Hide everying but price per square foot to start
-    hideGroup(c("Home Price","Education","Income"))%>%
+    hideGroup(c("Home Price","Education","Income","Price/ Sq Ft"))%>%
   # Add layers control, so user can select different layers
     addLayersControl(
-    baseGroups = c("Price/ Sq Ft"),
     overlayGroups = c("Price/ Sq Ft","Home Price","Education","Income"),
     options = layersControlOptions(collapsed = FALSE)
-  )
+  )->
+  map
 ```
 ## Nashville Neighborhoods
 ```{r}
