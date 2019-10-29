@@ -21,7 +21,9 @@ library(caret)
 library(forcats)
 library(tidytext)
 library(stringr)
-library(AUC)
+library(textdata)
+library(probably)
+library(tidymodels)
 library(tidyverse)
 ```
 
@@ -33,8 +35,12 @@ Below, I do some basic data wrangling, changing variable names and recoding a fe
 
 ```{r wrangling}
 #Recoding
-za$got_pizza<-rep(0,dim(za)[1])
-za$got_pizza[za$requester_received_pizza=="True"]<-1
+
+## 
+za%>%
+  mutate(got_pizza=ifelse(requester_received_pizza==TRUE,1,0))%>%
+  mutate(got_pizza_f=as_factor(ifelse(requester_received_pizza==TRUE,"Yes","No")))->za
+
 ```
 
 Next, I shorten a bunch of variable names I plan to use. Long variable and data frame names should always be avoided. 
@@ -78,11 +84,7 @@ za<-za%>%mutate(student=ifelse(grepl(x=request_text,pattern="student",ignore.cas
 za$words<-str_count(za$request_text,"\\S+")
 
 
-## Raw count of words in post
-za$poor_count<-str_count(za$request_text,"really")
-
-
-# Binary variable: word "poor" or "money" in text
+# Binary variable: word "poor" in text
 
 za<-za%>%mutate(poor=ifelse(grepl(x=request_text,pattern="poor"),1,0))%>%
   mutate(poor=fct_recode(as.factor(poor),
@@ -97,9 +99,6 @@ za<-za%>%mutate(grateful=
                   "Grateful in post"="1",
                   "Grateful not in post"="0"))
 
-za<-za%>%mutate(chair=
-                  ifelse(grepl(x = request_text,pattern="chair"),1,0))
-                 
 ```
 
 
@@ -137,18 +136,18 @@ Now we'll combine this data frame with a dataframe of words with
 Each word gets its own score, if the word is associated with a positive or negative sentiment.In this analysis, non-sentiment words will be coded as 0. 
 
 ```{r}
+sentiment<-get_sentiments("afinn")
+```
+
+
+```{r}
 ## Merge with data frame of words and associated sentiment scores
-za_expand<-za_expand%>%left_join(sentiments,by="word")
+za_expand<-za_expand%>%left_join(sentiment,by="word")
 
 ##Missing=0
 za_expand<-za_expand%>%
-  mutate(score=ifelse(is.na(score),0,score))
+  mutate(score=ifelse(is.na(value),0,value))
 
-## Show words and scores
-#za_expand%>%select(word,score)
-
-## Just score words
-#za_expand%>%select(word,score)%>%filter(score>0)%>%print()
 ```
 
 Now we're ready to bring this back in. We'll sum up the scores for each post to get how positive or negative it is. 
@@ -158,7 +157,6 @@ Now we're ready to bring this back in. We'll sum up the scores for each post to 
 za_sum<-za_expand%>%group_by(request_id)%>%
   summarize(score=sum(score))
 
-za_sum%>%select(request_id,score)%>%print()
 ```
 
 Now we can add this back in. 
@@ -168,6 +166,7 @@ za<-za%>%left_join(za_sum,by="request_id")
 head(za)
 
 za<-za%>%select(got_pizza,
+                got_pizza_f,
                 karma,
                 age,
                 raop_age,
@@ -186,19 +185,6 @@ za<-za%>%select(got_pizza,
 save(za,file="za.RData")
 ```
 
-```{r}
-# Training and testing datasets
-
-za_train<-za%>%sample_frac(.5)
-za_test<-setdiff(za,za_train)
-write_csv(za_train,path="za_train.csv")
-save(za_train,file="za_train.RData")
-write_csv(za_test,path="za_test.csv")
-save(za_test,file="za_test.RData")
-
-
-```
-
 
 ## Conditional Means as a Classifier
 
@@ -207,7 +193,7 @@ We'll start by generating some cross tabs and some quick plots, showing the prob
 ```{r descriptives}
 #Cross Tabs
 
-za%>%
+za_train%>%
   count(got_pizza)%>% # Count numbers getting pizza
   mutate(p=prop.table(n))%>% #mutate for proportions using prop.table
   kable(format="markdown") # output to table
@@ -220,16 +206,26 @@ Next, we cross-tabulate receiving pizza with certain terms. First, if the reques
 
 ```{r}
 za%>%
-  count(got_pizza,student)%>%
-  spread(got_pizza,n)
+  group_by(student,got_pizza)%>%
+  summarize(n=n())%>%
+  mutate(prop=n/sum(n))%>%
+  subset(select=c("student","got_pizza","prop"))%>%
+  spread(got_pizza,prop)%>%
+  kable()
 ```
 
 Next, if the request mentioned the word "grateful."
 
 ```{r}
-g_table<-table(za$grateful,za$got_pizza);g_table
 
-prop.table(g_table,margin=1)
+za%>%
+  group_by(grateful,got_pizza)%>%
+  summarize(n=n())%>%
+  mutate(prop=n/sum(n))%>%
+  subset(select=c("grateful","got_pizza","prop"))%>%
+  spread(got_pizza,prop)%>%
+  kable()
+
 ```
 
 Crosstabs using binary data are equivalent to generating conditional means, as shown below. 
@@ -237,14 +233,13 @@ Crosstabs using binary data are equivalent to generating conditional means, as s
 ```{r condtional_means}
 #Predictions using conditional means
 
-za%>%group_by(grateful)%>%summarize(mean(got_pizza))
+za%>%group_by(grateful)%>%summarize(mean(got_pizza,na.rm=-TRUE))
 
 ```
 
 But, we can also use conditional means to get proportions for very particular sets of characteristics. In this case, what about individuals who included some combination of the terms "grateful","student" and "poor" in their posts? 
 
 ```{r}
-
 za%>%group_by(grateful,student)%>%summarize(mean(got_pizza))
 
 za_sum<-za%>%group_by(grateful,student,poor)%>%summarize(mean_pizza=mean(got_pizza))
@@ -265,10 +260,38 @@ gg
 
 We can use standard OLS regression for classification. It's not ideal, but most of the time it's actually not too bad, either. Below we model the binary outcome of receiving pizza as a function of karma, total posts, posts on the pizza subreddit, wehterh or not the poster mentioned the words "student" or "grateful."
 
-```{r linear_model}
-# Linear model
 
-lm_mod<-lm(got_pizza~
+
+
+*Question: how do you get perfect specificity? How do you get 
+perfect sensitivity?*
+
+
+## Logistic regression as a classifier
+
+Logistic regression is set up to handle binary outcomes as the dependent variable. The downside to logistic regression is that it is modeling the log odds of the outcome, which means all of the coefficients are expressed as log odds, which no one understands intuitively. 
+
+We're going to use the "tidymodels" approach to running this model, which works much better for a standard data science workflow. It begins with splitting the data into testing and training datasets using the `initial_split` function.  
+
+
+```{r}
+# Training and testing datasets
+
+za_split<-initial_split(za,prop=.5)
+
+za_train<-training(za_split)
+
+za_test<-testing(za_split)
+
+```
+
+
+Next we set up the terms of the model. Notice the use of a log function for total posts, which follow a classic exponential distribution. 
+
+```{r linear_model}
+#  Model terms
+
+za_formula<-as.formula("got_pizza_f~
              age+
              karma+
              log(total_posts+1)+
@@ -276,91 +299,88 @@ lm_mod<-lm(got_pizza~
              student+
              grateful+
              pop_request+
-             score,
-           data=za,y=TRUE,na.exclude=TRUE);summary(lm_mod)
+             score")
+
+
 ```
 
-We're going to do something a bit different with the predictions from this model. After creating predictions, we're going to classify everyone with a predicted probablity above .5 as being predicted to get a pizza, while everyone with a predicted probability below .5 is predicted to not get one. We'll compare our classifications with the actual data. 
+
+Now we're going to run the model. This approach is a little different than what we've been using up until now. We're going to create a `logit_class` object by fitting a logistic regression to our outcome. The `set_engine` function says what particular kind of logistic regression we want to fit, and the fit argument sets out the formula and the data. 
 
 ```{r}
-#Predictions
-
-## Linear model predictions
-lm_predict<-predict(lm_mod)
-
-## Convert to binary, 1= >.5
-lm_predict_bin<-ifelse(lm_predict>.3,1,0)
-
-lpm_roc<-roc(lm_predict_bin,as.factor(lm_mod$y))
-
-auc(lpm_roc)
- 
 
 
-## Table of actual vs. predicted, what's going on here?
-lm_table<-table(lm_predict_bin,lm_mod$y)
+#Logisitic model
 
-## Percent correctly predicted
-pcp<-(lm_table[1,1]+lm_table[2,2])/sum(lm_table)
+logit_class<-logistic_reg(mode="classification")%>%
+  set_engine("glm")%>%
+  fit(za_formula,data=za_train)
 
-pred_table<-prop.table(lm_table,margin=1)
+logit_class$fit%>%summary()
 
-rownames(pred_table)<-c("Predicted: Yes","Predicted: No")
-colnames(pred_table)<-c("Actual: Yes","Actual: No")
-
-## Generate confusion matrix
-confusionMatrix(data=as.factor(lm_predict_bin),
-                reference = as.factor(lm_mod$y),positive="1")
 ```
+
+With these results in hand we can generate predicted classifications. 
+
+We can convert the predictions to a binary variable by setting a "threshold" of .5. Any prediction above .5 is considered to be a 1, anything below, a 0. We'll compare the actual "truth" of whether or not someone got a pizza with our prediction from the model using what's called a "confusion matrix" (really). 
+
+
+```{r}
+logit_class%>%
+  predict(za_test)%>%
+  bind_cols(za_test)%>%
+  conf_mat(truth=got_pizza_f,estimate=.pred_class)
+
+```
+
 
 The confusion matrix generated here is explained [here](https://topepo.github.io/caret/measuring-performance.html#class). 
 
+
 We're usually interested in three things: the overall accuracy of a classification is the proportion of cases accurately classified. The sensitivity is the proportion of "ones" that are accurately classified as ones-- it's the probability that a case classified as positive will indeed be positive. Specificity is the probability that a case classified as 0 will indeed be 0. 
 
-*Question: how do you get perfect specificity? How do you get 
-perfect sensitivity?*
 
-There are several well-known problems with linear regression as a classification algortihm. Two should give us pause: it can generate probabilites outside of 0,1 and it implies a linear change in probabilities as a function of the predictors which may not be justified given the underlying relationship between the predictors and the probability that the outcome is 1. Logistic regresssion should give a better predicted probability, one that's more sensitive to the actual relationship between the predictors and the outcome. 
-
-## Logistic regression as a classifier
-
-Logistic regression is set up to handle binary outcomes as the dependent variable. In particular, the predictions will always be a probability, which makes it better than the ironically named linear probability model. The downside to logistic regression is that it is modeling the log odds of the outcome, which means all of the coefficients are expressed as log odds, which no one understands intuitively. Below I run the same model using logistic regression. Note the use of `glm` and the `family` option, which specifies a functional form and a particular link function. 
-
+## Accuracy: proportion correctly identifed
 ```{r}
-#Logisitic model
-
-logit_mod<-glm(got_pizza~
-              age+
-             karma+
-             log(total_posts+1)+
-             raop_posts+
-             karma+
-             student+
-             grateful+
-             pop_request+
-             score,
-             data=za,
-            family=binomial(link="logit"),
-               y=TRUE)
-
-summary(logit_mod)
+logit_class%>%
+  predict(za_test)%>%
+  bind_cols(za_test)%>%
+  metrics(truth=got_pizza_f,estimate=.pred_class)
 ```
 
-With these results in hand we can generate predicted probabilities and see if this model did any better. To get predicted probabilities we use type="response".
-
-We can convert the predictions to a binary variable by setting a "threshold" of .5. Any prediction above .5 is considered to be a 1, anything below, a 0. 
-
-
+## Sensitivity, probability of saying it's a Yes when it's really a yes
 ```{r}
-logit_predict<-predict(logit_mod,type="response")
-logit_predict_bin<-rep(0,length(logit_predict))
-logit_predict_bin[logit_predict>.5]<-1
+
+logit_class%>%
+  predict(za_test)%>%
+  bind_cols(za_test)%>%
+  sens(truth=got_pizza_f,estimate=.pred_class)
+
 ```
 
+
+## Specificity, probability of saying it's a No when it's really a No
 ```{r}
-confusionMatrix(data=as.factor(logit_predict_bin),
-                reference = as.factor(logit_mod$y),positive="1")
+
+logit_class%>%
+  predict(za_test)%>%
+  bind_cols(za_test)%>%
+  spec(truth=got_pizza_f,estimate=.pred_class)
+
 ```
+
+
+#Thresholds
+
+```{r}
+
+logit_class%>%
+  predict(za_test,type="prob")%>%
+  bind_cols(za_test)%>%
+  threshold_perf(truth=got_pizza_f,estimate=.pred_Yes,thresholds=seq(0,1,by=.1))%>%View()
+
+```
+
 
 
 ## Area Under the Curve (AUC)
@@ -368,40 +388,25 @@ confusionMatrix(data=as.factor(logit_predict_bin),
 The area under the curve considers both the sensitivity (does the model accurately predict every positive outcome) with the specificity (does the model accurately predict every negative outcome) for a given model, and does so across every possible threshold value. 
 
 ```{r}
-logit_sens_curve<-sensitivity(logit_predict,as.factor(logit_mod$y))
-plot(logit_sens_curve)
 
-logit_spec_curve<-specificity(logit_predict,as.factor(logit_mod$y))
-plot(logit_spec_curve)
+logit_class%>%
+  predict(za_test,type="prob")%>%
+  bind_cols(za_test)%>%
+  roc_auc(truth=got_pizza_f,.estimate=.pred_Yes)
 
-logit_roc<-roc(logit_predict,as.factor(logit_mod$y))
-plot(logit_roc)
-
-
-auc(logit_roc)
- 
 ```
 
 
-
-
-
-## Plotting Predicted Probability
-
-Plots of binary models can be weird. To help with this, we can "jitter" the plot to add some random noise. 
 
 ```{r}
-
-#Prediction
-za<-za%>%modelr::add_predictions(logit_mod)%>%
-  mutate(pred=arm::invlogit(pred)) ## This transforms to probs
-
-gg<-ggplot(za,aes(x=karma,y=got_pizza))
-#gg<-gg+geom_point()
-gg<-gg+geom_jitter(alpha=.25,size=.5,position=position_jitter(height=.4,width=.4))
-gg<-gg+scale_x_continuous(trans="log",breaks=c(0,10,100,1000,3000,10000))
-gg<-gg+geom_smooth(data=za,aes(x=karma,y=pred,color=as.factor(student)))
-gg
+logit_class%>%
+  predict(za_test,type="prob")%>%
+  bind_cols(za_test)%>%
+  roc_curve(truth=got_pizza_f,.estimate=.pred_Yes)%>%
+  autoplot()
 
 ```
+
+
+
 
