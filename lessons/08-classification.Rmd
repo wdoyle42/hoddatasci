@@ -6,16 +6,11 @@ output: github_document
 
 Classification is the process of predicting group membership. Understanding which individuals are likely to be members of which groups is a key task for data scientists. For instance, most recommendation engines that are at the hear of consumer web sites are based on classification algorithms, predicting which consumers are likely to purchase which products. 
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
 ## Pizza
 
 Today we'll be working with the pizza dataset, which comes from the subreddit random acts of pizza. Each line represents a post to this subreddit. We have various characteristics of these posts, along with the request text from the post itself. We'll use these characteristics of the posts to predict whether or not the poster received pizza. This lesson is inspired by [this article](http://www.aaai.org/ocs/index.php/ICWSM/ICWSM14/paper/download/8106/8101)
 
 ```{r libraries}
-library(arm)
 library(knitr)
 library(caret)
 library(forcats)
@@ -35,8 +30,6 @@ Below, I do some basic data wrangling, changing variable names and recoding a fe
 
 ```{r wrangling}
 #Recoding
-
-## 
 za%>%
   mutate(got_pizza=ifelse(requester_received_pizza==TRUE,1,0))%>%
   mutate(got_pizza_f=as_factor(ifelse(requester_received_pizza==TRUE,"Yes","No")))->za
@@ -111,7 +104,7 @@ To get this done, we need to create a dataset that has one line per combination 
 ```{r}
 ## Create a new dataset with one line per word per request: crazy, I know
 za_expand<-za%>%
-  select(request_id,request_text)%>%
+  dplyr::select(request_id,request_text)%>%
   group_by(request_id)%>%
   unnest_tokens(input=request_text,output=word,token="words")
 
@@ -193,7 +186,7 @@ We'll start by generating some cross tabs and some quick plots, showing the prob
 ```{r descriptives}
 #Cross Tabs
 
-za_train%>%
+za%>%
   count(got_pizza)%>% # Count numbers getting pizza
   mutate(p=prop.table(n))%>% #mutate for proportions using prop.table
   kable(format="markdown") # output to table
@@ -256,16 +249,6 @@ gg<-gg+facet_wrap(~student+poor)
 gg
 ```
 
-## Classifiation Using Linear Probability Model
-
-We can use standard OLS regression for classification. It's not ideal, but most of the time it's actually not too bad, either. Below we model the binary outcome of receiving pizza as a function of karma, total posts, posts on the pizza subreddit, wehterh or not the poster mentioned the words "student" or "grateful."
-
-
-
-
-*Question: how do you get perfect specificity? How do you get 
-perfect sensitivity?*
-
 
 ## Logistic regression as a classifier
 
@@ -308,8 +291,6 @@ za_formula<-as.formula("got_pizza_f~
 Now we're going to run the model. This approach is a little different than what we've been using up until now. We're going to create a `logit_class` object by fitting a logistic regression to our outcome. The `set_engine` function says what particular kind of logistic regression we want to fit, and the fit argument sets out the formula and the data. 
 
 ```{r}
-
-
 #Logisitic model
 
 logit_class<-logistic_reg(mode="classification")%>%
@@ -365,19 +346,33 @@ logit_class%>%
 logit_class%>%
   predict(za_test)%>%
   bind_cols(za_test)%>%
-  spec(truth=got_pizza_f,estimate=.pred_class)
+  yardstick::spec(truth=got_pizza_f,estimate=.pred_class)
 
 ```
 
 
+
+*Question: how do you get perfect specificity? How do you get 
+perfect sensitivity?*
+
+
 #Thresholds
+
+As we vary the threshold from 0 to 1, the sensitivity will decrease, while the specificity will increase. The best models will be able to have both high sensitivity and specificty at an threshold. The code below shows what happens to sensitivity and specificity as thresholds go from 0 to 1. 
 
 ```{r}
 
 logit_class%>%
   predict(za_test,type="prob")%>%
   bind_cols(za_test)%>%
-  threshold_perf(truth=got_pizza_f,estimate=.pred_Yes,thresholds=seq(0,1,by=.1))%>%View()
+  threshold_perf(truth=got_pizza_f,
+                 estimate=.pred_Yes,
+                 thresholds=seq(0,1,by=.1))->th
+
+ggplot(filter(th,.metric%in%c("sens","spec")),
+       aes(x=.threshold,y=.estimate,color=.metric))+
+  geom_line()
+  
 
 ```
 
@@ -404,6 +399,35 @@ logit_class%>%
   bind_cols(za_test)%>%
   roc_curve(truth=got_pizza_f,.estimate=.pred_Yes)%>%
   autoplot()
+
+```
+
+
+# Plotting results from logisitc regression
+
+Because individual coefficients are so hard to understand, most of the time we convert the results to predicited probabilities, using a range of hypothetical values, as in the code below. 
+```{r}
+hypo_data<-za_train%>%data_grid(
+  age=mean(age,na.rm=TRUE),
+  karma=mean(karma,na.rm=TRUE),
+  total_posts=mean(total_posts,na.rm=TRUE),
+  raop_posts=seq_range(raop_posts,n=100),
+  student=as_factor(levels(student)),
+  grateful=as_factor(levels(grateful)[1]),
+  pop_request=mean(pop_request,na.rm=TRUE),
+  score=mean(score,na.rm=TRUE)
+)
+
+logit_class%>%
+  predict(hypo_data,type="prob")%>%
+  bind_cols(hypo_data)%>%
+  rename(`Post Includes "Student"`=student)->plot_data
+
+gg<-ggplot(plot_data,aes(x=raop_posts,y=.pred_Yes,color=`Post Includes "Student"`))
+gg<-gg+geom_line()
+gg<-gg+xlab("Number of Posts on RAOP")+ylab("Prob(Pizza)")
+
+gg
 
 ```
 
