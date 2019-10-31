@@ -1,0 +1,46 @@
+---
+title: "09-inclass_followup.Rmd"
+author: "Doyle"
+date: "10/31/2019"
+output: html_document
+---
+
+```{r}
+load("za.Rdata")
+```
+
+```{r formula}
+#  Model terms
+
+za_formula<-as.formula("got_pizza_f~
+             age+
+             karma+
+             log(total_posts+1)+
+             raop_posts+
+             student+
+             grateful+
+             pop_request+
+             score")
+```
+
+
+
+```{r}
+#Logisitic model
+
+logit_class<-logistic_reg(mode="classification")%>%
+  set_engine("glm")%>%
+  fit(za_formula,data=za_train)
+
+logit_class$fit%>%summary()
+
+```
+
+```{r}
+logit_class%>%
+  predict(za_test,type="prob")%>%
+  bind_cols(za_test)%>%
+  roc_auc(truth=got_pizza_f,.estimate=.pred_Yes)
+```
+
+
