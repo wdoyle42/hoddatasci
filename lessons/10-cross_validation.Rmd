@@ -55,7 +55,9 @@ We can run this model on the full dataset, but we're not taking advantage of the
 ```{r}
 ## Define the model
 mod1_formula<-formula(home_rank~coll_grad_pc+
-                        per_capita_inc)
+                        per_capita_inc+
+                        homeown_rate+
+                        median_hh_inc)
 ## Run the model against all of the data
 basic.mod<-lm(mod1_formula,
               data=pd); summary(basic.mod)
@@ -185,7 +187,7 @@ fitControl<-trainControl(method="boot",
 
 
 fit1<-train(home_rank~per_capita_inc+
-              coll_grad_pc,
+            coll_grad_pc,
             method="lm",
             data=pd,
             trControl=fitControl)
@@ -193,14 +195,18 @@ fit1<-train(home_rank~per_capita_inc+
 summary(fit1)
 fit1$results
 
+pd%>%select(-median_home_val)->pd
+
 fit2<-train(home_rank~.,
             data=pd,
             method="glmStepAIC",
             trControl=fitControl)
+
 summary(fit2)
 fit2$results
 
 rmse_data<-tbl_df(data.frame(fit1$resample$RMSE,fit2$resample$RMSE))
+
 names(rmse_data)<-c("fit1","fit2")
 
 gg<-ggplot(rmse_data,aes(x=fit1))
@@ -210,5 +216,103 @@ gg
 ```
 
 What this shows is that the second model---using stepwise regression--- has superior out-of-sample results to the first model. 
+
+## Cross Validation for Classification
+
+```{r}
+library(tidymodels)
+```
+
+
+```{r}
+load("za.RData")
+```
+
+```{r}
+za%>%
+  drop_na()->za_fit
+
+
+```
+
+
+```{r linear_model}
+#  Model terms
+za_formula<-as.formula("got_pizza_f~
+             age+
+             karma+
+             log(total_posts+1)+
+             raop_posts+
+             student+
+             grateful+
+             pop_request+
+             score")
+```
+
+```{r}
+
+fitControl<-trainControl(method="boot",
+                         p=.2,
+                         n=1000,
+                         classProbs = TRUE,
+                         summaryFunction=twoClassSummary)
+
+
+```
+
+```{r}
+
+fit_logit<-train(za_formula,
+            method="glm",
+            family="binomial",
+            data=za_fit,
+            metric="ROC",
+            trControl=fitControl)
+
+```
+
+
+```{r}
+summary(fit_logit$resample$ROC)
+
+fit_logit$resample%>%
+  summarize_at(vars(ROC),list(mean,sd))%>%
+  rename(mean=fn1,sd=fn2)
+
+logit_resample<-tbl_df(fit_logit$resample)
+
+gg<-ggplot(data=fit_logit$resample,aes(x=ROC))
+gg<-gg+geom_density(fill="blue",alpha=.2)
+gg
+```
+
+## Stewpise approach
+```{r}
+
+fit_step_logit<-train(za_formula,
+            method="glm",
+            family="binomial",
+            data=za_fit,
+            metric="ROC",
+            trControl=fitControl)
+
+```
+
+
+```{r}
+summary(fit_logit$resample$ROC)
+
+fit_logit$resample%>%
+  summarize_at(vars(ROC),list(mean,sd))%>%
+  rename(mean=fn1,sd=fn2)
+
+logit_resample<-tbl_df(fit_logit$resample)
+
+gg<-ggplot(data=fit_logit$resample,aes(x=ROC))
+gg<-gg+geom_density(fill="blue",alpha=.2)
+gg
+```
+
+
 
 In different situations we may care more about WHY something predicts an outcome, and in other situations we care more about WHETHER something predicts an outcome. The key is to be clear with yourself about what you're interested in. Model selection via stepwise regression or other algorithms is not a panacea. 
