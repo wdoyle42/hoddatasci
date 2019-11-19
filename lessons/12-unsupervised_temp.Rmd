@@ -2,7 +2,7 @@
 title: "Unsupervised Learning"
 author: "Doyle"
 date: "11/13/2019"
-output: github_document
+output: html_document
 ---
 
 # Introduction
@@ -154,18 +154,20 @@ gg<-gg+theme(legend.position = "none")
 gg
 ```
 
-We can also go back to the original dataset and see if we can make sense of individaul assignments. The code below shows how each player has been assigned, selecting the top ten field goal scorers from each cluster. 
+We can also go back to the original dataset and see if we can make sense of individaul assignments. The code below shows how each player has been assigned. 
 
 ```{r}
 nba_df_sub$cluster<-c1$cluster
-nba_df_sub$player<-player_id
 
 nba_df_sub%>%
   group_by(cluster)%>%
-  mutate(rank=rank(-fg,ties.method = "first"))%>%
+  arrange(-fg)%>%
+  mutate(rank=rank(fg,ties.method = "first"))%>%
   filter(rank<=10)%>%
   select(player,fg,total_rebound,rank)%>%
-  arrange(cluster,-fg)%>%kable()
+  arrange(cluster,fg)%>%kable()
+
+
 ```
 
 # Modeling Using Clusters
