@@ -1,0 +1,15 @@
+---
+title: "Clustering-- in class"
+author: "Doyle"
+date: "11/21/2019"
+output: github_document
+---
+
+
+
+For this in class work, complete the following steps:
+
+1. Subset the data for 1995,2000,2005,2010 and 2015
+1. Repeat the steps in K-means clustering from Tuesday for each year.
+1. Try to describe the groups you identify for each of the five years. 
+1. Generate a predictive analysis predicting points scored based only on the groups identified for each year.
