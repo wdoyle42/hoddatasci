@@ -5,11 +5,160 @@ date: "11/21/2019"
 output: github_document
 ---
 
+```{r}
+library(tidyverse)
+library(purrr)
+library(LICORS)
+library(factoextra)
+```
 
 
 For this in class work, complete the following steps:
 
 1. Subset the data for 1995,2000,2005,2010 and 2015
+
+
+```{r}
+load("nba.Rdata")
+```
+
+```{r}
+nba_df_all%>%
+  filter(minutes_played>500)%>%
+  group_by(player,year)%>%
+  top_n(1,minutes_played)%>%
+  ungroup()%>%
+   select(player,
+         pts,
+         minutes_played,
+         fg,
+         fg_attempts,
+         fg_percent,
+         three_pointers,
+         three_point_attempts,
+         three_point_percent,
+         two_pointers,
+         two_point_attempts,
+         two_point_percent,
+         effective_fg_percent,
+         free_throws,
+         free_throw_attempts,
+         free_throw_percent,
+         off_rebound,
+         def_rebound,
+         total_rebound,
+         assists,
+         steals,
+         blocks,
+         turnovers,
+         fouls,
+         year)%>%
+               drop_na()->nba_df_sub
+
+player_id<-nba_df_sub$player
+points<-nba_df_sub$pts
+year<-nba_df_sub$year
+
+# Scale the dataset
+nba_df_sub%>%
+  select(-player,-pts,-year)%>%
+  mutate_all(scale)->nba_df_cluster_all
+
+nba_df_cluster_all$year<-year
+```
+
 1. Repeat the steps in K-means clustering from Tuesday for each year.
-1. Try to describe the groups you identify for each of the five years. 
+
+This generates the elbow plots. Notice that it begins by splitting the overall dataset by year,
+then mapping that to the function using map(~). The data frame is implied as ., and the `select` operator drops the year, which we don't want in the analysis. The output is saved as a data frame using `as_tibble`. The elements of the data frame can then be called. 
+```{r}
+nba_df_cluster_all%>%
+split(.$year)%>%  
+map(~fviz_nbclust(select(.,-year),
+             FUNcluster=kmeanspp,
+             method="wss"))->elbow_plots
+
+elbow_plots$`1995`
+elbow_plots$`2000`
+elbow_plots$`2005`
+elbow_plots$`2010`
+elbow_plots$`2015`
+
+```
+
+
+This runs the kmeans clustering. I'm using the same basic approach as above. This time the output is a dataframe of all of the results of the kmeans. The first row of that data frame is the cluster assignments. When "unnested" these form a vector of cluster assignments that can be added to the original dataset. 
+```{r}
+nba_df_cluster_all%>%
+  mutate_all(.funs=as.numeric)%>% # Make sure everything is numeric
+  split(.$year)%>% # Split by year
+  map(~kmeanspp(data=select(.,-year),k=5,n=100,nstart=50))%>% # Apply kmeans clustering to each year
+  as_tibble()->cluster_tbl ## output results as data frame
+
+## Clusters are in row 1, unlist and add back to analysis dataset 
+
+nba_df_cluster_all$cluster<-unlist(cluster_tbl[1,])
+```
+
+
+
+1. Try to describe the groups you identify for each of the five years.
+
+
+Again, same basic setup. This time though, I'm going to turn the plotting code chunk into a function, then apply that function to each element of the list created by splitting the data frame by year. Again writing the results using `as_tibble` I get a data frame of plots, which can then be called.
+
+```{r}
+plot_cluster<-function(x){
+  ## plot function: x is a data frame, that includes a cluster variable
+  x%>%
+  group_by(cluster)%>%
+  summarize_all(.funs=mean)%>%
+  pivot_longer(cols=(-cluster),
+               names_to="stat",
+               values_to = "mean_results")->clus_results
+
+gg<-ggplot(clus_results,aes(x=as_factor(stat),
+                            y=mean_results,
+                            color=stat))
+gg<-gg+geom_point()
+gg<-gg+facet_wrap(~cluster,ncol=1)
+gg<-gg+geom_hline(yintercept=0)
+gg<-gg+coord_flip()
+gg<-gg+theme(legend.position = "none")
+gg<-gg+theme(axis.text.x=element_text(size=.75))
+gg
+}
+
+nba_df_cluster_all%>%
+  split(.$year)%>%
+  map(~plot_cluster(select(.,-year)))%>%
+  as_tibble()->plots
+
+
+plots$`1995`
+plots$`2000`
+plots$`2005`
+plots$`2010`
+plots$`2015`
+```
+
+
+
 1. Generate a predictive analysis predicting points scored based only on the groups identified for each year.
+
+And one more time, this time 
+```{r}
+nba_df_cluster_all$pts<-points
+
+nba_df_cluster_all%>%
+  split(.$year)%>%
+  map(~lm(pts~as.factor(cluster),data=select(.,-year)))%>%
+  as_tibble()->reg_results
+  
+summary(reg_results$`1995`)
+summary(reg_results$`2000`)
+summary(reg_results$`2005`)
+summary(reg_results$`2010`)
+summary(reg_results$`2015`)
+```
+
