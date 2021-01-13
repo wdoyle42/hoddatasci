@@ -1,10 +1,10 @@
 ---
 title: "Conditional Means"
-output: github_document
+output: html_document
 always_allow_html: yes
 ---
 
-# Analyzing Data, Part 1: Conditional Means
+# Analyzing Data: Conditional Means
 
 The conditional mean will be our first predictive algorithm. Conditional means answer the question: "Given what we know about a certain case, what can expect to see, on average?" The conditional mean is a powerful tool that is typically quite easy to explain to decision-makers. 
 
@@ -15,257 +15,184 @@ We'll go through the following steps:
 3. Computing and plotting conditional means using multiple predictors. 
 
 
-```{r  include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+## Motivating Example
+
+Suppose you're talking to a high school senior about college choice and student debt. They want to know which types of colleges have graduates
+with higher and lower levels of debt. They're concerned about the amount of debt they will incur on the path to graduation. Essentially they're asking for a prediction: based on the characteristics of the college they attend, what will be the likely amount of debt? 
+
+We'll use data from the [college scorecard](https://collegescorecard.ed.gov/) to answer these questions. 
+
+## Libraries
+
+We'll use `tidyverse` as usual, and we'll need the `yardstick` library for some calculations. 
+
+```{r}
 library(tidyverse)
-library(plotly)
-library(gridExtra)
-library(ModelMetrics)
+library(yardstick)
 ```
 
 ## Dataset for this week
 
-We will be working with a dataset put together by the census bureau that summarizes the characteristics of the 3,088 counties in the United States. 
+This week we'll use another dataset from the college scorecard, this one focused on student debt. Here are the variable names and definitions:
 
-```{r data}
-load("pd.Rdata")
-
-pd
+```{r}
+df<-readRDS("sc_debt.Rds") 
+names(df)
 ```
 
-The codebook for this dataset is stored as another dataset, `labels_explain`. The first column in this dataset is variable names, the second column is a full explanation of that variable. 
 
-```{r explain_date}
+| Name | Definition |
+| ------- | --------- |
+| unitid | Unit ID|
+| instnm| Institution Name|
+| stabbr| State Abbreviation|
+| grad_debt_mdn| Median Debt of Graduates|
+| control| Control Public or Private|
+| region | Census Region|
+| preddeg | Predominant Degree Offered: Associates or Bachelors |
+| openadmp| Open Admissions Policy: 1= Yes, 2=NO,3=No 1st time students|
+| selective| Institution admits fewer than 10 % of applicants, 1=Yes, 0=No |
+| research_u | Institiution is a research university 1=Yes, 0=No| 
 
-## Full explanation of data
-load("pd_lab_explain.Rdata")
-
-lab_explain
-
-#or use View
-#View(lab_explain)
-```
-
-*Quick Exercise: Find the per capita income and the percent of the population with a bachelor's degree for the county you're from.*
 
 ## Dependent Variable
 
-Our working example will be based on predicting income in a given county. Suppose we want to know what income level we can expect for a geographic area based on observed characteristics, such as the proportion of the population with a bachelor's degree. How would we predict the income based on what we know about the geographic area? 
-
-Let's begin by plotting the data to see what it looks like. To do this I need to first rank the counties by income. To create a rank variable that will be stored in the `pd` dataset, I use the `mutate` command. This creates a variable based on some calculation then stores it in the same dataset. I'm then going to plot incomes for each county in descending rank order. Using the `plotly` library I can make this interactive so we know which counties we're talking about. 
-
-```{r simple_plots}
-## Create a rank variable for income 
-pd<-pd%>%mutate(percapinc_rank=rank(percapinc.2010))
-
-## Plot by rank
-
-gg<-ggplot(data=pd , aes(x=percapinc_rank,
-                         y=percapinc.2010,
-                         text=county))
-##Add Axis Labels
-gg<-gg+xlab("Rank")+ylab("Per Capita Income, 2010")
-
-## Add Points
-gg<-gg+geom_point(alpha=.5,size=.5)
-
-gg
-
-## Save for later
-gg1<-gg
-
-# Make Interactive plot
-gg_p<-ggplotly(gg)
-
-gg_p
-```
+The dependent variable for us will be *institutional-level* median debt for graduates, as reported by the college scorecard. 
 
 ## Unconditional Means
 
-If you were asked to predict the income for a given area without any additional information, the likely best guess is the overall average. We're going to begin with the unconditional mean, or simple average, as our first prediction. We'll again use the `mutate` command to plug in a variable that will be the average for every county, and we'll plot this as a predictor.  
-
-Our notation for the unconditional mean as a predictor is:
-
-$$\hat{Y}=\bar{Y} $$
+If you were asked to predict the level of debt for this student without any information about the college itself, the best guess would be the overall average, or what we're going to call the unconditional mean. 
 
 ```{r}
-
-##Unconditional Average
-pd%>%summarize(mean_percapinc.2010=mean(percapinc.2010,na.rm=TRUE))
-
-##Unconditional Average as a Predictor
-pd<-pd%>%mutate(mean_percapinc.2010=mean(percapinc.2010,na.rm=TRUE))
-
-##Plotting
-gg<-ggplot(data=pd,aes(y=percapinc.2010,x=percapinc_rank,color="Actual"))
-gg<-gg+geom_point(alpha=.5,size=.5)
-gg<-gg+geom_point(aes(y=mean_percapinc.2010,x=percapinc_rank,
-                  color="Predicted: Unconditional Mean"),
-                  size=.5)
-gg<-gg+xlab("Rank of Per Capita Income")+ylab("Per Capita Income")
-gg<-gg+scale_color_manual(name="Type",
-                          values=c("Actual"="black",
-                          "Predicted: Unconditional Mean"="blue")
-                          )
-gg<-gg+theme(legend.position="bottom")
-
-gg
-
-##Save for later
-
-gg2<-gg
-
+df%>%
+  summarize(mean_debt_uncond=mean(grad_debt_mdn,na.rm=TRUE))
 ```
+
+This gives us the overall average, and would be our prediction about the level of college debt the student could expect, if we didn't have any other information about the college. 
+
+
+## Unconditional Mean as a Predictor
+
+Using the mean of a variable as a predictor is something we do all the time. In this example, our best guess for the level of debt incurred by a graduate is just the average level of debt across all institutions. We're going to add this guess to the dataset as our first prediction, using the `mutate` command. 
+
+```{r}
+df<-df%>%
+  mutate(mean_debt_uncond=mean(grad_debt_mdn,na.rm=TRUE))
+```
+
+Notice how this code is the same as above, except for the overwrite `df<-df%>%` and the use of `mutate` as opposed to `summarize.`
 
 This is of course a terrible prediction. In the absence of any other information, it's many times the best we can do, but we really ought to be able to do better. 
 
-To understand how far off we are, we need to summarize our errors. We will use different ways of doing this this semester, but let's start with a very standard one, Root Mean Squared Error, or RMSE. An error term is the vertical distance between each point and its prediction. The RMSE is the square root of the sum of squared errors. (Q:why do we square them?). 
+## Root Mean Squared Error
+To understand how far off we are, we need to summarize our errors. We will use different ways of doing this this semester, but let's start with a very standard one, Root Mean Squared Error, or RMSE. An error term is the distance between each point and its prediction. We square the errors, take the average, then take the square root of the result. The name RMSE is exactly what RMSE is-- neat, huh?
 
-$$RMSE(\hat{Y})=\sqrt{ 1/n \sum_{i=1}^n(Y_i-\hat{Y_i})^2} $$
+$$RMSE(\hat{Y})=\sqrt{ 1/n \sum_{i=1}^n(Y_i-\hat{Y_i})^2}$$
 
-```{r error_terms}
-
-pd<-pd%>%mutate(e1=percapinc.2010-mean_percapinc.2010)
-
-## RMSE
-
-rmse_uncond_mean<-rmse(pd$percapinc.2010,pd$mean_percapinc.2010)
-
-rmse_uncond_mean
+Luckily we have an r function that can do this for us. The `rmse` function from the `yardstick` library will calculate the rmse for a dataset. We need to give it the dataset and the two columns we're interested, in this case actual debt `grad_debt_mdn` and our prediction `mean_debt_uncond`. 
+```{r}
+rmse_uncond<-df%>%rmse(grad_debt_mdn,mean_debt_uncond)
+rmse_uncond
 ```
 
-## Conditional Means With One Predictor Variable
+This tells us that if we use the unconditional mean, we'll be off by an average of `r round(rmse_uncond$.estimate)`. Is that good or bad? We don't know! RMSE does not have a scale that tells us what it means. We have to understand it in the context of the problem we're working on. Lower is always better when it comes to RMSE, as a lower RMSE means a more accurate prediction. 
 
-To incorporate additional information into the mean, we need to calculate averages at levels of other predictors. Let's calculate the average per capita income at different levels of college education. The code below will calculate average income across counties at four different levels of college education-- the four quantiles of college education in the dataset. 
+## Conditional Mean With One Predictor
 
-What we're doing here is "grouping" the data at levels of college education. If we had a categorical variable (like region) we wouldn't need to do this step. But since we have a continuous variable (percent of the population with a bachelor's degree) we need to convert it into an ordinal variable, with one group for each range of college attainment.
-
-```{r condtl_mean_single}
-##Condtional Average across a single variable
-
-## Create a variable for quartiles of college education
-pd<-pd%>%mutate(coll_grad_level=ntile(coll_grad_pc,4))
-
-pd_sum<-pd%>%
-  group_by(coll_grad_level)%>%
-  summarize(mean_income=mean(percapinc.2010,na.rm=TRUE))
-
-gg<-ggplot(pd_sum,aes(x=coll_grad_level,y=mean_income,
-                      fill=as.factor(coll_grad_level)))
-gg<-gg+geom_bar(stat="identity")
-gg<-gg+theme(legend.position = "none")
-gg
-```
+Public and private colleges in the US charge very different prices, and so it's plausible that graduates of these two types of institutions would have different levels of debt. We can calculate the conditional mean by first grouping by control using `group_by(control)` and then calculating the mean for each of the two groups: public or private. 
 
 ```{r}
-table(pd$coll_grad_level)
-
-pd<-pd%>%group_by(coll_grad_level)%>% ## Group by predictor
-  ##Calculate mean at each level of predictor
-  mutate(pred_income_college=mean(percapinc.2010))%>% 
-  ## Ungroup
-  ungroup()%>% 
-  #Rank by prediction, with ties sorted randomly
-  mutate(pred_income_college_rank=rank(pred_income_college,ties.method="random"))
-
-
-pd%>%group_by(coll_grad_level)%>% ## Group by predictor
-  ##Calculate mean at each level of predictor
-  summarise(pred_income_college=mean(percapinc.2010))
-
-gg<-ggplot(data=pd,aes(x=pred_income_college_rank,y=percapinc.2010,color="Actual"))
-gg<-gg+geom_point(alpha=.5,size=.5)
-gg<-gg+geom_point(aes(x=pred_income_college_rank,y=pred_income_college,color="Predicted:Conditional Mean, 1 var"))
-gg<-gg+ scale_color_manual("Type",values=c("Predicted:Conditional Mean, 1 var"="red","Actual"="black"))
-gg<-gg+theme(legend.position="bottom")
-gg<-gg+xlab("Rank")+ylab("Per Capita Income, 2010")
-gg
-
-##Save for later
-gg3<-gg
-
+df%>%
+  group_by(control)%>%
+  summarize(mean_debt_control=mean(grad_debt_mdn,na.rm=TRUE))%>%
+  arrange(control)
 ```
-
-Our notation for this predictor will be:
-
-$$ \hat{Y}=(\bar{Y}|X=x) $$
-
-That is, the predicted value of y, $\bar{Y}$ is equal to the mean value of $Y$ given our predictor $X$ (college graduate levels in this case) is equal to a given value of $X$, denoted by $x$. 
-
-*Quick Exercise: Calculate per capita income as a function of the proportion of the county with a high school education*
-
-Let's see what happened to our RMSE when we did a conditional as opposed to an unconditional mean. 
-```{r}
-rmse_cond_mean_one<-rmse(pd$percapinc.2010,pd$pred_income_college)
-rmse_cond_mean_one
-```
-
-## Conditional Means with Multiple Predictors
-
-The next step is to then incorporate more information from additional variables. Let's calculate the average income by both quartiles of both the population with a bachelor's degree and median home values.  
-
-```{r condtl_mean_multiple}
-
-##Condtional average across multiple variables
-
-## Calculate quartiles of home value
-pd%>%mutate(median_home_level=ntile(median_home_val,4))->pd
-
-table(pd$median_home_level)
-
-##Make prediction: income by quartiles of education and home values
-
-pd<-pd%>%group_by(coll_grad_level,median_home_level)%>% ## Grouping at multiple levels
-  mutate(pred_income_college_home=mean(percapinc.2010))%>%
-  ungroup()%>%
-  mutate(pred_income_college_home_rank=rank(pred_income_college_home,ties.method="random"))
-
-## Showing the various levels
-gg<-ggplot(data=pd,aes(x=pred_income_college_home_rank,y=percapinc.2010,color="Actual"))
-gg<-gg+geom_point(alpha=.5,size=.5)
-gg<-gg+geom_point(aes(x=pred_income_college_home_rank,
-                      y=pred_income_college_home,
-                      color="Predicted:Conditional Mean, 2 vars")
-)
-
-gg<-gg+scale_color_manual("Type",values=c("Actual"="black",
-                                  "Predicted:Conditional Mean, 2 vars"="orange"
-))
-
-gg<-gg+theme(legend.position="bottom")
-gg<-gg+xlab("Rank")+ylab("Per Capita Income")
-
-gg
-
-## Save for later
-
-gg4<-gg
-```
-
-This is clearly much better: our predictions appear to be much closer to the actual data points more of the time. 
-
-And what happened to RMSE?
+We can see that graduates of private instituitions have higher debt levels than graduates of public institutions. 
+We'll follow the same steps as we did with the unconditional mean and add the conditional mean to the dataset as a predictor. 
 
 ```{r}
-rmse_cond_mean_two<-rmse(pd$percapinc.2010,pd$pred_income_college_home)
-rmse_cond_mean_two
+df<-df%>%
+  group_by(control)%>%
+  mutate(mean_debt_control=mean(grad_debt_mdn,na.rm=TRUE))%>%
+  ungroup()
+```
+I added one more step: I ungrouped the dataset using `ungroup()`. It's good practice to do this at the end of an code chunk that uses the group function, otherwise other steps might be grouped in ways that were unintended. 
+
+We can then calculate the RMSE using our new prediction based on the conditional mean:
+
+```{r}
+rmse_control<-df%>%rmse(grad_debt_mdn,mean_debt_control)
+rmse_control
 ```
 
-## Final Comparison
+Using the predictor increased our predictive accuracy considerably, from `r round(rmse_uncond$.estimate)`  to `r round(rmse_control$.estimate)`! 
 
-Let's put all of the plots together to compare.
-```{r grid_combine}
-gg5<-grid.arrange(gg1,gg2,gg3,gg4,nrow=2)
+## Conditional Mean With Two Predictors
 
-gg5
+It's also probably the case that the degree level for the institition matters. It takes longer to get a bachelor's degree than an associate degree, so we could expect that institutions that mostly give bachelor's degrees would have higher debt levels. To figure this out we need to group by control and predominant degree level. 
+
+Grouping with multiple predictors works exactly the same way as with one predictor. We just add the additional variable to the `group_by` command, like so:
+
+```{r}
+df%>%
+  group_by(control,preddeg)%>%
+  summarize(mean_debt_control_degree=mean(grad_debt_mdn,na.rm=TRUE))%>%
+  arrange(mean_debt_control_degree)
 ```
 
-*Quick Exercise: Predict income using two other variables*
+Notice that I used `arrange` which will sort the dataset in descending order based on the variable selected, in this case average debt levels by control and degree awarded. We can see the very different levels of debt incurred at these four different types of institutions. Now let's add this conditional mean to our dataset as a prediction.
+
+```{r}
+df<-df%>%
+  group_by(control,preddeg)%>%
+  mutate(mean_debt_control_degree=mean(grad_debt_mdn,na.rm=TRUE))%>%
+  ungroup()
+```
+
+
+```{r}
+rmse_control_degree<-df%>%rmse(grad_debt_mdn,mean_debt_control_degree)
+rmse_control_degree
+```
+
+Adding this variable has again improved our estimate. 
+
+## Conditional Mean With Three Predictors
+
+We can continue this logic indefinitely, but let's focus on one more variable: the region of the country. Unlike the previous two variables, this one has eight different levels. Adding it as another grouping variable means we're going to end up with 2x2x8=32 different conditional means, one for each type of institution (public or private, 2 year or 4 year) in each region of the country
+
+```{r}
+df%>%
+  group_by(control,preddeg,region)%>%
+  summarize(mean_debt_control_degree_region=mean(grad_debt_mdn,na.rm=TRUE))%>%
+  arrange(mean_debt_control_degree_region)%>%
+  print(n=100)
+```
+
+Because it's so many more conditional means, I added the `print(n=100)` to the code chunk, so we can see all of the results. 
+
+Let's add these as predictors to the dataset:
+```{r}
+df<-df%>%
+  group_by(control,preddeg,region)%>%
+  mutate(mean_debt_control_degree_region=mean(grad_debt_mdn,na.rm=TRUE))%>%
+  ungroup()
+```
+
+
+And calculate the RMSE:
+```{r}
+rmse_control_degree_region<-df%>%rmse(grad_debt_mdn,mean_debt_control_degree_region)
+rmse_control_degree_region
+```
+
+This is a much better RMSE than what we started with. Is it good enough? Who knows? Again this depends on the 
+context. But we can imagine the high school senior would have much more accurate information with which to make their decision. 
 
 ## Applications of the Conditional Mean
 
 When might we use the conditional mean?
 
-- Caluclating average sales for a retail location by day of the week and month
+- Calculating average sales for a retail location by day of the week and month
 - Calculating yield rate (proportion of admitted students who attend) by geographic region and income level for a college. 
 - Calculating average employee turnover by level of education and gender
