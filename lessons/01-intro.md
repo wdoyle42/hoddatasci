@@ -44,7 +44,7 @@ evelopment **E** nvironments (IDEs) that encompass all of these elements
 RStudio.
 
 If you haven’t already, you need to download RStudio here:
-<https://www.rstudio.com/products/rstudio/download2/>. You need the free
+<https://rstudio.com/products/rstudio/download/>. You need the free
 RStudio desktop version.
 
 ## Installing git

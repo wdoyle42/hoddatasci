@@ -30,7 +30,7 @@ If you haven't already, you need to download R here: <https://cran.r-project.org
 
 When we work with R, we communicate via the command line. To help automate this process, we can write scripts, which contain all of the commands to be executed. These scripts generate various kinds of output, like numbers on the screen, graphics or reports in common formats (pdf, word). Most programming languages have several **I** ntegrated **D** evelopment **E** nvironments (IDEs) that encompass all of these elements (scripts, command line interface, output). The primary IDE for R is RStudio.
 
-If you haven't already, you need to download RStudio here: <https://www.rstudio.com/products/rstudio/download2/>. You need the free RStudio desktop version.
+If you haven't already, you need to download RStudio here: <https://rstudio.com/products/rstudio/download/>. You need the free RStudio desktop version.
 
 ## Installing git
 
