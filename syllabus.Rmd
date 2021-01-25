@@ -1,6 +1,8 @@
 ---
 title: "Introduction to Data Science"
 output:
+  html_document:
+    df_print: paged
   pdf_document: default
 ---
 
@@ -20,10 +22,10 @@ nice_date<-function(x){
 }
 
 ## Day for first day of the week start sequence  (eg Mon or Tues)
-first_week_days_start<-as_date("2019-08-27")
+first_week_days_start<-as_date("2021-01-26")
 
 ## Day for first day of the week end sequence  (eg Mon or Tues)
-first_week_days_end<-as_date("2019-12-03")
+first_week_days_end<-as_date("2021-04-27")
 
 ## Sequence of days for the first day of the week (eg Mon or Tues)
 first_week_days<-seq(first_week_days_start,first_week_days_end,by=7)
@@ -31,19 +33,19 @@ first_week_days<-seq(first_week_days_start,first_week_days_end,by=7)
 ##Defines a sequence of days for the second day of the week (eg Weds or Thurs)
 ## if it's a second day start, then this should be the first in full weeks, then just push the first class as -7. 
 
-second_week_days_start<-as_date("2019-08-29")
+second_week_days_start<-as_date("2021-01-28")
 
-second_week_days_end<-as_date("2019-12-05")
+second_week_days_end<-as_date("2021-04-29")
 
 second_week_days<-seq(second_week_days_start,second_week_days_end,by=7)
 
 ## Defines a sequence of days for the homeworks
 
 #Start Day
-hw_days_start<-as_date("2019-08-25")
+hw_days_start<-as_date("2021-01-31")
 
 #End day
-hw_days_end<-as_date("2019-12-01")  
+hw_days_end<-as_date("2021-04-26")  
 
 ## Sequence of hw days
 hw_days<-seq(hw_days_start,hw_days_end,by=7)
@@ -53,19 +55,15 @@ hw_days<-seq(hw_days_start,hw_days_end,by=7)
 ## Vanderbilt University 
 ## Human and Organizational Development 
 ## Course Number HOD 3200 
-## Fall 2019
+## Spring 2021
 
 William R. Doyle 
 
-Office: 207D Payne
-
-Office Hours: Tuesdays and Thursdays, 2:30-5 (https://wdoyle42.youcanbook.me) or by appointment
+Office Hours: Wednesdays and Thursdays, 2:30-5 (https://wdoyle42.youcanbook.me) or by appointment
 
 Email: [w.doyle@vanderbilt.edu](mailto:w.doyle@vanderbilt.edu)
 
 Twitter: [\@wdoyle42](https://twitter.com/wdoyle42)
-
-Phone: (615) 322-2904
 
 Introduction
 =============
@@ -180,13 +178,13 @@ We will also use [git](https://git-scm.com/), a distributed version control prog
 
 Communication
 ================
-My office is in 207D Payne, and my phone number is (615) 322-2904. Please always feel free to stop by during office hours or to call. You can book my office hours at: https://wdoyle42.youcanbook.me  If my office hours don't work for you, please make an appointment. Student communications, including emails are my priority. However, due to the volume of email I receive, I may miss your message. To help with this problem, please place the phrase ``HOD 3200'' in your subject line. I will search for these messages every time I access my email. You can also use Brightspace's email function, which will automatically do this for you. If you have a general question that I can answer for the whole class, send me a message on twitter at [\@wdoyle42](https://twitter.com/wdoyle42), tagged \#hoddatasci, or you can send a direct message. 
+You can book my office hours at: https://wdoyle42.youcanbook.me  If my office hours don't work for you, please make an appointment over email. Student communications, including emails are my priority. However, due to the volume of email I receive, I may miss your message. To help with this problem, please place the phrase ``HOD 3200'' in your subject line. I will search for these messages every time I access my email. You can also use Brightspace's email function, which will automatically do this for you. If you have a general question that I can answer for the whole class, send me a message on twitter at [\@wdoyle42](https://twitter.com/wdoyle42), tagged \#hoddatasci, or you can send a direct message. 
 
 The Tedious Stuff
 ==================
 This class will be impossible if you don't show up. It's reasonable to contact me if for some reason you can't make it for a given class session. 
 
-We must use laptops in this class, despite the [substantial](http://journals.sagepub.com/doi/abs/10.1177/0956797614524581) [body](http://www.sciencedirect.com/science/article/pii/S0360131512002254?via%3Dihub) of [evidence](http://www.sciencedirect.com/science/article/pii/S0272775716303454) that laptop use in classrooms hinders learning. To mitigate this problem, the following standards will ALWAYS apply in class. You may have RStudio open. You may also have a web browser open to a web page that is relevant to course content. You MUST turn off all notifications and messaging programs. If your web browser is open to Facebook, Instagram or other purely social sites, or if you are responding to messaging apps, I will ask you to leave class for the day.   
+We must use laptops in this class, despite the [substantial](http://journals.sagepub.com/doi/abs/10.1177/0956797614524581) [body](http://www.sciencedirect.com/science/article/pii/S0360131512002254?via%3Dihub) of [evidence](http://www.sciencedirect.com/science/article/pii/S0272775716303454) that laptop use in classrooms hinders learning. To mitigate this problem, the following standards will ALWAYS apply in class. You may have RStudio open. You may also have a web browser open to a web page that is relevant to course content. You MUST turn off all notifications and messaging programs. If your web browser is open to Facebook, Instagram or other purely social sites, or if you are responding to messaging apps, I will ask you to leave class for the day. If you're joining us remotely the same rules apply.    
 
 Mobile phone use is never appropriate in class. I will ask you to leave if you are using your mobile phone at any time. Exceptions are to be arranged BEFORE class, not when I observe you using your mobile phone. 
 
@@ -213,7 +211,7 @@ Schedule
 ```{r echo=FALSE,warning=FALSE,results=FALSE,message=FALSE}
 i<-1
 ```
-## `r nice_date(second_week_days[i]-7)` Topic for the Week: Getting Data-- Tools of the Trade
+## `r nice_date(first_week_days[i])` Topic for the Week: Getting Data-- Tools of the Trade
 
 *Resources*
 
@@ -225,7 +223,7 @@ R Intro and Resources
 
 [Download R](https://cran.r-project.org/)
 
-[Download Rstudio](https://www.rstudio.com/products/rstudio/download3/)
+[Download Rstudio](https://rstudio.com/products/rstudio/download/)
 You want the "Desktop" version, free license
 
 [Rstudio Intro and Resources](https://www.rstudio.com/online-learning/)
@@ -236,17 +234,13 @@ You want the "Desktop" version, free license
 
 [Github Intro and Resources](https://guides.github.com/activities/hello-world/)
 
-## `r nice_date(first_week_days[i])`  Getting Data: Tools of the Trade
-
-Subtopics: "verbs" of data wrangling, file types, working with git and GitHub. 
-
 *Lesson Notes*
 
 `01-intro.Rmd`.
 
-## `r nice_date(second_week_days[i])`  Tools of the Trade, continued
+## `r nice_date(second_week_days[i])`  Getting Data: Tools of the Trade
 
-*Standing meeting*
+Subtopics: "verbs" of data wrangling, file types, working with git and GitHub. 
 
 *Lab Practical* R Basics, "verbs" of data wrangling
 
@@ -267,7 +261,7 @@ Condtional Means: `02-conditional_means.Rmd`.
 
 *Assignments*
 
-Assignment `r i-1` Due Midnight, `r nice_date(hw_days[i])`
+Assignment `r i-1` Due Midnight, `r nice_date(hw_days[i-1])`
 
 ## `r nice_date(second_week_days[i])` Conditional Means, continued
 
@@ -300,7 +294,7 @@ Plotting Distributions and Condtional Means: `03-plot_means.Rmd`.
 
 *Assignments*
 
-Assignment `r i-1` Due Midnight `r nice_date(hw_days[i])`
+Assignment `r i-1` Due Midnight `r nice_date(hw_days[i-1])`
 
 ## `r nice_date(second_week_days[i])` Descriptive Graphics, continued
 
@@ -325,7 +319,7 @@ Flat Data `04-flat_data.Rmd`
 
 *Assignments*
 
-Assignment `r i-1` Due Midnight `r nice_date(hw_days[i])`
+Assignment `r i-1` Due Midnight `r nice_date(hw_days[i-1])`
 
 ## `r nice_date(second_week_days[i])`  Flat Files and Tidy Data, continued
 
@@ -336,7 +330,16 @@ Assignment `r i-1` Due Midnight `r nice_date(hw_days[i])`
 i<-i+1
 ```
 
-## `r nice_date(first_week_days[i])` Analyzing Data: Linear Regression
+## `r nice_date(first_week_days[i])` Reading Day 
+
+Assignment: watch one of the following movies
+
+- Moneyball
+- Minority Report
+- Her
+- Margin Call
+
+##  `r nice_date(second_week_days[i])` Analyzing Data: Linear Regression
 
 *Resources*
 
@@ -346,16 +349,6 @@ Wickham: [Model: Introduction](http://r4ds.had.co.nz/model-intro.html),  [Model 
 
 Linear Regression `05-regression.Rmd`
 
-*Assignments*
-
-Assignment `r i-1` Due Midnight `r nice_date(hw_days[i])`
-
-## September `r nice_date(second_week_days[i])` Linear Regression, continued
-
-*Standing Meetings*
-
-*Lab Practical: linear regression*
-
 ```{r echo=FALSE,warning=FALSE,results=FALSE,message=FALSE}
 i<-i+1
 ```
@@ -364,7 +357,11 @@ i<-i+1
 
 *Training and Testing Models*
 
-## September `r nice_date(second_week_days[i])` Linear Regression, continued
+*Assignments*
+
+Assignment `r i-2` Due Midnight `r nice_date(hw_days[i-1])`
+
+##  `r nice_date(second_week_days[i])` Linear Regression, continued
 
 *Second Progress Report for Final Project Due*
 
@@ -388,7 +385,7 @@ Scatterplots `06-scatterplots.Rmd`
 
 *Assignments*
 
-Assignment `r i-2` Due Midnight `r nice_date(hw_days[i])`
+Assignment `r i-2` Due Midnight `r nice_date(hw_days[i-1])`
 
 ## `r nice_date(second_week_days[i])` Scatterplots, continued
 
@@ -416,7 +413,7 @@ Web Scraping and APIs, `07-webscraping.Rmd`
 
 *Assignments*
 
-Assignment `r i-2` Due Midnight `r nice_date(hw_days[i])`
+Assignment `r i-2` Due Midnight `r nice_date(hw_days[i-1])`
 
 ## `r nice_date(second_week_days[i])` Web Data, continued
 
@@ -442,14 +439,13 @@ Classification, `08-classification.Rmd`
 
 *Assignments*
 
-Assignment `r i-2` Due Midnight `r nice_date(hw_days[i])`
+Assignment `r i-2` Due Midnight `r nice_date(hw_days[i-1])`
 
 *Lab Practical*
 
 Classifying behavior via text analysis: random acts of pizza.
 
-## `r nice_date(second_week_days[i])` No Class, Fall Break
-
+## `r nice_date(second_week_days[i])` Classification, continued
 
 ```{r echo=FALSE,warning=FALSE,results=FALSE,message=FALSE}
 i<-i+1
@@ -465,7 +461,7 @@ Plots for Classification `09-plots_classification.Rmd`
 
 *Assignments*
 
-Assignment `r i-2` Due Midnight `r nice_date(hw_days[i])`
+Assignment `r i-2` Due Midnight `r nice_date(hw_days[i-1])`
 
 ## `r nice_date(second_week_days[i])` Plots for Classification, continued
 
@@ -497,9 +493,19 @@ James, G., Witten, D., Hastie, T., & Tibshirani, R. (2013). An introduction to s
 
 *Assignments*
 
-Assignment `r i-2` Due Midnight `r nice_date(hw_days[i])`
+Assignment `r i-2` Due Midnight `r nice_date(hw_days[i-1])`
 
-## `r nice_date(second_week_days[i])` Cross Validation, continued
+## `r nice_date(second_week_days[i])` Reading Day
+
+Read Jill Lepore ["How the Simulmatics Corporation Invented the Future"](https://www.newyorker.com/magazine/2020/08/03/how-the-simulmatics-corporation-invented-the-future)
+
+
+```{r echo=FALSE,warning=FALSE,results=FALSE,message=FALSE}
+i<-i+1
+```
+
+
+## `r nice_date(first_week_days[i])` Cross Validation, continued
 
 *Standing Meeting*
 
@@ -508,41 +514,20 @@ Assignment `r i-2` Due Midnight `r nice_date(hw_days[i])`
 Lab Practical: Cross Validation
 
 
-```{r echo=FALSE,warning=FALSE,results=FALSE,message=FALSE}
-i<-i+1
-```
+## `r nice_date(second_week_days[i])`  Cross Validation, continued
 
 
-## `r nice_date(first_week_days[i])` Getting Data: Databases and Relational Data
+*Lab Practical*
 
-*Resources*
-Wickham [Relational Data](http://r4ds.had.co.nz/relational-data.html)
+Lab Practical: Cross Validation for Classification
 
-Working with Databases in R, available: [https://dbplyr.tidyverse.org/articles/dbplyr.html](https://dbplyr.tidyverse.org/articles/dbplyr.html)
-
-*Lecture Notes*
-
-Chapter 11, Databases `11-databases.Rmd`
-
-*Assignments*
-
-Assignment `r i-2` Due Midnight `r nice_date(hw_days[i])`
-
-## `r nice_date(second_week_days[i])` Databases, continued
-
-*Standing Meetings*
-
-*Lab Practical* Databases and relational data, collaborating via github
 
 ```{r echo=FALSE,warning=FALSE,results=FALSE,message=FALSE}
 i<-i+1
 ```
 
 
-
-## `r nice_date(first_week_days[i])`  Analyzing Data: Unsupervised learning 
-
-Subtopics: k-means, nearest neighbor clustering
+## `r nice_date(first_week_days[i])`  Reporting Results: Using Knitr
 
 *Resources*
 
@@ -551,35 +536,16 @@ James, G., Witten, D., Hastie, T., & Tibshirani, R. (2013). An introduction to s
 
 *Lecture Notes*
 
-Chapter 12, Unsupervised Learning `12-unsupervised.Rmd`
-
 *Assignments*
 
-Assignment `r i-2` Due Midnight `r nice_date(hw_days[i])`
+Assignment `r i-3` Due Midnight `r nice_date(hw_days[i-1])`
 
-
-## `r nice_date(second_week_days[i])`  Unsupervised Learning, continued
+## `r nice_date(second_week_days[i])`  Reporting Results, Continued
 
 *Standing Meetings*
 
 *Fourth Progress Reports Due*
 
-
-*Lab Practical:* K-means clustering, nearest neighbor classification
-
-
-
-```{r echo=FALSE,warning=FALSE,results=FALSE,message=FALSE}
-i<-i+1
-```
-
-## `r nice_date(first_week_days[i])` Thanksgiving Break: No Class
-
-Check out the lecture notes on interactive graphics,  `13-interactive_graphics.Rmd`
-
-## `r nice_date(second_week_days[i])` Thanksgiving Break: No Class
-
-*No Standing meetings, but feel free to talk about Data Science at dinner*
 ```{r echo=FALSE,warning=FALSE,results=FALSE,message=FALSE}
 i<-i+1
 ```
@@ -588,11 +554,7 @@ i<-i+1
 
 Group 1
 
-*Assignments*
-
-Assignment `r i-3` Due Midnight `r nice_date(hw_days[i])`
-
-## `r nice_date(second_week_days[i])` Class Presentations 
+## `r nice_date(second_week_days[i])` Class Presentations
 
 Group 2
 
