@@ -276,10 +276,7 @@ gg<-ggplot(data=df,aes(x=sat_avg,y=adm_rate))
 gg<-gg+geom_point()
 gg<-gg+geom_smooth()
 gg
-ggsave("adm_rate.png")
 ```
-
-![Admit Rate Graphic](adm_rate.png)
 
 *Quick exercise* Replicate the above plots, but put cost of attendance on the y axis.
 
