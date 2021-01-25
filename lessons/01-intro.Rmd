@@ -278,8 +278,7 @@ gg<-gg+geom_smooth()
 gg
 ```
 
-*Quick exercise* Replicate the above plots, but put cost of attendance on the y axis.
-
+*Quick exercise* Replicate the above plots, but debt level  on the y axis.
 
 ## GitHub: save, stage, commit, push
 

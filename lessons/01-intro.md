@@ -535,21 +535,8 @@ gg
 
 ![](01-intro_files/figure-gfm/plotting-1.png)<!-- -->
 
-``` r
-ggsave("adm_rate.png")
-```
-
-    ## Saving 7 x 5 in image
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-
-    ## Warning: Removed 1325 rows containing non-finite values (stat_smooth).
-
-    ## Warning: Removed 1325 rows containing missing values (geom_point).
-
-![Admit Rate Graphic](adm_rate.png)
-
-*Quick exercise* Replicate the above plots, but put cost of attendance
-on the y axis.
+*Quick exercise* Replicate the above plots, but debt level on the y
+axis.
 
 ## GitHub: save, stage, commit, push
 
