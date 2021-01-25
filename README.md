@@ -7,20 +7,16 @@ Introduction to Data Science
 
 ## Course Number HOD 3200
 
-## Fall 2019
+## Spring 2021
 
 William R. Doyle
 
-Office: 207D Payne
-
-Office Hours: Tuesdays and Thursdays, 2:30-5
+Office Hours: Wednesdays and Thursdays, 2:30-5
 (<https://wdoyle42.youcanbook.me>) or by appointment
 
 Email: <w.doyle@vanderbilt.edu>
 
 Twitter: [@wdoyle42](https://twitter.com/wdoyle42)
-
-Phone: (615) 322-2904
 
 # Introduction
 
@@ -41,39 +37,39 @@ the results of analysis. For each area, the subtopics are as follows:
 
 ## Getting Data Topics
 
-  - Tools of the Trade: R and Rstudio, git and Github
-  - Working with pre-processed data and flat files
-  - Getting data from the web: webscraping, using forms, using
+-   Tools of the Trade: R and Rstudio, git and Github
+-   Working with pre-processed data and flat files
+-   Getting data from the web: webscraping, using forms, using
     Application Programming Interfaces
-  - Using databases
+-   Using databases
 
 ## Analyzing Data Topics
 
-  - Descriptives and conditional means
-  - Regression
-  - Supervised learning: classification
-  - Unsupervised learning: K-means and nearest neighbors clustering
-  - Evaluating multiple models/ Cross Validation
+-   Descriptives and conditional means
+-   Regression
+-   Supervised learning: classification
+-   Unsupervised learning: K-means and nearest neighbors clustering
+-   Evaluating multiple models/ Cross Validation
 
 ## Presenting Data Analysis Topics
 
-  - Descriptives: histograms, density plots, bar plots, dot plots
-  - Scatterplots
-  - Plots for Classification
-  - Interactive Graphics
+-   Descriptives: histograms, density plots, bar plots, dot plots
+-   Scatterplots
+-   Plots for Classification
+-   Interactive Graphics
 
 # Evaluation
 
 Students will be evaluated based in two areas: weekly assignments and
 the final project.
 
-  - Problem sets: 65% Each week I will assign a problem set for students
+-   Problem sets: 65% Each week I will assign a problem set for students
     to complete. These problem sets will be assigned on Monday, and will
     be due the next Sunday night at 11:59:59 pm. No late assignments
     will be accepted. Each assignment will be graded on a 100 point
     scale. Your lowest grade will be dropped.
 
-  - Final Project 35%: During the course of the semester you will work
+-   Final Project 35%: During the course of the semester you will work
     on a final assignment utilizing your skills as a data analyst. We
     will discuss this assignment and my expectations in detail during
     the course of the semester. There will be four progress reports due
@@ -89,16 +85,14 @@ the final project.
 We will have two texts for the course. The first is Hadley Wickham’s
 book, [R for Data Science](http://r4ds.had.co.nz/). Wickham is
 generously making this book available for free. However, I strongly
-encourage you to buy this book from
-[O’Reilly](http://amzn.to/2aHLAQ1).
+encourage you to buy this book from [O’Reilly](http://amzn.to/2aHLAQ1).
 
 [Amazon](https://www.amazon.com/R-Data-Science-Hadley-Wickham/dp/1491910399/ref=as_li_ss_tl?ie=UTF8&qid=1469550189&sr=8-1&keywords=R+for+data+science&linkCode=sl1&tag=devtools-20&linkId=6fe0069f9605cf847ed96c191f4e84dd)
 
 The other text is Nate Silver’s *Signal and the Noise*.
 
 Silver,N. (2012). *The signal and the noise: Why so many predictions
-fail-but some don’t*. New York:
-Penguin.
+fail-but some don’t*. New York: Penguin.
 
 [Amazon](https://www.amazon.com/Signal-Noise-Many-Predictions-Fail-but/dp/0143125087)
 
@@ -159,17 +153,15 @@ be collected and graded through GitHub as well.
 
 # Communication
 
-My office is in 207D Payne, and my phone number is (615) 322-2904.
-Please always feel free to stop by during office hours or to call. You
-can book my office hours at: <https://wdoyle42.youcanbook.me> If my
-office hours don’t work for you, please make an appointment. Student
-communications, including emails are my priority. However, due to the
-volume of email I receive, I may miss your message. To help with this
-problem, please place the phrase \`\`HOD 3200’’ in your subject line. I
-will search for these messages every time I access my email. You can
-also use Brightspace’s email function, which will automatically do this
-for you. If you have a general question that I can answer for the whole
-class, send me a message on twitter at
+You can book my office hours at: <https://wdoyle42.youcanbook.me> If my
+office hours don’t work for you, please make an appointment over email.
+Student communications, including emails are my priority. However, due
+to the volume of email I receive, I may miss your message. To help with
+this problem, please place the phrase \`\`HOD 3200’’ in your subject
+line. I will search for these messages every time I access my email. You
+can also use Brightspace’s email function, which will automatically do
+this for you. If you have a general question that I can answer for the
+whole class, send me a message on twitter at
 [@wdoyle42](https://twitter.com/wdoyle42), tagged \#hoddatasci, or you
 can send a direct message.
 
@@ -190,7 +182,8 @@ have RStudio open. You may also have a web browser open to a web page
 that is relevant to course content. You MUST turn off all notifications
 and messaging programs. If your web browser is open to Facebook,
 Instagram or other purely social sites, or if you are responding to
-messaging apps, I will ask you to leave class for the day.
+messaging apps, I will ask you to leave class for the day. If you’re
+joining us remotely the same rules apply.
 
 Mobile phone use is never appropriate in class. I will ask you to leave
 if you are using your mobile phone at any time. Exceptions are to be
@@ -216,12 +209,11 @@ data that you do not personally collect must be cited, as with any other
 resource.
 
 If you have any questions at all about the honor code or how it will be
-applied, ask me right
-away.
+applied, ask me right away.
 
 # Schedule
 
-## Thursday, August 22 Topic for the Week: Getting Data– Tools of the Trade
+## Tuesday, January 26 Topic for the Week: Getting Data– Tools of the Trade
 
 *Resources*
 
@@ -236,8 +228,8 @@ R Intro and Resources
 
 [Download R](https://cran.r-project.org/)
 
-[Download Rstudio](https://www.rstudio.com/products/rstudio/download3/)
-You want the “Desktop” version, free license
+[Download Rstudio](https://rstudio.com/products/rstudio/download/) You
+want the “Desktop” version, free license
 
 [Rstudio Intro and Resources](https://www.rstudio.com/online-learning/)
 
@@ -248,22 +240,18 @@ You want the “Desktop” version, free license
 [Github Intro and
 Resources](https://guides.github.com/activities/hello-world/)
 
-## Tuesday, August 27 Getting Data: Tools of the Trade
-
-Subtopics: “verbs” of data wrangling, file types, working with git and
-GitHub.
-
 *Lesson Notes*
 
 `01-intro.Rmd`.
 
-## Thursday, August 29 Tools of the Trade, continued
+## Thursday, January 28 Getting Data: Tools of the Trade
 
-*Standing meeting*
+Subtopics: “verbs” of data wrangling, file types, working with git and
+GitHub.
 
 *Lab Practical* R Basics, “verbs” of data wrangling
 
-## Tuesday, September 3 Analyzing Data: Conditional Means
+## Tuesday, February 2 Analyzing Data: Conditional Means
 
 *Resources*
 
@@ -276,15 +264,15 @@ Condtional Means: `02-conditional_means.Rmd`.
 
 *Assignments*
 
-Assignment 1 Due Midnight, Sunday, September 1
+Assignment 1 Due Midnight, Sunday, January 31
 
-## Thursday, September 5 Conditional Means, continued
+## Thursday, February 4 Conditional Means, continued
 
 *Standing Meetings*
 
 *Lab Practical: Conditional Means*
 
-## Tuesday, September 10 Presenting Data: Descriptives
+## Tuesday, February 9 Presenting Data: Descriptives
 
 Subtopics: bar plot, density plot, dot plots, histograms
 
@@ -308,17 +296,16 @@ Plotting Distributions and Condtional Means: `03-plot_means.Rmd`.
 
 *Assignments*
 
-Assignment 2 Due Midnight Sunday, September 8
+Assignment 2 Due Midnight Sunday, February 7
 
-## Thursday, September 12 Descriptive Graphics, continued
+## Thursday, February 11 Descriptive Graphics, continued
 
 *Standing Meeting* Progress Report 1 Due
 
 *Lab Practical: Presenting results in graphical format: barplots,
-density plots, dot plots,
-histograms*
+density plots, dot plots, histograms*
 
-## Tuesday, September 17 Getting Data: Flat Files, Basic Concepts of “Tidy Data”
+## Tuesday, February 16 Getting Data: Flat Files, Basic Concepts of “Tidy Data”
 
 *Resources*
 
@@ -331,15 +318,24 @@ Flat Data `04-flat_data.Rmd`
 
 *Assignments*
 
-Assignment 3 Due Midnight Sunday, September 15
+Assignment 3 Due Midnight Sunday, February 14
 
-## Thursday, September 19 Flat Files and Tidy Data, continued
+## Thursday, February 18 Flat Files and Tidy Data, continued
 
 *Standing Meeting*
 
 *Lab Practical: working with various data formats*
 
-## Tuesday, September 24 Analyzing Data: Linear Regression
+## Tuesday, February 23 Reading Day
+
+Assignment: watch one of the following movies
+
+-   Moneyball
+-   Minority Report
+-   Her
+-   Margin Call
+
+## Thursday, February 25 Analyzing Data: Linear Regression
 
 *Resources*
 
@@ -351,25 +347,19 @@ Building](http://r4ds.had.co.nz/model-building.html)
 
 Linear Regression `05-regression.Rmd`
 
-*Assignments*
-
-Assignment 4 Due Midnight Sunday, September 22
-
-## September Thursday, September 26 Linear Regression, continued
-
-*Standing Meetings*
-
-*Lab Practical: linear regression*
-
-## Tuesday, October 1 Analyzing Data: Linear Regression, continued
+## Tuesday, March 2 Analyzing Data: Linear Regression, continued
 
 *Training and Testing Models*
 
-## September Thursday, October 3 Linear Regression, continued
+*Assignments*
+
+Assignment 4 Due Midnight Sunday, February 28
+
+## Thursday, March 4 Linear Regression, continued
 
 *Second Progress Report for Final Project Due*
 
-## Tuesday, October 8 Presenting Data: Scatterplots
+## Tuesday, March 9 Presenting Data: Scatterplots
 
 *Resources*
 
@@ -388,15 +378,15 @@ Scatterplots `06-scatterplots.Rmd`
 
 *Assignments*
 
-Assignment 5 Due Midnight Sunday, October 6
+Assignment 5 Due Midnight Sunday, March 7
 
-## Thursday, October 10 Scatterplots, continued
+## Thursday, March 11 Scatterplots, continued
 
 *Standing Meetings*
 
 *Lab Practical: Presenting Data via Scatterplots*
 
-## Tuesday, October 15 Getting Data: Scraping Data from the Web, APIs
+## Tuesday, March 16 Getting Data: Scraping Data from the Web, APIs
 
 *Resources*
 
@@ -415,21 +405,22 @@ Web Scraping and APIs, `07-webscraping.Rmd`
 
 *Assignments*
 
-Assignment 6 Due Midnight Sunday, October 13
+Assignment 6 Due Midnight Sunday, March 14
 
-## Thursday, October 17 Web Data, continued
+## Thursday, March 18 Web Data, continued
 
 *Standing Meetings*
 
 *Lab Practical*
 
-## Tuesday, October 22 Analyzing Data: Classification
+## Tuesday, March 23 Analyzing Data: Classification
 
 *Resources*
 
 James, G., Witten, D., Hastie, T., & Tibshirani, R. (2013). An
 introduction to statistical learning (Vol. 6). New York: Springer.
-[Chapter 4](http://faculty.marshall.usc.edu/gareth-james/ISL/ISLR%20Seventh%20Printing.pdf)
+[Chapter
+4](http://faculty.marshall.usc.edu/gareth-james/ISL/ISLR%20Seventh%20Printing.pdf)
 , [Chapter 4 Lab R
 Code](http://faculty.marshall.usc.edu/gareth-james/ISL/Chapter%204%20Lab.txt)
 
@@ -444,15 +435,15 @@ Classification, `08-classification.Rmd`
 
 *Assignments*
 
-Assignment 7 Due Midnight Sunday, October 20
+Assignment 7 Due Midnight Sunday, March 21
 
 *Lab Practical*
 
 Classifying behavior via text analysis: random acts of pizza.
 
-## Thursday, October 24 No Class, Fall Break
+## Thursday, March 25 Classification, continued
 
-## Tuesday, October 29 Presenting Data: Plots for Classification
+## Tuesday, March 30 Presenting Data: Plots for Classification
 
 *Resources*
 
@@ -462,9 +453,9 @@ Plots for Classification `09-plots_classification.Rmd`
 
 *Assignments*
 
-Assignment 8 Due Midnight Sunday, October 27
+Assignment 8 Due Midnight Sunday, March 28
 
-## Thursday, October 31 Plots for Classification, continued
+## Thursday, April 1 Plots for Classification, continued
 
 *Standing Meetings*
 
@@ -474,7 +465,7 @@ Assignment 8 Due Midnight Sunday, October 27
 
 Plots for understanding classification
 
-## Tuesday, November 5 Analyzing Data: Cross Validation
+## Tuesday, April 6 Analyzing Data: Cross Validation
 
 *Resources*
 
@@ -482,7 +473,8 @@ Wickham [Many Models](http://r4ds.had.co.nz/many-models.html)
 
 James, G., Witten, D., Hastie, T., & Tibshirani, R. (2013). An
 introduction to statistical learning (Vol. 6). New York: Springer.
-[Chapter 5](http://faculty.marshall.usc.edu/gareth-james/ISL/ISLR%20Seventh%20Printing.pdf)
+[Chapter
+5](http://faculty.marshall.usc.edu/gareth-james/ISL/ISLR%20Seventh%20Printing.pdf)
 
 *Lecture Notes*
 
@@ -490,9 +482,14 @@ introduction to statistical learning (Vol. 6). New York: Springer.
 
 *Assignments*
 
-Assignment 9 Due Midnight Sunday, November 3
+Assignment 9 Due Midnight Sunday, April 4
 
-## Thursday, November 7 Cross Validation, continued
+## Thursday, April 8 Reading Day
+
+Read Jill Lepore [“How the Simulmatics Corporation Invented the
+Future”](https://www.newyorker.com/magazine/2020/08/03/how-the-simulmatics-corporation-invented-the-future)
+
+## Tuesday, April 13 Cross Validation, continued
 
 *Standing Meeting*
 
@@ -500,76 +497,41 @@ Assignment 9 Due Midnight Sunday, November 3
 
 Lab Practical: Cross Validation
 
-## Tuesday, November 12 Getting Data: Databases and Relational Data
+## Thursday, April 15 Cross Validation, continued
 
-*Resources* Wickham [Relational
-Data](http://r4ds.had.co.nz/relational-data.html)
+*Lab Practical*
 
-Working with Databases in R, available:
-<https://dbplyr.tidyverse.org/articles/dbplyr.html>
+Lab Practical: Cross Validation for Classification
 
-*Lecture Notes*
-
-Chapter 11, Databases `11-databases.Rmd`
-
-*Assignments*
-
-Assignment 10 Due Midnight Sunday, November 10
-
-## Thursday, November 14 Databases, continued
-
-*Standing Meetings*
-
-*Lab Practical* Databases and relational data, collaborating via github
-
-## Tuesday, November 19 Analyzing Data: Unsupervised learning
-
-Subtopics: k-means, nearest neighbor clustering
+## Tuesday, April 20 Reporting Results: Using Knitr
 
 *Resources*
 
 James, G., Witten, D., Hastie, T., & Tibshirani, R. (2013). An
 introduction to statistical learning (Vol. 6). New York: Springer.
-[Chapter 10](http://www-bcf.usc.edu/~gareth/ISL/ISLR%20Sixth%20Printing.pdf)
-, [Chapter 10 Lab R
+[Chapter
+10](http://www-bcf.usc.edu/~gareth/ISL/ISLR%20Sixth%20Printing.pdf) ,
+[Chapter 10 Lab R
 Code](http://www-bcf.usc.edu/~gareth/ISL/Chapter%2010%20Labs.txt)
 
 *Lecture Notes*
 
-Chapter 12, Unsupervised Learning `12-unsupervised.Rmd`
-
 *Assignments*
 
-Assignment 11 Due Midnight Sunday, November 17
+Assignment 10 Due Midnight Sunday, April 18
 
-## Thursday, November 21 Unsupervised Learning, continued
+## Thursday, April 22 Reporting Results, Continued
 
 *Standing Meetings*
 
 *Fourth Progress Reports Due*
 
-*Lab Practical:* K-means clustering, nearest neighbor classification
-
-## Tuesday, November 26 Thanksgiving Break: No Class
-
-Check out the lecture notes on interactive graphics,
-`13-interactive_graphics.Rmd`
-
-## Thursday, November 28 Thanksgiving Break: No Class
-
-*No Standing meetings, but feel free to talk about Data Science at
-dinner*
-
-## Tuesday, December 3 Class Presentations
+## Tuesday, April 27 Class Presentations
 
 Group 1
 
-*Assignments*
-
-Assignment 13 Due Midnight Sunday, December 1
-
-## Thursday, December 5 Class Presentations
+## Thursday, April 29 Class Presentations
 
 Group 2
 
-## Final Projects Due Tuesday, December 10, midnight
+## Final Projects Due Tuesday, May 4, midnight
