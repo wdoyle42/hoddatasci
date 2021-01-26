@@ -34,7 +34,7 @@ Data: (Early Childhood Longitudinal Study)[https://nces.ed.gov/ecls/]
 
 ## Financial
 
-- Select a "bundle" of tech stocks likely to outperform the market in 2020
+- Select a "bundle" of tech stocks likely to outperform the market in 2021
 
 Data: (Google Finance via R tidyquant library)[https://cran.r-project.org/web/packages/tidyquant/index.html]
 
@@ -45,7 +45,7 @@ Data: (Google Finance via R tidyquant library)[https://cran.r-project.org/web/pa
 
 Data: (Facebook ad Archive API)[https://www.facebook.com/ads/library/api/]
 
-- Predict county-by-county vote share for likely candidates in Senate Races in 2020
+- Predict county-by-county vote share for likely candidates in Senate Races in 2022
 
 Data: (MIT Election Lab)[https://electionlab.mit.edu/]
 
