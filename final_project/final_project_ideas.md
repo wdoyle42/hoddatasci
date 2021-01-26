@@ -51,7 +51,7 @@ Data: (MIT Election Lab)[https://electionlab.mit.edu/]
 
 ## Social
 
-- Predict which areas will be draw the most colleg-educated 24-35 year olds in the next five yeaars
+- Predict which areas will be draw the most college-educated 24-35 year olds in the next five years
 
 Data: [American Community Survey via R tidycensus library](https://walkerke.github.io/tidycensus/)
 
