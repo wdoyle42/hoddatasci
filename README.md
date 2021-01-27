@@ -1,5 +1,5 @@
 Introduction to Data Science
-================
+=================
 
 ## Vanderbilt University
 
