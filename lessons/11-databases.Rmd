@@ -26,14 +26,15 @@ An R analyst typically doesn't want to be a database person-- they just want to 
 
 Today we'll use the `nyclfights13` database, which contains information on every single flight departing New York City in 2013, including airline information, airport information, flight information, plane information and weather information. 
 
-Here is the schema for the nycflights13 database 
+Here is the schema for the nycflights13 database:  
 
-We'll also use the Lahman database, which contains information on every single player to ever play any professional baseball since 1871, including batting, pitching, team information and so on. 
+https://r4ds.had.co.nz/relational-data.html#nycflights13-relational
+
 
 ```{r}
 # Mostly taken from : http://cran.r-project.org/web/packages/dplyr/vignettes/databases.html circa 2014
 
-# Will need: nycflights13 RSQLite, Lahman
+# Will need: nycflights13 RSQLite,
 
 #Get libraries
 
@@ -139,7 +140,23 @@ dim(req_df)
 head(req_df,20)
 ```
 
-*Quick Exercise:*  Get the weather table and put it in a data frame
+*Quick Exercise:*  Get the airlines table and put it in a data frame
+
+
+```{r}
+#Generate a SQL request to a database
+req_text<-"Select * from airlines"
+
+#Send query through connection
+req<-dbSendQuery(con,req_text)
+
+#Generate dataframe from results
+req_df<-dbFetch(req,n=-1)
+
+#Good practice: clear request
+dbClearResult(req)
+```
+
 
 Many times we want to generate a request that will only give us part of some tables. We'd also like to join tables together in many circumstances. Below is a SQL request that includes the key verbs SELECT, FROM, JOIN and WHERE.
 
@@ -162,7 +179,34 @@ table(req1_df$name)
 
 delay_summary<-req1_df%>%
   group_by(name)%>%
-  summarize(avg_delay=mean(dep_delay,na.rm=TRUE))%>%
+  dplyr::summarize(avg_delay=mean(dep_delay,na.rm=TRUE))%>%
+  arrange(-avg_delay)
+
+delay_summary
+```
+
+Of all of the airlines that flew out of JFK in 2013, what was the average departure delay? 
+
+```{r}
+#New request: which carriers have longer delays? 
+req1_text<-"SELECT a.carrier, a.name, f.dep_delay, f.origin
+            FROM flights f 
+            JOIN airlines a ON a.carrier=f.carrier 
+            WHERE f.origin='JFK'
+            "
+req1<-dbSendQuery(con,req1_text)
+
+req1_df<-dbFetch(req1,n=-1)
+
+dbClearResult(req1)
+
+head(req1_df)
+
+table(req1_df$name)
+
+delay_summary<-req1_df%>%
+  group_by(name)%>%
+  dplyr::summarize(avg_delay=mean(dep_delay,na.rm=TRUE))%>%
   arrange(-avg_delay)
 
 delay_summary
@@ -219,7 +263,7 @@ req1_df<-dbFetch(req1,n=-1)
 dbClearResult(req1)
 
 req1_df%>%group_by(name)%>%
-  summarize(mean_delay=mean(dep_delay,na.rm=TRUE))%>%
+  dplyr::summarize(mean_delay=mean(dep_delay,na.rm=TRUE))%>%
   arrange(-mean_delay)
 
 ```
@@ -312,7 +356,18 @@ With a table in memory, we can change it to a tibble and do all the fun `dplyr` 
 ua_flight_delay <- tbl(con,"flights")%>%
   tbl_df()%>%
   filter(carrier=="UA")%>%
-  summarize(mean(arr_delay,na.rm=TRUE))
+  dplyr::summarize(mean(arr_delay,na.rm=TRUE))
+
+```
+
+## What's the average flight distance for American Airlines?  (Use dplyr way)
+
+```{r}
+## Average flight delay for United
+aa_distance <- tbl(con,"flights")%>%
+  tbl_df()%>%
+  filter(carrier=="AA")%>%
+  dplyr::summarize(mean(distance,na.rm=TRUE))
 ```
 
 
@@ -325,13 +380,11 @@ show_query(tally(tbl(con, "flights")))
 A famous database in this area is the Lahman database. This contains data on every baseball player who's played Major League baseball since 1871 (more or less). Even though the wrong teams played in the World Series this year (ie not my beloved San Francisco Giants) I still wanted to show you how this might work. 
 
 ```{r}
-## Because it's October
-
 library(Lahman)
 
 batting<-Batting%>%
   tbl_df%>%
-  filter(yearID==2017,AB>100)%>%
+  filter(yearID==2018,AB>100)%>%
   select(playerID,AB,H)
 
 master<-Master%>%
@@ -343,11 +396,33 @@ bat_full<-left_join(batting,master,by="playerID")
 bat_full<-bat_full%>%
   mutate(bat_avg=H/AB)%>%
   arrange(-bat_avg)
-## Compare to: http://www.baseball-reference.com/leagues/MLB/2016-batting-leaders.shtml
-## Why different?
+
 ```
 
 *Quick Exercise* Generate a table with batting averages for every professional player who played college ball for Vanderbilt in the last 20 years. 
+
+
+```{r}
+CollegePlaying%>%
+  filter(schoolID=="vandy")%>%
+  select(schoolID,playerID)%>%
+  group_by(playerID)%>%
+  dplyr::summarize(schoolID=first(schoolID))%>%
+  left_join(Batting,by="playerID")%>%
+  left_join(Mastger,by="playerID")%>%
+  select(playerID, nameFirst,nameLast,yearID,schoolID,H,AB)%>%
+  filter(yearID>1997)%>%
+  mutate(avg=H/AB)%>%
+  drop_na()%>%
+  arrange(-yearID,-avg)%>%
+  View()
+  
+
+
+
+
+```
+
 
 ## MY ADVICE
 

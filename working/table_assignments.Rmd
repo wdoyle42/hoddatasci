@@ -16,7 +16,7 @@ class<-class%>%arrange(random)
 
 class["index"]<-seq(1:dim(class)[1])
 
-ngroups<-5
+ngroups<-8
 
 class<-class%>%mutate(table=cut(index,ngroups,(1:ngroups)))
 

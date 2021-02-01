@@ -1,0 +1,29 @@
+---
+title: "01-assignment-doyle"
+author: "Doyle"
+date: "1/28/2021"
+output: html_document
+---
+
+
+```{r}
+## Get necessary libraries-- won't work the first time, because you need to install them!
+library(tidyverse)
+```
+
+
+
+```{r}
+df<-readRDS("sc_debt.Rds") 
+names(df)
+```
+
+
+
+```{r}
+df%>%
+  filter(adm_rate<.1)%>%
+  select(instnm,adm_rate,sat_avg)%>%
+  arrange(sat_avg,adm_rate)%>%print(n=20)
+```
+

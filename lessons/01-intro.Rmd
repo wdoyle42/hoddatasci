@@ -182,7 +182,7 @@ Many times, though we don't want to see everything, we just want to choose a few
 ```{r}
 df%>%
   filter(instnm=="Vanderbilt University")%>%
-  select(instnm,adm_rate,sat_avg )
+  select(instnm,adm_rate,sat_avg)
 ```
 
 `filter` takes logical tests as its argument. The code `insntnm=="Vanderbilt University"` is a logical statement that will be true of just one case in the dataset-- when institution name is Vanderbilt University. The `==` is a logical test, asking if this is equal to that. Other common logical and relational operators for R include
@@ -199,7 +199,7 @@ Next, we can use `filter` to look at colleges with low admissions rates, say les
 df%>%
   filter(adm_rate<.1)%>%
   select(instnm,adm_rate,sat_avg)%>%
-  arrange(sat_avg,adm_rate)
+  arrange(sat_avg,adm_rate)%>%print(n=20)
 ```
 
 Now let's look at colleges with low admit rates, and order them by SAT scores (`-sat_avg` gives descending order).

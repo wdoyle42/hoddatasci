@@ -1,0 +1,56 @@
+---
+title: "Untitled"
+author: "Doyle"
+date: "10/10/2019"
+output: html_document
+---
+
+In Class Work: Scatterplots
+-----------------------------
+
+Complete the following steps using the `cex.Rdata` file:
+
+
+```{r}
+library(tidyverse)
+load("cex.Rdata")
+cex<-cex%>%mutate(inc_rank=inc_rank*100)
+```
+
+1. Plot dining out as a function of income percentile rank. 
+2. Add a line of best fit to the above graphic. 
+3. Now create a plot with a scale appropriate to dining out as the dependent variable. 
+4. Add a line of best fit to your new graphic.
+5. Create another plot with dining out on the y axis, income percentile rank on the x axis, and a categorical (factor) variable that differentiates the points. 
+6. Run a regression that has (possibly transformed) dining out out as the dependent variable, with income and at least one other variable as predictors. What's the RMSE (log scale, if needed) from this model (relative to the testing dataset)? 
+
+```{r}
+lm1<-lm(log(dine_out+1)~inc_rank+fam_type,data=cex)
+summary(lm1)
+```
+
+
+7. Create new predictions from your model. 
+
+```{r}
+library(modelr)
+h_data<-cex%>%data_grid(inc_rank=seq_range(inc_rank,n=100),
+                        fam_type=levels(cex$fam_type))
+
+h_data%>%add_predictions(lm1)%>%
+  mutate(spend=exp(pred))->h_data
+
+# 
+# 1 hw, 2 hw own children, oldest under 6, 3 hw own children oldest 6-17, 4 hw own children oldest over 17, 5 all other hws, 6 one parent male, kids under 18, 7 one parent female, kids under 18, 8 single, 9 othe
+
+```
+
+```{r}
+g1<-ggplot(h_data,aes(x=inc_rank,y=spend,color=fam_type))
+g1<-g1+geom_line()
+g1
+```
+
+
+8. Create a plot showing predicted levels of dining out based on income and your other variable from the model in number 6. 
+9. Make your plot beautiful in every way. Make sure that axes are labeled appropriately, that colors are used well, and that legends help the reader to make sense of the plot. 

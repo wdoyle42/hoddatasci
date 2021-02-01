@@ -122,16 +122,25 @@ It's also really hard to see. We can use conditional means to help out with that
 
 ```{r}
 
-cex_sum<-cex%>%mutate(inc_rank_r=round(inc_rank))%>%group_by(inc_rank_r)%>%summarize(groc_mean=mean(grocery))
+cex_sum<-cex%>%
+  mutate(inc_rank_r=round(inc_rank))%>%
+  group_by(inc_rank_r)%>%
+  summarize(groc_mean=mean(grocery))
 
 g1a<-ggplot(cex_sum,aes(x=inc_rank_r,y=groc_mean))
 
 g1a<-g1a+geom_point()
 
+
 g1a<-g1a+ylab("Grocery Spending")+xlab("Income Rank")
 
 g1a
 
+```
+
+
+```{r}
+lm2<-lm(grocery~inc_rank+I(inc_rank^2),data=cex)
 ```
 
 
@@ -179,6 +188,22 @@ m1<-lm(log(other_store+1)~inc_rank,data=cex);summary(m1)
 ```
 
 _Quick Exercise_ Create a similar graphic, but this time use other store expenditures as the dependent variable. Run a regression with store expenditures as the dv and income rank as the only independent variable. 
+
+```{r}
+g1<-ggplot(data=cex,
+           aes(x=inc_rank,y=(other_store+1))
+           )
+# Set nice looking breaks, the ones used by ggplot for log transform typically don't work
+my.breaks=c(0,50,100,200,400, 1000,2000,4000,6000)
+#Change the scale 
+g1<-g1+scale_y_continuous(trans="log",breaks=my.breaks)
+g1<-g1+geom_point() # Add points
+g1<-g1+geom_smooth(method=lm)  #Add a Line
+g1<-g1+ylab("Other Store Spending")+xlab("Income Percentile (0-100)") #Nice labels
+g1
+
+```
+
 
 ## Multiple Regression
 
@@ -228,9 +253,8 @@ Now let's take a look at this model plotted against the actual data. I'm going t
 ```{r}
 
 cex<-cex%>%mutate(mod2_pred=exp(fitted(mod2)))
-
 g3<-ggplot(cex,aes(x=inc_rank,y=grocery_food))
-g3<-g3+geom_point(alpha=.2,size=.25)
+g3<-g3+geom_point(alpha=.2,size=.5)
 g3<-g3+scale_y_continuous(trans="log",breaks=my.breaks)
 g3<-g3+geom_smooth(data=cex,(aes(x=inc_rank,y=mod2_pred)))
 g3<-g3+xlab("Income Percentile (0-100")+ylab("Grocery Food Spending")
@@ -295,6 +319,7 @@ g5<-g5+geom_smooth(method="lm",color="black")
 g5<-g5+facet_wrap(~childage,ncol=3)
 g5<-g5+scale_y_continuous(trans="log",breaks=my.breaks)
 g5<-g5+xlab("Income Rank, 0-100")+ylab("Grocery Spending")
+g5<-g5+theme_fivethirtyeight()
 g5<-g5+theme(legend.position="none") #Suppress legend, not needed
 
 g5

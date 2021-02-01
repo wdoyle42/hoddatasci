@@ -1,0 +1,177 @@
+---
+title: "My Entry"
+author: "Doyle"
+date: "10/3/2019"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(caret)
+library(Hmisc)
+library(modelr)
+```
+
+
+```{r}
+load("ces_train.Rdata")
+load("ces_test.Rdata")
+load("~/hod_datasci_keys/ces_hold.Rdata")
+```
+
+```{r}
+ces_train<-as_tibble(ces_train)
+```
+
+
+## Isolate complete variables, continuous variables
+```{r}
+
+## Number of unique values
+few_unique<-function(x){
+  ifelse(length(unique(x))<20,
+         TRUE,
+         FALSE)}
+
+mostly_zero<-function(x){
+  ifelse(length(x[x==0])>.5*length(x),
+         TRUE,
+         FALSE)}
+
+
+## Just numeric variables
+ces_train%>%
+  select_if(is.numeric)%>%
+  select_if( ~ !any(is.na(.)))%>%
+  select_if( ~ !(few_unique(.)))%>%
+  select_if(~ !(mostly_zero(.)))->ces_train_a
+
+
+```
+
+## No cheating: drop ALL entertainment variables
+```{r}
+ces_train_a<-ces_train_a%>%
+  select(-(starts_with("e")))
+
+just_dv<-ces_train%>%
+  select(cuid,eentrmtp)
+
+ces_train_a<-left_join(ces_train_a,just_dv,by="cuid")
+  
+```
+
+
+```{r}
+not_vars<-c("cuid","eentrmtp")
+
+predict_vars<-names(ces_train_a)[!names(ces_train_a)%in%not_vars]
+```
+
+## create a formula
+```{r}
+predict_formula<-reformulate(predict_vars,response = "eentrmtp")
+
+```
+
+```{r}
+lm1<-lm(predict_formula,data=ces_train_a)
+```
+
+
+```{r}
+submit_lm<-ces_test%>%
+  add_predictions(lm1,var = "predict")%>%
+  select(cuid,predict)
+```
+
+
+```{r}
+if(!file.exists("step_fit.Rdata")){
+step_fit<-train(eentrmtp~.,
+            data=ces_train_a,
+            method="lmStepAIC",
+            verbose=FALSE)
+save(step_fit,file="step_fit.Rdata")
+} else {
+  load("step_fit.Rdata")
+}
+
+
+```
+
+
+```{r}
+submit_step<-ces_test%>%
+  add_predictions(step_fit,var = "predict")%>%
+  select(cuid,predict)
+```
+
+
+```{r}
+rmse_function<-function(df1){
+  ## Function to compute rmse from held out data
+  ## argument is a dataframe
+  new_data<-left_join(ces_hold,df1,by="cuid") # combine held out data with predicted
+  rmse<-ModelMetrics::rmse(new_data$eentrmtp,new_data$predict) # calculate rmse
+  rmse # return rmse
+}
+```
+
+
+```{r}
+rmse_function(submit_lm)
+```
+
+
+```{r}
+rmse_function(submit_step)
+```
+
+
+
+## create a formula
+```{r}
+
+predict_vars<-c(predict_vars,
+                  "as.factor(fam_size)",
+                  "as.factor(fam_type)")
+                  
+predict_formula<-reformulate(predict_vars,response = "log(eentrmtp+1)")
+
+```
+
+```{r}
+
+if(!file.exists("step_fit_log.Rdata")){
+step_fit_log<-train(predict_formula,
+            data=ces_train,
+            method="leapForward",
+            tuneGrid=data.frame(nvmax=seq(10,50,by=5)),
+            verbose=FALSE)
+save(step_fit,file="step_fit_log.Rdata")
+} else {
+  load("step_fit_log.Rdata")
+}
+
+
+```
+
+
+```{r}
+ces_train%>%
+  add_residuals(step_fit_log)->ces_train
+
+submit_step_log <- ces_test %>%
+  mutate(pred=predict(step_fit_log,newdata=.)) %>%
+  mutate(ds = mean(exp(ces_train$resid), na.rm = TRUE)) %>% # create "smearing" estimator ds
+  mutate(predict = exp(pred)) %>% # adjust using smearing estimator
+  select(cuid, predict)
+
+```
+
+```{r}
+rmse_function(submit_step_log)
+```
+
+

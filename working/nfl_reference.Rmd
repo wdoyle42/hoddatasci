@@ -80,28 +80,12 @@ url<-paste0("https://www.pro-football-reference.com/years/",year,
 
 
 ## Parse web page
-nfl_defense<-url %>% read_html() %>%
-      html_table()
-## Add names here 
-
-
-##  simple, just for now
-nfl_defense<-data.frame(nfl_defense[1])
-names(nfl_defense)<-nfl_defense[1,]
-nfl_defense<-nfl_defense%>%slice(-1)
-
-nfl_all_stats<-left_join(nfl_df,nfl_defense)
-## Win/loss record
-
-## Parse web page
 nfl_afc<-url %>% read_html() %>%                   # parse html
       html_nodes('#AFC')%>%
       html_table()%>%
       data.frame()%>%
       slice(-c(seq(1,20,by=5)))
       
-
-
 ## Parse web page
 nfl_nfc<-url %>% read_html() %>%                   # parse html
       html_nodes('#NFC')%>%

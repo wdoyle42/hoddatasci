@@ -1,0 +1,38 @@
+---
+title: "NCAA MBB"
+author: "Doyle"
+date: "10/8/2019"
+output: html_document
+---
+
+```{r}
+ddir<-"~/ncaa_mbb/"
+```
+
+Inspiration:
+
+https://www.kaggle.com/captcalculator/a-very-extensive-ncaa-exploratory-analysis
+
+
+```{r}
+teams<-read_csv(paste0(ddir,"Teams.csv"))
+seasons<-read_csv(paste0(ddir,"Seasons.csv"))
+compact_results<-read_csv(paste0(ddir,"RegularSeasonCompactResults.csv"))
+full_results<-read_csv(paste0(ddir,"RegularSeasonDetailedResults.csv"))
+```
+
+## Wins by season
+```{r}
+compact_results%>%
+  group_by(WTeamID,Season)%>%
+  select(WTeamID,Season)%>%
+  rename(TeamID=WTeamID)%>%
+  tally()%>%
+  arrange(-n)->
+  summary_results
+
+summary_results<-left_join(summary_results, teams, by="TeamID")
+
+summary_results
+```
+

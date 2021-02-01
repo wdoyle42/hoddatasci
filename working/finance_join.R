@@ -7,10 +7,19 @@ library(tidyquant)
 library(lubridate)
 library(tidyverse)
 
-symbols<-c("GOOG","IBM")
+api_key<-readlines("~/hod_datasci_keys/av_key.txt")
+
+av_api_key(api_key)
+
+nyse<-tq_exchange("NYSE")
+
+symbols<-nyse$symbol[1:100]
+
+
 
 prices<-symbols%>%
-  tq_get(get=c("stock.prices","key.ratios",from="2001-01-01"))
+  tq_get(get=c("dividends"))
+         from="2001-01-01"))
 
 
 stock_price$year<-year(stock_price$date)

@@ -96,6 +96,30 @@ rmse_2<-modelr::rmse(mod2,els_train); rmse_2
 
 ```
 
+
+```{r}
+gg<-ggplot(els_train,aes(x=byincome))
+gg<-gg+geom_density()
+gg
+```
+
+
+```{r}
+
+els_train%>%mutate(reading2=bynels2r/10)->els_train
+
+mod2a<-lm(bynels2m~reading2+
+           as.factor(byincome),
+          data=els_train)
+
+summary(mod2a) 
+
+els_train<-els_train%>%add_predictions(mod2)%>%rename(pred2=pred)
+
+rmse_2a<-modelr::rmse(mod2a,els_train); rmse_2a
+```
+
+
 This finding reflects the basic inequity in our education system: lower income students score lower on math scores. This holds true even if we control for parental education. 
 
 _Quick Exercise_ Add another variable to your model from above and see what difference it makes. How is your RMSE? 
@@ -115,6 +139,8 @@ mod3<-lm(bynels2m~byses_p+
          data=els_train
          );summary(mod3)
 ```
+
+
 
 This changes the coefficient AND its interpretation. Now, for every one percent increase in SES, math scores are predicted to increase by `r round(mod3$coefficients[2],2)`. Linear transformations will not change the statistical significance (t value), but non linear transformations like the one we just did will, as you can see. Does this change the RMSE? 
 
@@ -150,6 +176,8 @@ Now we can use the model we trained (model 3) on the testing data.
 rmse_test_1<-modelr::rmse(mod1,els_test);rmse_test_1
 
 rmse_test_2<-modelr::rmse(mod2,els_test);rmse_test_2
+
+rmse_3<-modelr::rmse(mod3,els_train);rmse_3
 
 rmse_test_3<-modelr::rmse(mod3,els_test);rmse_test_3
 ```

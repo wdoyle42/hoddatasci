@@ -70,7 +70,6 @@ df%>%
 
 This gives us the overall average, and would be our prediction about the level of college debt the student could expect, if we didn't have any other information about the college. 
 
-
 ## Unconditional Mean as a Predictor
 
 Using the mean of a variable as a predictor is something we do all the time. In this example, our best guess for the level of debt incurred by a graduate is just the average level of debt across all institutions. We're going to add this guess to the dataset as our first prediction, using the `mutate` command. 

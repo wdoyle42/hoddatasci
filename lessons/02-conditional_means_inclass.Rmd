@@ -1,7 +1,6 @@
 ---
-title: "Untitled"
+title: "Conditional Means In-Class Work"
 author: "Doyle"
-date: "9/5/2019"
 output: html_document
 ---
 
@@ -19,46 +18,13 @@ load("pd.RData")
 
 * Calculate the mean of the outcome variable of retail sales: `pd%>%summarize(mean_retail=mean(retail,na.rm=TRUE))`
 
-```{r}
-pd%>%summarize(mean_retail=mean(retail_percap,na.rm=TRUE))
-```
-
-
-* Create new variables that indicate the quantiles of another variable, using `ntile`.
-
-```{r}
-pd%>%mutate(manufacture_ship_level=ntile(manufacture_ship,4))->pd
-```
+* Create new variable that indicate the quantiles of another variable, using `ntile`.
 
 * Generate some tables of the conditional mean of the outcome variable by levels of the predictor variable. (hint: `group_by`, then `summarize`).
-
-```{r}
-
-pd%>%group_by(manufacture_ship_level)%>% ## Group by predictor
-  ##Calculate mean at each level of predictor
-  summarise(mean_retail_man_ship=mean(retail_percap))
-
-
-```
 
 
 * Create predictions for each county based on conditional means within each grouping of the predictor variable. 
 
-```{r}
-
-pd%>%group_by(manufacture_ship_level)%>% ## Group by predictor
-  ##Calculate mean at each level of predictor
-  mutate(predict_retail_man_ship=mean(retail_percap))->pd
-```
-
 
 * Generate summary measures of the error terms: the difference between actual retail sales and your predicted retail sales, using `rmse`.
-
-
-```{r}
-rmse_cond_mean_one<-rmse(pd$retail_percap,pd$predict_retail_man_ship)
-rmse_cond_mean_one
-```
-
-```
 

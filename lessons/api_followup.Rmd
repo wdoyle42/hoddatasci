@@ -1,0 +1,173 @@
+---
+title: "API followup"
+author: "Doyle"
+date: "10/22/2019"
+output: html_document
+---
+
+
+```{r}
+## Look up fips code for county
+lookup_code("CA","Los Angeles") 
+
+state_fips<-"06"
+county_stub<-"037"
+
+county_fips<-paste0(state_fips,county_stub)
+
+# Get dataset that matches all zip codes to cities, counties and states. 
+county_to_zip<-read_csv("http://www2.census.gov/geo/docs/maps-data/data/rel/zcta_county_rel_10.txt")
+
+#easier names to work with
+names(county_to_zip)<-tolower(names(county_to_zip))
+
+#Just zip codes in selected county
+county_to_zip<-county_to_zip%>%
+  filter(state%in%as.numeric(state_fips),county==county_stub)%>%
+  select(zcta5,state,county)
+
+#list of zip codes
+ziplist<-county_to_zip$zcta5
+
+#City names
+data(zip_codes)
+
+city_zip<-zip_codes%>%filter(zip%in%ziplist)%>%select(zip,city)
+
+#Arrange in order
+city_zip<-city_zip%>%arrange(as.numeric(zip))
+```
+
+
+## Education Levels
+
+```{r}
+my_acs_key<-readLines("~/hod_datasci_keys/my_acs_key.txt",warn = FALSE)
+
+acs_key<-my_acs_key
+
+# Or just paste it here.
+acs_key<-"<your_acs_key_here>"
+
+census_api_key(acs_key)
+
+v17 <- load_variables(2017, "acs5", cache = TRUE)
+
+View(v17)
+
+var_list<-paste0("B15002_",c("001",
+                            "015",
+                            "016",
+                            "017",
+                            "018",
+                            "032",
+                            "033",
+                            "034",
+                            "035"))
+
+educ<-get_acs("zcta",
+                variables=var_list,
+                output="wide",
+                geometry=TRUE
+                )
+
+names(educ)<-tolower(names(educ))
+
+educ%>%filter(geoid%in%ziplist)->county_educ
+
+county_educ%>%
+  rename(zip=geoid)%>%
+  group_by(zip)%>%
+  mutate(college_educ=((b15002_015e+
+                         b15002_016e+
+                         b15002_017e+
+                         b15002_018e+
+                         b15002_032e+
+                         b15002_033e+
+                         b15002_034e+
+                         b15002_035e)/b15002_001e)*100) %>%
+    select(zip,college_educ)->
+    county_educ
+
+```
+
+## Income Levels
+
+
+```{r}
+var_list<-paste0("B19001_",c("001",
+                             "013",
+                             "014",
+                            "015",
+                            "016",
+                            "017"
+                            ))
+
+income<-get_acs("zcta",
+                variables=var_list,
+                output="wide"
+                )
+
+names(income)<-tolower(names(income))
+
+income%>%filter(geoid%in%ziplist)->county_income
+
+
+county_income %>%
+  rename(zip = geoid)%>%
+group_by(zip) %>%
+  mutate(
+    income_75 = ((
+      b19001_013e +
+        b19001_014e +
+        b19001_015e +
+        b19001_016e +
+        b19001_017e 
+    ) / b19001_001e)*100
+  )%>%
+  select(zip,income_75)->
+  county_income
+
+```
+
+
+```{r}
+var_list<-paste0("B27001_",c("001",
+                             "013",
+                             "014",
+                            "015",
+                            "016",
+                            "017"
+                            ))
+
+income<-get_acs("zcta",
+                variables=var_list,
+                output="wide"
+                )
+
+names(income)<-tolower(names(income))
+
+income%>%filter(geoid%in%ziplist)->county_income
+
+
+county_income %>%
+  rename(zip = geoid)%>%
+group_by(zip) %>%
+  mutate(
+    income_75 = ((
+      b19001_013e +
+        b19001_014e +
+        b19001_015e +
+        b19001_016e +
+        b19001_017e 
+    ) / b19001_001e)*100
+  )%>%
+  select(zip,income_75)->
+  county_income
+
+```
+```{r}
+table<-"b27001"
+```
+
+

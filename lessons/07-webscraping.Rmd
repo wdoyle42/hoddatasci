@@ -353,13 +353,13 @@ ggplotly(gg)
 
 ```{r}
 
-nfl_get_data<-FALSE
+nfl_get_data<-TRUE
 
 nfl_df_all<-NULL
 
 if (nfl_get_data==TRUE){
 
-  for (year in 2008:2017){
+  for (year in 2008:2018){
 url<-paste0("https://www.pro-football-reference.com/years/",year,"/")
 
 ## Parse web page
@@ -526,7 +526,6 @@ Next, we'll turn to the American Community Survey. This includes a large number 
 
 The first step is to get the table from ACS. Below, I submit a request using my key to get table B15002, which contains information on education levels. 
 
-
 ## An Alternative: Tidycensus
 ```{r}
 my_acs_key<-readLines("~/hod_datasci_keys/my_acs_key.txt",warn = FALSE)
@@ -534,13 +533,13 @@ my_acs_key<-readLines("~/hod_datasci_keys/my_acs_key.txt",warn = FALSE)
 acs_key<-my_acs_key
 
 # Or just paste it here.
-#acs_key<-"<your_acs_key_here>"
+acs_key<-"<your_acs_key_here>"
 
 census_api_key(acs_key)
 
 v17 <- load_variables(2017, "acs5", cache = TRUE)
 
-#View(v17)
+View(v17)
 
 var_list<-paste0("B15002_",c("001",
                             "015",

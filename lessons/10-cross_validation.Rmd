@@ -231,8 +231,6 @@ load("za.RData")
 ```{r}
 za%>%
   drop_na()->za_fit
-
-
 ```
 
 
@@ -290,7 +288,7 @@ gg
 ```{r}
 
 fit_step_logit<-train(za_formula,
-            method="glm",
+            method="glmStepAIC",
             family="binomial",
             data=za_fit,
             metric="ROC",

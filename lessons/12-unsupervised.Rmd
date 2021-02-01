@@ -19,14 +19,20 @@ We'll be working with the NBA data that we scraped earlier this semester to defi
 
 There are two new libraries today: LICORS and factoextra. 
 
-```{r}
+```{r,include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, results ='hide',include=TRUE, message = FALSE)
 library(knitr)
 library(tidyverse)
 library(LICORS)
 library(factoextra)
 library(cluster)
-
+library(stargazer)
 ```
+
+```{r}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, results ='hide',include=TRUE, message = FALSE)
+```
+
 
 We'll pull in the NBA dataset, which has data on all players from all teams from 1993 to 2018
 ```{r}
@@ -36,10 +42,9 @@ load("nba.Rdata")
 
 We're going to subset the data to players who put in at least 500 minutes, which is roughly averaging half a quarter per game (6*82=492). 
 ```{r}
-
 nba_df_all%>%
-  filter(year==2018,minutes_played>500)%>%
-  group_by(player)%>%
+  filter(minutes_played>500)%>%
+  group_by(player,year)%>%
   top_n(1,minutes_played)%>%
   ungroup()%>%
    select(player,
@@ -65,7 +70,8 @@ nba_df_all%>%
          steals,
          blocks,
          turnovers,
-         fouls)%>%
+         fouls,
+         year)%>%
                drop_na()->nba_df_sub
 
 
@@ -73,12 +79,14 @@ nba_df_all%>%
 player_id<-nba_df_sub$player
 points<-nba_df_sub$pts
 
+# Scale the dataset
 nba_df_sub%>%
   select(-player,-pts)%>%
-  mutate_all(scale)->nba_df_cluster
+  mutate_all(scale)->nba_df_cluster_all
 
 # Set player name as row id
-rownames(nba_df_cluster)<-player_id
+rownames(nba_df_cluster_all)<-player_id
+
 ```
 
 
@@ -88,12 +96,16 @@ The `stepFlexClust` command can be helpful here. What it will do is to run a clu
 
 
 ```{r}
+  
 fviz_nbclust(nba_df_cluster,
              FUNcluster=kmeanspp,
              method="wss")
+
+ggsave(paste0("elbow_",year,".png"))
+
 ```
 
-The silhouette method measures the fit of each observation within each cluster. The resulting ploit generally provides a pretty clear indication of the appropriate number of clusters. 
+The silhouette method measures the fit of each observation within each cluster. The resulting plot generally provides a pretty clear indication of the appropriate number of clusters. 
 
 ```{r}
 fviz_nbclust(nba_df_cluster,
@@ -110,7 +122,6 @@ c1<-kmeanspp(nba_df_cluster,
              iter.max=1000,
              nstart=50)
 ```
-
 
 Notice how the sample sizes in each group are identical, although the group numbers (which are arbitrary) are different after each run. 
 
@@ -151,12 +162,13 @@ gg<-gg+facet_wrap(~cluster,ncol=1)
 gg<-gg+geom_hline(yintercept=0)
 gg<-gg+coord_flip()
 gg<-gg+theme(legend.position = "none")
+gg<-gg+theme(axis.text.x=element_text(size=.75))
 gg
 ```
 
 We can also go back to the original dataset and see if we can make sense of individaul assignments. The code below shows how each player has been assigned, selecting the top ten field goal scorers from each cluster. 
 
-```{r}
+```{r,results='asis'}
 nba_df_sub$cluster<-c1$cluster
 nba_df_sub$player<-player_id
 
@@ -172,12 +184,20 @@ nba_df_sub%>%
 
 Once you have clusters, then you can use these as independent variables to predict various outcomes.
 
-```{r}
+```{r,results='asis'}
 nba_df_sub$pts<-points
 
 mod1<-lm(pts~as_factor(cluster),data=nba_df_sub)
 
-summary(mod1)
+stargazer(mod1,type="html")
 
+```
+
+```{r}
+for (year in seq(1995,2015,by=5)){
+  load("nba.Rdata")
+  nba<-filter(nba_df_all,year==year)
+  save(nba,file=paste0("nba_",year,".Rdata"))
+}
 ```
 

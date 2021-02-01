@@ -77,6 +77,7 @@ za<-za%>%mutate(student=ifelse(grepl(x=request_text,pattern="student",ignore.cas
 za$words<-str_count(za$request_text,"\\S+")
 
 
+
 # Binary variable: word "poor" in text
 
 za<-za%>%mutate(poor=ifelse(grepl(x=request_text,pattern="poor"),1,0))%>%
@@ -121,6 +122,15 @@ za_expand<-za_expand%>%anti_join(stop_words,by="word")
 ## What this looks like
 #za_expand%>%select(word)
 ```
+
+```{r}
+za_unqiue_word%>%
+  group_by(request_id)%>%
+  mutate(unique_count=length(unique(word)))%>%
+  summarize()
+
+```
+
 
 Notice how the content of the post has changed after dropping the stop words. 
 
@@ -388,7 +398,6 @@ logit_class%>%
   predict(za_test,type="prob")%>%
   bind_cols(za_test)%>%
   roc_auc(truth=got_pizza_f,.estimate=.pred_Yes)
-
 ```
 
 

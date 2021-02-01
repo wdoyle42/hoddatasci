@@ -42,89 +42,11 @@ groups.
 
 There are two new libraries today: LICORS and factoextra.
 
-``` r
-library(knitr)
-library(tidyverse)
-```
-
-    ## ── Attaching packages ──────────────────────────────── tidyverse 1.2.1 ──
-
-    ## ✔ ggplot2 3.2.1     ✔ purrr   0.3.2
-    ## ✔ tibble  2.1.3     ✔ dplyr   0.8.3
-    ## ✔ tidyr   1.0.0     ✔ stringr 1.4.0
-    ## ✔ readr   1.3.1     ✔ forcats 0.4.0
-
-    ## ── Conflicts ─────────────────────────────────── tidyverse_conflicts() ──
-    ## ✖ dplyr::filter() masks stats::filter()
-    ## ✖ dplyr::lag()    masks stats::lag()
-
-``` r
-library(LICORS)
-library(factoextra)
-```
-
-    ## Welcome! Related Books: `Practical Guide To Cluster Analysis in R` at https://goo.gl/13EFCZ
-
-``` r
-library(cluster)
-```
-
 We’ll pull in the NBA dataset, which has data on all players from all
 teams from 1993 to 2018
 
-``` r
-load("nba.Rdata")
-```
-
 We’re going to subset the data to players who put in at least 500
 minutes, which is roughly averaging half a quarter per game (6\*82=492).
-
-``` r
-nba_df_all%>%
-  filter(year==2018,minutes_played>500)%>%
-  group_by(player)%>%
-  top_n(1,minutes_played)%>%
-  ungroup()%>%
-   select(player,
-         pts,
-         minutes_played,
-         fg,
-         fg_attempts,
-         fg_percent,
-         three_pointers,
-         three_point_attempts,
-         three_point_percent,
-         two_pointers,
-         two_point_attempts,
-         two_point_percent,
-         effective_fg_percent,
-         free_throws,
-         free_throw_attempts,
-         free_throw_percent,
-         off_rebound,
-         def_rebound,
-         total_rebound,
-         assists,
-         steals,
-         blocks,
-         turnovers,
-         fouls)%>%
-               drop_na()->nba_df_sub
-
-
-## Remove points scored and player name
-player_id<-nba_df_sub$player
-points<-nba_df_sub$pts
-
-nba_df_sub%>%
-  select(-player,-pts)%>%
-  mutate_all(scale)->nba_df_cluster
-
-# Set player name as row id
-rownames(nba_df_cluster)<-player_id
-```
-
-    ## Warning: Setting row names on a tibble is deprecated.
 
 The first step in running cluster analysis is to figure out how many
 clusters are needed. It’s generally assumed that there are at least 3
@@ -137,25 +59,13 @@ clusters, choosing the best fit (minimum distance) from each set of runs
 for each number of clusters. We can then take a look at the distances
 generated and plot them.
 
-``` r
-fviz_nbclust(nba_df_cluster,
-             FUNcluster=kmeanspp,
-             method="wss")
-```
-
-![](12-unsupervised_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+![](12-unsupervised_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
 The silhouette method measures the fit of each observation within each
 cluster. The resulting ploit generally provides a pretty clear
 indication of the appropriate number of clusters.
 
-``` r
-fviz_nbclust(nba_df_cluster,
-             FUNcluster=kmeanspp,
-             method="silhouette")
-```
-
-![](12-unsupervised_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](12-unsupervised_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
 The `kmeanspp` (stands for k-means ++) command will repeat the kmeans
 clustering algorithm with different starting points until it converges
@@ -163,26 +73,12 @@ on a stable solution. It basically repeats the process we saw above, but
 with the intention of getting to a stable solution. This is generally a
 preferred way of generating cluster assignments.
 
-``` r
-c1<-kmeanspp(nba_df_cluster,
-             k=5,
-             iter.max=1000,
-             nstart=50)
-```
-
 Notice how the sample sizes in each group are identical, although the
 group numbers (which are arbitrary) are different after each run.
 
 We can visualize the groups by taking a look at a plot of the various
 groupings, labeled by player name.
-
-``` r
-fviz_cluster(c1,
-             data=nba_df_cluster,
-             labelsize = 6)
-```
-
-![](12-unsupervised_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+![](12-unsupervised_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
 # Understanding cluster assignments
 
@@ -193,52 +89,15 @@ The code below summarizes the average of each variable in the analysis
 within each cluster. We need to take a look at these and figure out what
 they mean.
 
-``` r
-nba_df_cluster$cluster<-c1$cluster
-
-nba_df_cluster%>%
-  group_by(cluster)%>%
-  summarize_all(.funs=mean)%>%
-  pivot_longer(cols=(-cluster),
-               names_to="stat",
-               values_to = "mean_results")->clus_results
-```
-
 We can then plot the averages for each cluster. Remember that these are
 standardized variables, so they will generally range from -3 to 3, with
 0 being the average.
 
-``` r
-gg<-ggplot(clus_results,aes(x=as_factor(stat),
-                            y=mean_results,
-                            color=stat))
-gg<-gg+geom_point()
-gg<-gg+facet_wrap(~cluster,ncol=1)
-gg<-gg+geom_hline(yintercept=0)
-gg<-gg+coord_flip()
-gg<-gg+theme(legend.position = "none")
-gg
-```
-
-![](12-unsupervised_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](12-unsupervised_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 We can also go back to the original dataset and see if we can make sense
 of individaul assignments. The code below shows how each player has been
 assigned, selecting the top ten field goal scorers from each cluster.
-
-``` r
-nba_df_sub$cluster<-c1$cluster
-nba_df_sub$player<-player_id
-
-nba_df_sub%>%
-  group_by(cluster)%>%
-  mutate(rank=rank(-fg,ties.method = "first"))%>%
-  filter(rank<=10)%>%
-  select(player,fg,total_rebound,rank)%>%
-  arrange(cluster,-fg)%>%kable()
-```
-
-    ## Adding missing grouping variables: `cluster`
 
 | cluster | player                 |  fg | total\_rebound | rank |
 | ------: | :--------------------- | --: | -------------: | ---: |
@@ -298,32 +157,384 @@ nba_df_sub%>%
 Once you have clusters, then you can use these as independent variables
 to predict various outcomes.
 
-``` r
-nba_df_sub$pts<-points
+<table style="text-align:center">
 
-mod1<-lm(pts~as_factor(cluster),data=nba_df_sub)
+<tr>
 
-summary(mod1)
-```
+<td colspan="2" style="border-bottom: 1px solid black">
 
-    ## 
-    ## Call:
-    ## lm(formula = pts ~ as_factor(cluster), data = nba_df_sub)
-    ## 
-    ## Residuals:
-    ##     Min      1Q  Median      3Q     Max 
-    ## -549.78 -145.71  -10.52  130.08  822.35 
-    ## 
-    ## Coefficients:
-    ##                     Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)           855.52      18.18  47.059   <2e-16 ***
-    ## as_factor(cluster)2  -398.11      34.06 -11.688   <2e-16 ***
-    ## as_factor(cluster)3   702.26      40.01  17.552   <2e-16 ***
-    ## as_factor(cluster)4  -493.05      26.10 -18.894   <2e-16 ***
-    ## as_factor(cluster)5   432.13      48.61   8.889   <2e-16 ***
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-    ## 
-    ## Residual standard error: 201.6 on 335 degrees of freedom
-    ## Multiple R-squared:  0.7838, Adjusted R-squared:  0.7812 
-    ## F-statistic: 303.6 on 4 and 335 DF,  p-value: < 2.2e-16
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left">
+
+</td>
+
+<td>
+
+<em>Dependent variable:</em>
+
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+</td>
+
+<td colspan="1" style="border-bottom: 1px solid black">
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left">
+
+</td>
+
+<td>
+
+pts
+
+</td>
+
+</tr>
+
+<tr>
+
+<td colspan="2" style="border-bottom: 1px solid black">
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left">
+
+as\_factor(cluster)2
+
+</td>
+
+<td>
+
+\-398.112<sup>\*\*\*</sup>
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left">
+
+</td>
+
+<td>
+
+(34.061)
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left">
+
+</td>
+
+<td>
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left">
+
+as\_factor(cluster)3
+
+</td>
+
+<td>
+
+702.261<sup>\*\*\*</sup>
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left">
+
+</td>
+
+<td>
+
+(40.011)
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left">
+
+</td>
+
+<td>
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left">
+
+as\_factor(cluster)4
+
+</td>
+
+<td>
+
+\-493.046<sup>\*\*\*</sup>
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left">
+
+</td>
+
+<td>
+
+(26.095)
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left">
+
+</td>
+
+<td>
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left">
+
+as\_factor(cluster)5
+
+</td>
+
+<td>
+
+432.130<sup>\*\*\*</sup>
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left">
+
+</td>
+
+<td>
+
+(48.612)
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left">
+
+</td>
+
+<td>
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left">
+
+Constant
+
+</td>
+
+<td>
+
+855.520<sup>\*\*\*</sup>
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left">
+
+</td>
+
+<td>
+
+(18.180)
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left">
+
+</td>
+
+<td>
+
+</td>
+
+</tr>
+
+<tr>
+
+<td colspan="2" style="border-bottom: 1px solid black">
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left">
+
+Observations
+
+</td>
+
+<td>
+
+340
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left">
+
+R<sup>2</sup>
+
+</td>
+
+<td>
+
+0.784
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left">
+
+Adjusted R<sup>2</sup>
+
+</td>
+
+<td>
+
+0.781
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left">
+
+Residual Std. Error
+
+</td>
+
+<td>
+
+201.624 (df = 335)
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left">
+
+F Statistic
+
+</td>
+
+<td>
+
+303.609<sup>\*\*\*</sup> (df = 4; 335)
+
+</td>
+
+</tr>
+
+<tr>
+
+<td colspan="2" style="border-bottom: 1px solid black">
+
+</td>
+
+</tr>
+
+<tr>
+
+<td style="text-align:left">
+
+<em>Note:</em>
+
+</td>
+
+<td style="text-align:right">
+
+<sup>*</sup>p\<0.1; <sup>**</sup>p\<0.05; <sup>***</sup>p\<0.01
+
+</td>
+
+</tr>
+
+</table>

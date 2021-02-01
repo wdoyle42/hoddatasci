@@ -1,0 +1,93 @@
+---
+title: "10-inclass_floowup"
+author: "Doyle"
+date: "11/7/2019"
+output: html_document
+---
+
+```{r}
+load("els_train.Rdata")
+```
+
+
+```{r}
+els_train%>%drop_na()%>%
+  select(-stu_id,
+         -urm,
+         -white,
+         -bypared,
+         -byrace,
+         -bydob_p,
+        -f1psepln,
+        -p_noplan,
+        -f2evratt,
+        -f2ps1sec
+  )->els_train
+```
+
+```{r}
+
+fitControl<-trainControl(method="boot",
+                         p=.2)
+
+fit1<-train(bynels2m~.,
+            method="glmStepAIC",
+            data=els_train,
+            trControl=fitControl)
+
+summary(fit1)
+
+fit1$results
+
+fit1$resample%>%
+  summarize_at(.vars=("RMSE"),.funs=list(mean,sd))
+
+gg<-ggplot(data=fit1$resample,aes(x=RMSE))
+gg<-gg+geom_density(color="lightblue",fill="lightblue", alpha=.8)
+gg
+
+```
+
+```{r}
+
+load("at.Rdata")
+
+names(at)<-tolower(names(at))
+
+
+## Number of unique values
+few_unique<-function(x){
+  ifelse(length(unique(x))<20,
+         TRUE,
+         FALSE)}
+
+
+factor_vars<-at%>%
+  select_if(~few_unique(.))%>%
+  mutate_all(.funs=(as_factor)
+  
+
+at%>%
+  mutate_at()
+  
+
+fitControl<-trainControl(method="boot",
+                         p=.2,
+                        classProbs = TRUE,
+                        summaryFunction=twoClassSummary)
+
+fit1<-train(attrit~.,
+            method="glmStepAIC",
+            family="binomial",
+            data=at,
+            trControl=fitControl)
+
+summary(fit1)
+
+fit1$results
+
+fit1$resample
+
+```
+
+

@@ -1,0 +1,35 @@
+---
+title: "WDI Indicators"
+author: "Doyle"
+date: "9/24/2019"
+output: html_document
+---
+
+```{r}
+library(WDI)
+```
+
+Link for WDI package
+
+https://github.com/vincentarelbundock/WDI
+
+Catalog of indicators
+
+https://datacatalog.worldbank.org/dataset/world-development-indicators
+
+
+## Search for indicators
+```{r}
+search_string<-"literacy"
+
+lit_results<-WDIsearch(string = search_string)
+
+dat = WDI(indicator='NY.GDP.PCAP.KD', country=c('MX','CA','US'), start=1960, end=2012)
+
+dat2<-WDI(indicator="SE.ADT.LITR.ZS",
+          country=c('MX','CA','US'),
+          start=2010,end=2015)
+
+
+```
+
