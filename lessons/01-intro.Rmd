@@ -113,32 +113,31 @@ library(tidyverse)
 
 ## Loading Datasets
 
-Now we're ready to load in data. The data frame will be our basic way of interacting with everything in this class. The `sc_debt.Rds`  data frame contains information from the college scorecard on  different colleges and universities.
+Now we're ready to load in data. The data frame will be our basic way of interacting with everything in this class. The `sc_debt.Rds` data frame contains information from the college scorecard on different colleges and universities.
 
 However, we first need to make sure that R is looking in the right place. When you opened up your project, RStudio automagically took you to the directory for that project. But because we keep lessons in a separate directory, we need to point R to the right place. This is called setting the working directory, and can be done either by using the command `setwd` or in RStudio by going to "Session--\>Set Working Directory--\>Choose Directory." Choose the directory where the file currently resides on your computer. Make sure to always set the working directory at the beginning of each session---not doing so causes a lot of headaches for new users.
-
 
 ```{r}
 df<-readRDS("sc_debt.Rds") 
 names(df)
 ```
 
-
-| Name | Definition |
-| ------- | --------- |
-| unitid | Unit ID|
-| instnm| Institution Name|
-| stabbr| State Abbreviation|
-| grad_debt_mdn| Median Debt of Graduates|
-| control| Control Public or Private|
-| region | Census Region|
-| preddeg | Predominant Degree Offered: Associates or Bachelors |
-| openadmp| Open Admissions Policy: 1= Yes, 2=No,3=No 1st time students|
-| adm_rate| Admissions Rate: proportion of applications accepted |
-| ccbasic| Type of institution-- see [here](https://data.ed.gov/dataset/9dc70e6b-8426-4d71-b9d5-70ce6094a3f4/resource/658b5b83-ac9f-4e41-913e-9ba9411d7967/download/collegescorecarddatadictionary_01192021.xlsx) |
-| selective| Institution admits fewer than 10 % of applicants, 1=Yes, 0=No |
-| research_u | Institiution is a research university 1=Yes, 0=No| 
-
+| Name           | Definition                                                                                                                                                                                             |
+|----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| unitid         | Unit ID                                                                                                                                                                                                |
+| instnm         | Institution Name                                                                                                                                                                                       |
+| stabbr         | State Abbreviation                                                                                                                                                                                     |
+| grad_debt_mdn  | Median Debt of Graduates                                                                                                                                                                               |
+| control        | Control Public or Private                                                                                                                                                                              |
+| region         | Census Region                                                                                                                                                                                          |
+| preddeg        | Predominant Degree Offered: Associates or Bachelors                                                                                                                                                    |
+| openadmp       | Open Admissions Policy: 1= Yes, 2=No,3=No 1st time students                                                                                                                                            |
+| adm_rate       | Admissions Rate: proportion of applications accepted                                                                                                                                                   |
+| ccbasic        | Type of institution-- see [here](https://data.ed.gov/dataset/9dc70e6b-8426-4d71-b9d5-70ce6094a3f4/resource/658b5b83-ac9f-4e41-913e-9ba9411d7967/download/collegescorecarddatadictionary_01192021.xlsx) |
+| selective      | Institution admits fewer than 10 % of applicants, 1=Yes, 0=No                                                                                                                                          |
+| research_u     | Institiution is a research university 1=Yes, 0=No                                                                                                                                                      |
+| sat_avg        | Average Sat Scores                                                                                                                                                                                     |
+| md_earn_wne_p6 | Average Earnings of Recent Graduates                                                                                                                                                                   |
 
 ## Looking at datasets
 
@@ -278,7 +277,7 @@ gg<-gg+geom_smooth()
 gg
 ```
 
-*Quick exercise* Replicate the above plots, but debt level  on the y axis.
+*Quick exercise* Replicate the above plots, but debt level on the y axis.
 
 ## GitHub: save, stage, commit, push
 
@@ -320,6 +319,6 @@ If you have extra time, you can do the following:
 
 3.  Plot the relationship between SAT and debt. What do you see? Does this surprise you?
 
-4.  Now, provide separate plots for SAT  and debt by control of the institution.
+4.  Now, provide separate plots for SAT and debt by control of the institution.
 
 Save, commit and push the assignment file to the assignments directory.
