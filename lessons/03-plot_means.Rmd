@@ -24,185 +24,81 @@ Next we load in the data, using the `readr` package. Note that this data is save
 readRDS("sc_debt.Rds")
 ```
 
-Today, our primary outcome of interest will be student debt. We can quickly summarize this variable using
+Today, our primary outcome of interest will be student debt. We can quickly summarize this variable using `summarize` and functions like `mean` and `sd`.
 
-
-
+```{r}
+df%>%summarize(mean_debt=mean(grad_debt_mdn,na.rm=TRUE),
+               sd_debt=sd(grad_debt_mdn,na.rm=TRUE))
+```
 
 
 ##Univariate Graphics
 
-Univariate graphics help us understand what individual variables look like-- how are they distibuted across the sample? Here's a quick rundown on some univariate graphics. Say we wanted a quick count of who was in each department. We can use geom_bar to get this done. By default, this will give us a count in each department. 
+Univariate graphics help us understand what individual variables look like-- how are they distibuted across the sample? Here's a quick rundown on some univariate graphics. Say we wanted a quick count of public and private institutions. We can use geom_bar to get this done. 
 
 ```{r}
-gg<-ggplot(at,aes(x=Department,fill=Department))
-gg<-gg+geom_bar()
-gg
+df%>%
+ggplot(aes(as_factor(control),fill=as_factor(control)))
+geom_bar()
 ``` 
 
 The next univariate graphic you should know is for continuous variables. The first thing you generally want is a histogram. 
 
 ```{r}
-gg<-ggplot(at,aes(x=DistanceFromHome))
-gg<-gg+geom_histogram(binwidth = .1,fill="lightblue")
-gg
+df%>%
+  ggplot(aes(x=grad_debt_mdn))+
+  geom_histogram()
+
 ``` 
 Density plots provide a continous graphic of the distribution of a variable:
 ```{r}
-gg<-ggplot(at,aes(x=DistanceFromHome))
-gg<-gg+geom_density()
-gg
-
-## Changing bandwidth-- not recommended, just showing you how. 
-gg<-gg+geom_density(bw=.1,color="blue")
-gg
+df%>%
+  ggplot(aes(x=grad_debt_mdn))+
+  geom_density(fill="lightblue")
 ```
-
 
 
 ## Predicting Attrition
-Our first prediction will use business travel as a predictor for attrition. There are three categories here-- non travel, travel infrequently, and frequent travel. We'll calculate levels of attrtion at teach level and then take a look at the data. 
+
+Our first predction will calculate student debt as a function of control. 
 
 
 ```{r}
-
-at_sum<-at%>%
-  group_by(BusinessTravel)%>%
-  summarize(attr_avg=mean(attrit))
-
-at_sum
+df%>%
+  group_by(control)%>%
+  summarize(mean_debt=mean(grad_debt_mdn,na.rm=TRUE))
 
 ```
 
-Remember that the mean of a binary variable indicates the proportion of the population that has a certain characteristcs. So, in our case, `r  round(at_sum$attr_avg[2],2)` of the sample that travels frequently left the company in the last year. Our first plot will be a basic bar plot, showing the average levels of attrition. 
-
+We can then take those results and plot them: 
 
 ```{r}
-## Bar Plot with aesthetics: mean attrition as height, business travel as cateogry
-gg<-ggplot(at_sum,aes(x=BusinessTravel,y=attr_avg))
-## Use bar plot geometry, height of bars set by level observed in dataset
-gg<-gg+geom_bar(stat="Identity")
-## Print
-gg
+df%>%
+  group_by(control)%>%
+  summarize(mean_debt=mean(grad_debt_mdn,na.rm=TRUE))%>%
+  ggplot(aes(x=control,y=mean_debt))+
+  geom_bar(stat="identity",position="dodge")
 ```
 
-This is fine, but it should really be in the order of the underlying variable. We can use `fct_reorder` to do this. 
+*Quick Exercise: Create a bar plot showing average debt level by degree (2yr/4yr) instead of control*
 
-_Side_ _Note_
-
-What is a factor variable? In R, factor variables are used for categorical data. These are data elements that can take on one and only one value of a mutually exclusive and exhaustive list of elements. In our case, the travel variable is a factor-- employees can be in Non-Travel, Travel Frequently or Travel Rarely bins. Everyone is one bin, and the bins cover all possible options. We use factors when numbers won't work-- for characteristics like race or religion or political affiliation. 
-
-```{r}
-## Same asethetics, but now orderred by level
-gg<-ggplot(at_sum,aes(x=fct_reorder(BusinessTravel,attr_avg),y=attr_avg))
-
-gg<-gg+geom_bar(stat="identity")
-
-## Labeling
-gg<-gg+xlab("Amount of Travel")+ylab("Yearly Attrition")
-##Print
-gg
-```
-
-*Quick Exercise: Create a bar plot showing average attrition by job satisfaction instead of travel*
-
-```{r}
-at_sum<-at%>%group_by(JobSatisfaction)%>%
-  summarize(mean_attrit=mean(attrit))
-
-at_sum<-at_sum%>%
-  mutate(JobSatisfaction=as_factor(JobSatisfaction))
-
-## Bar Plot with aesthetics: mean attrition as height, business travel as cateogry
-gg<-ggplot(at_sum,aes(x=JobSatisfaction,y=mean_attrit))
-## Use bar plot geometry, height of bars set by level observed in dataset
-gg<-gg+geom_bar(stat="Identity")
-## Print
-gg
-
-
-gg<-ggplot(at_sum,aes(x=fct_reorder(Department,mean_attrit),y=mean_attrit))
-
-## Use bar plot geometry, height of bars set by level observed in dataset
-gg<-gg+geom_bar(stat="Identity")
-## Print
-gg
-
-
-```
-
-
-
-```{r}
-
-at_sum<-at%>%
-  group_by(Department)%>%
-  summarize(attr_avg=mean(attrit))
-
-at_sum
-
-gg<-ggplot(at_sum,aes(x=fct_reorder(Department,attr_avg),y=attr_avg))
-
-gg<-gg+geom_bar(stat="identity")
-
-## Labeling
-gg<-gg+xlab("Department")+ylab("Yearly Attrition")
-##Print
-gg
-
-
-
-```
-
+## Dot Plots
 
 A dot plot can be a good way of displaying conditional means as well. Many times dot plots are more easily understood if they are horizontal, so we'll use `coord_flip` to make it horizontal.
 
 ```{r}
 
-at_sum<-at%>%
-  group_by(BusinessTravel)%>%
-  summarize(attr_avg=mean(attrit))
 
-at_sum
-
-## Now a dot plot
-gg<-ggplot(at_sum,aes(x=reorder(BusinessTravel,-attr_avg),y=attr_avg))
-gg<-gg+geom_point()
-gg<-gg+coord_flip()
-gg
 ```
 
 *Quick Exercise: Create a dot plot showing average attrition by department*
 
 ## Conditional means using two predictors
 
-We can use graphics to display conditonal means at multiple levels of predictor levels. There are a couple of ways to get this done. When using bar plots we've got two basic tools: location and color. In the first example, we're going to plot attrition by travel and gender, We'll use color to indicate gender, and location to indicate travel.
+We can use graphics to display conditonal means at multiple levels of predictor levels. There are a couple of ways to get this done. When using bar plots we've got two basic tools: location and color. In the first example, we're going to plot debt as a function of control and the level of the college, 2 year or 4 year. We'll use position for control and color for the type of college. 
 
 
 ```{r}
-## Summarize attrition by travel AND gender
-at_sum<-at%>%
-  group_by(BusinessTravel,Gender)%>%
-  summarize(attr_avg=mean(attrit))
-
-## Get the results
-at_sum
-
-## PLot it using a bar plot
-gg<-ggplot(at_sum,aes(x=fct_reorder(BusinessTravel,attr_avg),y=attr_avg,color=Gender))
-gg<-gg+geom_bar(stat="identity",aes(fill=Gender),position="dodge")
-gg
-
-gg<-gg+ylab("Pr(Attrition)")+xlab("Frequency of Travel")
-gg
-
-ggsave(gg, file="~/Desktop/travel.png")
-## Plot it using a dot plot
-gg<-ggplot(at_sum,aes(x=reorder(BusinessTravel,attr_avg),y=attr_avg),color=Gender)
-gg<-gg+geom_point(aes(color=Gender))
-gg<-gg+coord_flip()
-gg
-
 
 ```
 
@@ -337,3 +233,11 @@ gg
 ```
 
 *Sort of Quick Exercise: Try and Replicate one of the above plots using performance review, department, education field and overtime. *
+
+
+This is fine, but it should really be in the order of the underlying variable. We can use `fct_reorder` to do this. 
+
+_Side_ _Note_
+
+What is a factor variable? In R, factor variables are used for categorical data. These are data elements that can take on one and only one value of a mutually exclusive and exhaustive list of elements.. We use factors when numbers won't work-- for characteristics like race or religion or political affiliation. 
+
