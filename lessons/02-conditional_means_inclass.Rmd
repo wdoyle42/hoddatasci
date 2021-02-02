@@ -1,13 +1,13 @@
 ---
 title: "Conditional Means In-Class Work"
 author: "Doyle"
-output: html_document
+output: github_document
 ---
 
 In Class Work: Conditional Means
 ---------------------------------
 
-For today's class, I'd like for you to continue using the college-level dataset. Today, instead of predicting debt levels use the variables, I want you to predict average sat scores as a function of the variables in the dataset . Here are some (but not all!) of the things that you'll need to do along the way:
+For today's class, I'd like for you to continue using the college-level dataset. Today, instead of predicting debt levels use the variables, I want you to predict average sat scores `sat_avg` as a function of the variables in the dataset . Here are some (but not all!) of the things that you'll need to do along the way:
 
 * Open up the dataset, `sc_debt.Rds`
 
