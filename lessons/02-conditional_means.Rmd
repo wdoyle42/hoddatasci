@@ -1,30 +1,28 @@
 ---
 title: "Conditional Means"
-output: html_document
+output: github_document
 always_allow_html: yes
 ---
 
 # Analyzing Data: Conditional Means
 
-The conditional mean will be our first predictive algorithm. Conditional means answer the question: "Given what we know about a certain case, what can expect to see, on average?" The conditional mean is a powerful tool that is typically quite easy to explain to decision-makers. 
+The conditional mean will be our first predictive algorithm. Conditional means answer the question: "Given what we know about a certain case, what can expect to see, on average?" The conditional mean is a powerful tool that is typically quite easy to explain to decision-makers.
 
 We'll go through the following steps:
 
-1. Computing and plotting unconditional means
-2. Computing and plotting conditional means using a single predictor.
-3. Computing and plotting conditional means using multiple predictors. 
-
+1.  Computing and unconditional means
+2.  Computing conditional means using a single predictor and calculating our error.
+3.  Computing conditional means using multiple predictors and calculating our error.
 
 ## Motivating Example
 
-Suppose you're talking to a high school senior about college choice and student debt. They want to know which types of colleges have graduates
-with higher and lower levels of debt. They're concerned about the amount of debt they will incur on the path to graduation. Essentially they're asking for a prediction: based on the characteristics of the college they attend, what will be the likely amount of debt? 
+Suppose you're talking to a high school senior about college choice and student debt. They want to know which types of colleges have graduates with higher and lower levels of debt. They're concerned about the amount of debt they will incur on the path to graduation. Essentially they're asking for a prediction: based on the characteristics of the college they attend, what will be the likely amount of debt?
 
-We'll use data from the [college scorecard](https://collegescorecard.ed.gov/) to answer these questions. 
+We'll use data from the [college scorecard](https://collegescorecard.ed.gov/) to answer these questions.
 
 ## Libraries
 
-We'll use `tidyverse` as usual, and we'll need the `yardstick` library for some calculations. 
+We'll use `tidyverse` as usual, and we'll need the `yardstick` library for some calculations.
 
 ```{r}
 library(tidyverse)
@@ -40,39 +38,42 @@ df<-readRDS("sc_debt.Rds")
 names(df)
 ```
 
-
-| Name | Definition |
-| ------- | --------- |
-| unitid | Unit ID|
-| instnm| Institution Name|
-| stabbr| State Abbreviation|
-| grad_debt_mdn| Median Debt of Graduates|
-| control| Control Public or Private|
-| region | Census Region|
-| preddeg | Predominant Degree Offered: Associates or Bachelors |
-| openadmp| Open Admissions Policy: 1= Yes, 2=NO,3=No 1st time students|
-| selective| Institution admits fewer than 10 % of applicants, 1=Yes, 0=No |
-| research_u | Institiution is a research university 1=Yes, 0=No| 
-
+| Name           | Definition                                                                                                                                                                                                |
+|----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| unitid         | Unit ID                                                                                                                                                                                                   |
+| instnm         | Institution Name                                                                                                                                                                                          |
+| stabbr         | State Abbreviation                                                                                                                                                                                        |
+| grad_debt_mdn  | Median Debt of Graduates                                                                                                                                                                                  |
+| control        | Control Public or Private                                                                                                                                                                                 |
+| region         | Census Region                                                                                                                                                                                             |
+| preddeg        | Predominant Degree Offered: Associates or Bachelors                                                                                                                                                       |
+| openadmp       | Open Admissions Policy: 1= Yes, 2=NO,3=No 1st time students                                                                                                                                               |
+| adm_rate       | Proportion of applicants admitted                                                                                                                                                                         |
+| ccbasic        | Carnegie classification, see [here](https://data.ed.gov/dataset/9dc70e6b-8426-4d71-b9d5-70ce6094a3f4/resource/658b5b83-ac9f-4e41-913e-9ba9411d7967/download/collegescorecarddatadictionary_01192021.xlsx) |
+| sat_avg        | Average SAT scores                                                                                                                                                                                        |
+| md_earn_wne_p6 | Median earnings of recent graduates                                                                                                                                                                       |
+| ugds           | Number of undergraduates                                                                                                                                                                                  |
+| selective      | Institution admits fewer than 10 % of applicants, 1=Yes, 0=No                                                                                                                                             |
+| research_u     | Institiution is a research university 1=Yes, 0=No                                                                                                                                                         |
 
 ## Dependent Variable
 
-The dependent variable for us will be *institutional-level* median debt for graduates, as reported by the college scorecard. 
+The dependent variable for us will be *institutional-level* median debt for graduates, as reported by the college scorecard.
 
 ## Unconditional Means
 
-If you were asked to predict the level of debt for this student without any information about the college itself, the best guess would be the overall average, or what we're going to call the unconditional mean. 
+If you were asked to predict the level of debt for this student without any information about the college itself, the best guess would be the overall average, or what we're going to call the unconditional mean.
 
 ```{r}
 df%>%
   summarize(mean_debt_uncond=mean(grad_debt_mdn,na.rm=TRUE))
 ```
 
-This gives us the overall average, and would be our prediction about the level of college debt the student could expect, if we didn't have any other information about the college. 
+This gives us the overall average, and would be our prediction about the level of college debt the student could expect, if we didn't have any other information about the college.
 
 ## Unconditional Mean as a Predictor
 
-Using the mean of a variable as a predictor is something we do all the time. In this example, our best guess for the level of debt incurred by a graduate is just the average level of debt across all institutions. We're going to add this guess to the dataset as our first prediction, using the `mutate` command. 
+Using the mean of a variable as a predictor is something we do all the time. In this example, our best guess for the level of debt incurred by a graduate is just the average level of debt across all institutions. We're going to add this guess to the dataset as our first prediction, using the `mutate` command.
 
 ```{r}
 df<-df%>%
@@ -81,24 +82,26 @@ df<-df%>%
 
 Notice how this code is the same as above, except for the overwrite `df<-df%>%` and the use of `mutate` as opposed to `summarize.`
 
-This is of course a terrible prediction. In the absence of any other information, it's many times the best we can do, but we really ought to be able to do better. 
+This is of course a terrible prediction. In the absence of any other information, it's many times the best we can do, but we really ought to be able to do better.
 
 ## Root Mean Squared Error
+
 To understand how far off we are, we need to summarize our errors. We will use different ways of doing this this semester, but let's start with a very standard one, Root Mean Squared Error, or RMSE. An error term is the distance between each point and its prediction. We square the errors, take the average, then take the square root of the result. The name RMSE is exactly what RMSE is-- neat, huh?
 
-$$RMSE(\hat{Y})=\sqrt{ 1/n \sum_{i=1}^n(Y_i-\hat{Y_i})^2}$$
+$$ RMSE(\\hat{Y})=\\sqrt{ 1/n \\sum\_{i=1}^n(Y_i-\\hat{Y_i})^2} $$
 
-Luckily we have an r function that can do this for us. The `rmse` function from the `yardstick` library will calculate the rmse for a dataset. We need to give it the dataset and the two columns we're interested, in this case actual debt `grad_debt_mdn` and our prediction `mean_debt_uncond`. 
+Luckily we have an r function that can do this for us. The `rmse` function from the `yardstick` library will calculate the rmse for a dataset. We need to give it the dataset and the two columns we're interested, in this case actual debt `grad_debt_mdn` and our prediction `mean_debt_uncond`.
+
 ```{r}
 rmse_uncond<-df%>%rmse(grad_debt_mdn,mean_debt_uncond)
 rmse_uncond
 ```
 
-This tells us that if we use the unconditional mean, we'll be off by an average of `r round(rmse_uncond$.estimate)`. Is that good or bad? We don't know! RMSE does not have a scale that tells us what it means. We have to understand it in the context of the problem we're working on. Lower is always better when it comes to RMSE, as a lower RMSE means a more accurate prediction. 
+This tells us that if we use the unconditional mean, we'll be off by an average of `r round(rmse_uncond$.estimate)`. Is that good or bad? We don't know! RMSE does not have a scale that tells us what it means. We have to understand it in the context of the problem we're working on. Lower is always better when it comes to RMSE, as a lower RMSE means a more accurate prediction.
 
 ## Conditional Mean With One Predictor
 
-Public and private colleges in the US charge very different prices, and so it's plausible that graduates of these two types of institutions would have different levels of debt. We can calculate the conditional mean by first grouping by control using `group_by(control)` and then calculating the mean for each of the two groups: public or private. 
+Public and private colleges in the US charge very different prices, and so it's plausible that graduates of these two types of institutions would have different levels of debt. We can calculate the conditional mean by first grouping by control using `group_by(control)` and then calculating the mean for each of the two groups: public or private.
 
 ```{r}
 df%>%
@@ -106,8 +109,8 @@ df%>%
   summarize(mean_debt_control=mean(grad_debt_mdn,na.rm=TRUE))%>%
   arrange(control)
 ```
-We can see that graduates of private instituitions have higher debt levels than graduates of public institutions. 
-We'll follow the same steps as we did with the unconditional mean and add the conditional mean to the dataset as a predictor. 
+
+We can see that graduates of private instituitions have higher debt levels than graduates of public institutions. We'll follow the same steps as we did with the unconditional mean and add the conditional mean to the dataset as a predictor.
 
 ```{r}
 df<-df%>%
@@ -115,7 +118,8 @@ df<-df%>%
   mutate(mean_debt_control=mean(grad_debt_mdn,na.rm=TRUE))%>%
   ungroup()
 ```
-I added one more step: I ungrouped the dataset using `ungroup()`. It's good practice to do this at the end of an code chunk that uses the group function, otherwise other steps might be grouped in ways that were unintended. 
+
+I added one more step: I ungrouped the dataset using `ungroup()`. It's good practice to do this at the end of an code chunk that uses the group function, otherwise other steps might be grouped in ways that were unintended.
 
 We can then calculate the RMSE using our new prediction based on the conditional mean:
 
@@ -124,11 +128,11 @@ rmse_control<-df%>%rmse(grad_debt_mdn,mean_debt_control)
 rmse_control
 ```
 
-Using the predictor increased our predictive accuracy considerably, from `r round(rmse_uncond$.estimate)`  to `r round(rmse_control$.estimate)`! 
+Using the predictor increased our predictive accuracy considerably, from `r round(rmse_uncond$.estimate)` to `r round(rmse_control$.estimate)`!
 
 ## Conditional Mean With Two Predictors
 
-It's also probably the case that the degree level for the institition matters. It takes longer to get a bachelor's degree than an associate degree, so we could expect that institutions that mostly give bachelor's degrees would have higher debt levels. To figure this out we need to group by control and predominant degree level. 
+It's also probably the case that the degree level for the institition matters. It takes longer to get a bachelor's degree than an associate degree, so we could expect that institutions that mostly give bachelor's degrees would have higher debt levels. To figure this out we need to group by control and predominant degree level.
 
 Grouping with multiple predictors works exactly the same way as with one predictor. We just add the additional variable to the `group_by` command, like so:
 
@@ -148,13 +152,12 @@ df<-df%>%
   ungroup()
 ```
 
-
 ```{r}
 rmse_control_degree<-df%>%rmse(grad_debt_mdn,mean_debt_control_degree)
 rmse_control_degree
 ```
 
-Adding this variable has again improved our estimate. 
+Adding this variable has again improved our estimate.
 
 ## Conditional Mean With Three Predictors
 
@@ -168,9 +171,10 @@ df%>%
   print(n=100)
 ```
 
-Because it's so many more conditional means, I added the `print(n=100)` to the code chunk, so we can see all of the results. 
+Because it's so many more conditional means, I added the `print(n=100)` to the code chunk, so we can see all of the results.
 
 Let's add these as predictors to the dataset:
+
 ```{r}
 df<-df%>%
   group_by(control,preddeg,region)%>%
@@ -178,20 +182,19 @@ df<-df%>%
   ungroup()
 ```
 
-
 And calculate the RMSE:
+
 ```{r}
 rmse_control_degree_region<-df%>%rmse(grad_debt_mdn,mean_debt_control_degree_region)
 rmse_control_degree_region
 ```
 
-This is a much better RMSE than what we started with. Is it good enough? Who knows? Again this depends on the 
-context. But we can imagine the high school senior would have much more accurate information with which to make their decision. 
+This is a much better RMSE than what we started with. Is it good enough? Who knows? Again this depends on the context. But we can imagine the high school senior would have much more accurate information with which to make their decision.
 
 ## Applications of the Conditional Mean
 
 When might we use the conditional mean?
 
-- Calculating average sales for a retail location by day of the week and month
-- Calculating yield rate (proportion of admitted students who attend) by geographic region and income level for a college. 
-- Calculating average employee turnover by level of education and gender
+-   Calculating average sales for a retail location by day of the week and month
+-   Calculating yield rate (proportion of admitted students who attend) by geographic region and income level for a college.
+-   Calculating average employee turnover by level of education and gender

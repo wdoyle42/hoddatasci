@@ -138,6 +138,7 @@ names(df)
 | research_u     | Institiution is a research university 1=Yes, 0=No                                                                                                                                                      |
 | sat_avg        | Average Sat Scores                                                                                                                                                                                     |
 | md_earn_wne_p6 | Average Earnings of Recent Graduates                                                                                                                                                                   |
+|ugds  | Number of undergraduates |
 
 ## Looking at datasets
 

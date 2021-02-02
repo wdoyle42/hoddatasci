@@ -10,9 +10,11 @@ tool that is typically quite easy to explain to decision-makers.
 
 We’ll go through the following steps:
 
-1.  Computing and plotting unconditional means
-2.  Computing and plotting conditional means using a single predictor.
-3.  Computing and plotting conditional means using multiple predictors.
+1.  Computing and unconditional means
+2.  Computing conditional means using a single predictor and calculating
+    our error.
+3.  Computing conditional means using multiple predictors and
+    calculating our error.
 
 ## Motivating Example
 
@@ -70,22 +72,28 @@ df<-readRDS("sc_debt.Rds")
 names(df)
 ```
 
-    ##  [1] "unitid"        "instnm"        "stabbr"        "grad_debt_mdn"
-    ##  [5] "control"       "region"        "preddeg"       "openadmp"     
-    ##  [9] "adm_rate"      "ccbasic"       "selective"     "research_u"
+    ##  [1] "unitid"         "instnm"         "stabbr"         "grad_debt_mdn" 
+    ##  [5] "control"        "region"         "preddeg"        "openadmp"      
+    ##  [9] "adm_rate"       "ccbasic"        "sat_avg"        "md_earn_wne_p6"
+    ## [13] "ugds"           "selective"      "research_u"
 
-| Name            | Definition                                                    |
-| --------------- | ------------------------------------------------------------- |
-| unitid          | Unit ID                                                       |
-| instnm          | Institution Name                                              |
-| stabbr          | State Abbreviation                                            |
-| grad\_debt\_mdn | Median Debt of Graduates                                      |
-| control         | Control Public or Private                                     |
-| region          | Census Region                                                 |
-| preddeg         | Predominant Degree Offered: Associates or Bachelors           |
-| openadmp        | Open Admissions Policy: 1= Yes, 2=NO,3=No 1st time students   |
-| selective       | Institution admits fewer than 10 % of applicants, 1=Yes, 0=No |
-| research\_u     | Institiution is a research university 1=Yes, 0=No             |
+| Name              | Definition                                                                                                                                                                                                |
+|-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| unitid            | Unit ID                                                                                                                                                                                                   |
+| instnm            | Institution Name                                                                                                                                                                                          |
+| stabbr            | State Abbreviation                                                                                                                                                                                        |
+| grad\_debt\_mdn   | Median Debt of Graduates                                                                                                                                                                                  |
+| control           | Control Public or Private                                                                                                                                                                                 |
+| region            | Census Region                                                                                                                                                                                             |
+| preddeg           | Predominant Degree Offered: Associates or Bachelors                                                                                                                                                       |
+| openadmp          | Open Admissions Policy: 1= Yes, 2=NO,3=No 1st time students                                                                                                                                               |
+| adm\_rate         | Proportion of applicants admitted                                                                                                                                                                         |
+| ccbasic           | Carnegie classification, see [here](https://data.ed.gov/dataset/9dc70e6b-8426-4d71-b9d5-70ce6094a3f4/resource/658b5b83-ac9f-4e41-913e-9ba9411d7967/download/collegescorecarddatadictionary_01192021.xlsx) |
+| sat\_avg          | Average SAT scores                                                                                                                                                                                        |
+| md\_earn\_wne\_p6 | Median earnings of recent graduates                                                                                                                                                                       |
+| ugds              | Number of undergraduates                                                                                                                                                                                  |
+| selective         | Institution admits fewer than 10 % of applicants, 1=Yes, 0=No                                                                                                                                             |
+| research\_u       | Institiution is a research university 1=Yes, 0=No                                                                                                                                                         |
 
 ## Dependent Variable
 
@@ -141,7 +149,7 @@ term is the distance between each point and its prediction. We square
 the errors, take the average, then take the square root of the result.
 The name RMSE is exactly what RMSE is– neat, huh?
 
-\[RMSE(\hat{Y})=\sqrt{ 1/n \sum_{i=1}^n(Y_i-\hat{Y_i})^2}\]
+$$ RMSE(\\\\hat{Y})=\\\\sqrt{ 1/n \\\\sum\\\_{i=1}^n(Y\_i-\\\\hat{Y\_i})^2} $$
 
 Luckily we have an r function that can do this for us. The `rmse`
 function from the `yardstick` library will calculate the rmse for a
@@ -160,7 +168,7 @@ rmse_uncond
     ## 1 rmse    standard       6992.
 
 This tells us that if we use the unconditional mean, we’ll be off by an
-average of 6992. Is that good or bad? We don’t know\! RMSE does not have
+average of 6992. Is that good or bad? We don’t know! RMSE does not have
 a scale that tells us what it means. We have to understand it in the
 context of the problem we’re working on. Lower is always better when it
 comes to RMSE, as a lower RMSE means a more accurate prediction.
@@ -188,8 +196,10 @@ df%>%
     ## 1 Private            23684.
     ## 2 Public             15588.
 
-We’ll follow the same steps as we did with the unconditional mean and
-add the conditional mean to the dataset as a predictor.
+We can see that graduates of private instituitions have higher debt
+levels than graduates of public institutions. We’ll follow the same
+steps as we did with the unconditional mean and add the conditional mean
+to the dataset as a predictor.
 
 ``` r
 df<-df%>%
@@ -216,12 +226,13 @@ rmse_control
     ##   <chr>   <chr>          <dbl>
     ## 1 rmse    standard       5701.
 
-Using the predictor increased our predictive accuracy considerably\!
+Using the predictor increased our predictive accuracy considerably, from
+6992 to 5701!
 
 ## Conditional Mean With Two Predictors
 
 It’s also probably the case that the degree level for the institition
-matters. It takes longer to get a bachelor’s degree than an associate4
+matters. It takes longer to get a bachelor’s degree than an associate
 degree, so we could expect that institutions that mostly give bachelor’s
 degrees would have higher debt levels. To figure this out we need to
 group by control and predominant degree level.
@@ -362,9 +373,9 @@ to make their decision.
 
 When might we use the conditional mean?
 
-  - Calculating average sales for a retail location by day of the week
+-   Calculating average sales for a retail location by day of the week
     and month
-  - Calculating yield rate (proportion of admitted students who attend)
+-   Calculating yield rate (proportion of admitted students who attend)
     by geographic region and income level for a college.
-  - Calculating average employee turnover by level of education and
+-   Calculating average employee turnover by level of education and
     gender

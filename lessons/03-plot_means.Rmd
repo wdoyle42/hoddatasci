@@ -5,46 +5,29 @@ output: github_document
 
 The idea when plotting conditional means is to show how the outcome, or variable of interest, varies as a function of predictors. 
 
-Today we'll be working with a dataset from IBM which provide a standard HR dataset, which we can use to predict attrition. Attrition in this case is defined as an employee leaving without being fired or retiring. Companies generally attempt to avoid attrition, as it's very expensive to search for and hire a replacement-- better in general to keep the employees you have, provided they are doing their jobs. This means that it's important to predict who might leave in a given year. This information can be used in a targeted way in order to focus resources on the employees most likely to leave. 
+Today we'll be working with the college scorecard dataset, returning to our idea of predicting debt levels as a function of the characteristics of the college. 
 
 ## Setup for plotting conditional means
 
-We start with a standard set of setup commands. Today we'll be working with `tidyverse`, as usual, along with a library called `forcats` which helps us to deal with the dreaded factor variables. To handle colors, we'll need the package `RColorBrewer.`
+We start with a standard set of setup commands. Today we'll be working with `tidyverse`,us usual. To handle colors, we'll need the package `RColorBrewer.`
 
 ```{r  include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
-library(forcats)
 library(RColorBrewer)
-library(knitr)
 ```
 
 Next we load in the data, using the `readr` package. Note that this data is saved as comma separated or `csv.` This is an easy file format to recognize. When we use the `readr` package, it gives us some output that says how it interprets the data-- is it a string variable, numeric (float), integer and so on. 
 
 ## Loading Data 
 ```{r}
-#at<-read_csv("WA_Fn-UseC_-HR-Employee-Attrition.csv")
-
-## Save for later
-#save(at,file="at.Rdata")
-
-## Load the saved version (not necessary, just showing we can!)
-load("at.Rdata")
+readRDS("sc_debt.Rds")
 ```
 
-Today, our primary outcome of interest will be attrition. This is a binary variable that is currently encoded as text-- "Yes" or "No." We need to encode it as a binary variable with 1 meaning yes and 0 meaning no. After recoding, we need to make sure that the new variable looks correct.
+Today, our primary outcome of interest will be student debt. We can quickly summarize this variable using
 
-```{r}
-## Crate a new variable named attrit and define it as 0
-at<-at%>%mutate(attrit=ifelse(Attrition=="Yes",1,0))
 
-table(at$Attrition)
 
-table(at$attrit)
-
-table(at$attrit,at$Attrition)
-
-```
 
 
 ##Univariate Graphics
