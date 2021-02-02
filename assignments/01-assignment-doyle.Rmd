@@ -25,6 +25,28 @@ For your first assignment, I want you to create a file called `01-assignment_<la
 
 2. R output that summarizes one of the variables in the `sc_debt.Rds` dataset
 
+
+```{r}
+## Get necessary libraries-- won't work the first time, because you need to install them!
+library(tidyverse)
+```
+
+
+
+```{r}
+df<-readRDS("sc_debt.Rds") 
+names(df)
+```
+
+
+```{r filter_select_arrange}
+df%>%
+  filter(instnm=="Vanderbilt University")
+```
+
+
+
+
 Submit it under assignment 1, using the format `01-assignment_<lastname>.Rmd`. All assignments should be turned in using this format. Since my last name is Doyle, I would use `01-assignment_doyle.Rmd` as my file name. Unless your name is also Doyle, you should use a different name. 
 
 
