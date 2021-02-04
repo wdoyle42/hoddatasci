@@ -230,6 +230,11 @@ To summarize data, we use the summarize command. Inside that command, we tell R 
 ```{r summarize}
 df%>%
   summarize(mean_debt=mean(grad_debt_mdn,na.rm=TRUE))
+
+df%>%
+  summarize(median_debt=median(grad_debt_mdn,na.rm=TRUE))
+
+
 ```
 
 *Quick Exercise* Summarize the average entering SAT scores in this dataset.

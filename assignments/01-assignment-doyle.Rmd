@@ -31,8 +31,6 @@ For your first assignment, I want you to create a file called `01-assignment_<la
 library(tidyverse)
 ```
 
-
-
 ```{r}
 df<-readRDS("sc_debt.Rds") 
 names(df)
@@ -44,6 +42,10 @@ df%>%
   filter(instnm=="Vanderbilt University")
 ```
 
+
+```{r}
+
+```
 
 
 
