@@ -34,7 +34,7 @@ df%>%summarize(mean_debt=mean(grad_debt_mdn,na.rm=TRUE),
 
 ##Univariate Graphics
 
-Univariate graphics help us understand what individual variables look like-- how are they distibuted across the sample? Here's a quick rundown on some univariate graphics. Say we wanted a quick count of public and private institutions. We can use geom_bar to get this done. 
+Univariate graphics help us understand what individual variables look like-- how are they distributed across the sample? Here's a quick rundown on some univariate graphics. Say we wanted a quick count of public and private institutions. We can use geom_bar to get this done. 
 
 ```{r}
 df%>%
@@ -52,7 +52,7 @@ df%>%
   geom_histogram()
 
 ``` 
-Density plots provide a continous graphic of the distribution of a variable:
+Density plots provide a continuous graphic of the distribution of a variable:
 ```{r}
 df%>%
   ggplot(aes(x=grad_debt_mdn))+
@@ -62,7 +62,7 @@ df%>%
 
 ## Predicting Attrition
 
-Our first predction will calculate student debt as a function of control. 
+Our first prediction will calculate student debt as a function of control. 
 
 ```{r}
 df%>%
@@ -211,7 +211,7 @@ df%>%
 ```
 
 Better, but still awful. We need to do a couple of things. First, we should sort by the level of debt. 
-To do that, we need to reorder the states in the order of debt levels. To do that, we need to work with the state variabl `stabbr` as a factor.
+To do that, we need to reorder the states in the order of debt levels. To do that, we need to work with the state variable `stabbr` as a factor.
 
 
 
@@ -246,7 +246,7 @@ df%>%
 ```
 
 
-We can also use facets when there are multiple groups, so for instance if we wantto work across regions:
+We can also use facets when there are multiple groups, so for instance if we want to work across regions:
 
 ```{r}
 df%>%
@@ -258,4 +258,6 @@ df%>%
 
 ```
 
+
+*No so quick exercise: Plot debt levels for public and private four-year institutions (use `filter`) by whether or not they're research institutions*
 

@@ -1,495 +1,348 @@
 
-Presenting Data 1: Plotting Conditional Means
-=============================================
+\#Presenting Data 1: Plotting Conditional Means {\#plot\_means}
 
-The idea when plotting conditional means is to show how the outcome, or variable of interest, varies as a function of predictors.
+The idea when plotting conditional means is to show how the outcome, or
+variable of interest, varies as a function of predictors.
 
-Today we'll be working with a dataset from IBM which provide a standard HR dataset, which we can use to predict attrition. Attrition in this case is defined as an employee leaving without being fired or retiring. Companies generally attempt to avoid attrition, as it's very expensive to search for and hire a replacement-- better in general to keep the employees you have, provided they are doing their jobs. This means that it's important to predict who might leave in a given year. This information can be used in a targeted way in order to focus resources on the employees most likely to leave.
+Today we’ll be working with the college scorecard dataset, returning to
+our idea of predicting debt levels as a function of the characteristics
+of the college.
 
-Setup for plotting conditional means
-------------------------------------
+## Setup for plotting conditional means
 
-We start with a standard set of setup commands. Today we'll be working with `tidyverse`, as usual, along with a library called `forcats` which helps us to deal with the dreaded factor variables. To handle colors, we'll need the package `RColorBrewer.`
+We start with a standard set of setup commands. Today we’ll be working
+with `tidyverse`,us usual. To handle colors, we’ll need the package
+`RColorBrewer.`
 
-Next we load in the data, using the `readr` package. Note that this data is saved as comma separated or `csv.` This is an easy file format to recognize. When we use the `readr` package, it gives us some output that says how it interprets the data-- is it a string variable, numeric (float), integer and so on.
+Next we load in the data, using the `readr` package. Note that this data
+is saved as comma separated or `csv.` This is an easy file format to
+recognize. When we use the `readr` package, it gives us some output that
+says how it interprets the data– is it a string variable, numeric
+(float), integer and so on.
 
-Loading Data
-------------
-
-``` r
-at<-read_csv("https://community.watsonanalytics.com/wp-content/uploads/2015/03/WA_Fn-UseC_-HR-Employee-Attrition.csv")
-```
-
-    ## Parsed with column specification:
-    ## cols(
-    ##   .default = col_integer(),
-    ##   Attrition = col_character(),
-    ##   BusinessTravel = col_character(),
-    ##   Department = col_character(),
-    ##   EducationField = col_character(),
-    ##   Gender = col_character(),
-    ##   JobRole = col_character(),
-    ##   MaritalStatus = col_character(),
-    ##   Over18 = col_character(),
-    ##   OverTime = col_character()
-    ## )
-
-    ## See spec(...) for full column specifications.
+## Loading Data
 
 ``` r
-## Save for later
-save(at,file="at.Rdata")
-
-## Load the saved version (not necessary, just showing we can!)
-load("at.Rdata")
+df<-readRDS("sc_debt.Rds")
 ```
 
-Today, our primary outcome of interest will be attrition. This is a binary variable that is currently encoded as text-- "Yes" or "No." We need to encode it as a binary variable with 1 meaning yes and 0 meaning no. After recoding, we need to make sure that the new variable looks correct.
+Today, our primary outcome of interest will be student debt. We can
+quickly summarize this variable using `summarize` and functions like
+`mean` and `sd`.
 
 ``` r
-## Crate a new variable named attrit and define it as 0
-at<-at%>%mutate(attrit=ifelse(Attrition=="Yes",1,0))
-
-table(at$Attrition)
+df%>%summarize(mean_debt=mean(grad_debt_mdn,na.rm=TRUE),
+               sd_debt=sd(grad_debt_mdn,na.rm=TRUE))
 ```
 
-    ## 
-    ##   No  Yes 
-    ## 1233  237
+    ## # A tibble: 1 x 2
+    ##   mean_debt sd_debt
+    ##       <dbl>   <dbl>
+    ## 1    19662.   6994.
+
+\#\#Univariate Graphics
+
+Univariate graphics help us understand what individual variables look
+like– how are they distributed across the sample? Here’s a quick rundown
+on some univariate graphics. Say we wanted a quick count of public and
+private institutions. We can use geom\_bar to get this done.
 
 ``` r
-table(at$attrit)
+df%>%
+  group_by(control)%>%
+  count()%>%
+ggplot(aes(x=control,y=n,fill=as_factor(control)))+
+geom_bar(stat="identity")
 ```
 
-    ## 
-    ##    0    1 
-    ## 1233  237
+![](03-plot_means_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+
+The next univariate graphic you should know is for continuous variables.
+The first thing you generally want is a histogram.
 
 ``` r
-table(at$attrit,at$Attrition)
+df%>%
+  ggplot(aes(x=grad_debt_mdn))+
+  geom_histogram()
 ```
 
-    ##    
-    ##       No  Yes
-    ##   0 1233    0
-    ##   1    0  237
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 
-Univariate Graphics
--------------------
+    ## Warning: Removed 319 rows containing non-finite values (stat_bin).
 
-Univariate graphics help us understand what individual variables look like-- how are they distibuted across the sample? Here's a quick rundown on some univariate graphics. Say we wanted a quick count of who was in each department. We can use geom\_bar to get this done. By default, this will give us a count in each department.
+![](03-plot_means_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+Density plots provide a continuous graphic of the distribution of a
+variable:
 
 ``` r
-gg<-ggplot(at,aes(x=Department,fill=Department))
-gg<-gg+geom_bar()
-gg
+df%>%
+  ggplot(aes(x=grad_debt_mdn))+
+  geom_density(fill="lightblue")
 ```
 
-![](03-plot_means_files/figure-markdown_github/unnamed-chunk-4-1.png)
+    ## Warning: Removed 319 rows containing non-finite values (stat_density).
 
-The next univariate graphic you should know is for continuous variables. The first thing you generally want is a histogram.
+![](03-plot_means_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
+## Predicting Attrition
+
+Our first prediction will calculate student debt as a function of
+control.
 
 ``` r
-gg<-ggplot(at,aes(x=DistanceFromHome))
-gg<-gg+geom_histogram(binwidth = 1,fill="lightblue")
-gg
+df%>%
+  group_by(control)%>%
+  summarize(mean_debt=mean(grad_debt_mdn,na.rm=TRUE))
 ```
 
-![](03-plot_means_files/figure-markdown_github/unnamed-chunk-5-1.png) Density plots provide a continous graphic of the distribution of a variable:
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+    ## # A tibble: 2 x 2
+    ##   control mean_debt
+    ##   <chr>       <dbl>
+    ## 1 Private    23684.
+    ## 2 Public     15588.
+
+We can then take those results and plot them:
 
 ``` r
-gg<-ggplot(at,aes(x=DistanceFromHome))
-gg<-gg+geom_density()
-gg
+df%>%
+  group_by(control)%>%
+  summarize(mean_debt=mean(grad_debt_mdn,na.rm=TRUE))%>%
+  ggplot(aes(x=control,y=mean_debt))+
+  geom_bar(stat="identity",position="dodge")
 ```
 
-![](03-plot_means_files/figure-markdown_github/unnamed-chunk-6-1.png)
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+![](03-plot_means_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+To make the bars in different colors we use the “fill” aesthetic:
 
 ``` r
-## Changing bandwidth-- not recommended, just showing you how. 
-gg<-gg+geom_density(bw=10,color="blue")
-gg
+df%>%
+  group_by(control)%>%
+  summarize(mean_debt=mean(grad_debt_mdn,na.rm=TRUE))%>%
+  ggplot(aes(x=control,y=mean_debt,fill=control))+
+  geom_bar(stat="identity",position="dodge")
 ```
 
-![](03-plot_means_files/figure-markdown_github/unnamed-chunk-6-2.png)
+    ## `summarise()` ungrouping output (override with `.groups` argument)
 
-Predicting Attrition
---------------------
+![](03-plot_means_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
-Our first prediction will use business travel as a predictor for attrition. There are three categories here-- non travel, travel infrequently, and frequent travel. We'll calculate levels of attrtion at teach level and then take a look at the data.
+*Quick Exercise: Create a bar plot showing average debt level by degree
+(2yr/4yr) instead of control*
+
+## Dot Plots
+
+A dot plot can be a good way of displaying conditional means as well.
+Many times dot plots are more easily understood if they are horizontal,
+so we’ll use `coord_flip` to make it horizontal.
 
 ``` r
-at_sum<-at%>%
-  group_by(BusinessTravel)%>%
-  summarize(attr_avg=mean(attrit))
-
-at_sum
+df%>%
+  group_by(control)%>%
+  summarize(mean_debt=mean(grad_debt_mdn,na.rm=TRUE))%>%
+  ggplot(aes(x=control,y=mean_debt,color=control))+
+  geom_point()
 ```
 
-    ## # A tibble: 3 x 2
-    ##   BusinessTravel    attr_avg
-    ##   <chr>                <dbl>
-    ## 1 Non-Travel           0.08 
-    ## 2 Travel_Frequently    0.249
-    ## 3 Travel_Rarely        0.150
+    ## `summarise()` ungrouping output (override with `.groups` argument)
 
-Remember that the mean of a binary variable indicates the proportion of the population that has a certain characteristcs. So, in our case, 0.25 of the sample that travels frequently left the company in the last year. Our first plot will be a basic bar plot, showing the average levels of attrition.
+![](03-plot_means_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
+*Quick Exercise: Create a dot plot showing average debt level by region*
+
+## Conditional means using two predictors
+
+We can use graphics to display conditional means at multiple levels of
+predictor levels. There are a couple of ways to get this done. When
+using bar plots we’ve got two basic tools: location and color. In the
+first example, we’re going to plot debt as a function of control and the
+level of the college, 2 year or 4 year. We’ll use position for control
+and color for the type of college.
 
 ``` r
-## Bar Plot with aesthetics: mean attrition as height, business travel as cateogry
-gg<-ggplot(at_sum,aes(x=BusinessTravel,y=attr_avg))
-## Use bar plot geometry, height of bars set by level observed in dataset
-gg<-gg+geom_bar(stat="Identity")
-## Print
-gg
+df%>%
+  group_by(control,preddeg)%>%
+  summarize(mean_debt=mean(grad_debt_mdn,na.rm=TRUE))%>%
+  ggplot(aes(x=control,y=mean_debt,fill=preddeg))+
+  geom_bar(stat="identity",position="dodge")
 ```
 
-![](03-plot_means_files/figure-markdown_github/unnamed-chunk-8-1.png)
+    ## `summarise()` regrouping output by 'control' (override with `.groups` argument)
 
-This is fine, but it should really be in the order of the underlying variable. We can use `fct_reorder` to do this.
+![](03-plot_means_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
-*Side* *Note*
+*Quick Exercise: Create either a bar plot or a dot plot showing debt
+levels by region and control*
 
-What is a factor variable? In R, factor variables are used for categorical data. These are data elements that can take on one and only one value of a mutually exclusive and exhaustive list of elements. In our case, the travel variable is a factor-- employees can be in Non-Travel, Travel Frequently or Travel Rarely bins. Everyone is one bin, and the bins cover all possible options. We use factors when numbers won't work-- for characteristics like race or religion or political affiliation.
+## More Variables: faceting
+
+We can continue this logic with three variables. Now we’re going to
+summarize by control and degree and selectivity. Here we’re going to use
+an additional tool in our arsenal: Faceting. Faceting means making
+multiple graphs with the same structure. In the code below, we will
+arrange positions based on control, color based on degree type, and
+faceting by selectivity.
 
 ``` r
-## Same asethetics, but now orderred by level
-gg<-ggplot(at_sum,aes(x=fct_reorder(BusinessTravel,attr_avg),y=attr_avg))
-
-gg<-gg+geom_bar(stat="identity")
-
-## Labeling
-gg<-gg+xlab("Amount of Travel")+ylab("Yearly Attrition")
-##Print
-gg
+df%>%
+  group_by(control,preddeg,selective)%>%
+  summarize(mean_debt=mean(grad_debt_mdn,na.rm=TRUE))%>%
+  ggplot(aes(x=control,y=mean_debt,fill=preddeg))+
+  geom_bar(stat="identity",position="dodge")+
+  facet_wrap(~selective)
 ```
 
-![](03-plot_means_files/figure-markdown_github/unnamed-chunk-9-1.png)
+    ## `summarise()` regrouping output by 'control', 'preddeg' (override with `.groups` argument)
 
-*Quick Exercise: Create a bar plot showing average attrition by department instead of travel*
-
-``` r
-at_sum<-at%>%group_by(Department)%>%
-  summarize(mean_attrit=mean(attrit))
-
-
-## Bar Plot with aesthetics: mean attrition as height, business travel as cateogry
-gg<-ggplot(at_sum,aes(x=Department,y=mean_attrit))
-## Use bar plot geometry, height of bars set by level observed in dataset
-gg<-gg+geom_bar(stat="Identity")
-## Print
-gg
-```
-
-![](03-plot_means_files/figure-markdown_github/unnamed-chunk-10-1.png)
-
-``` r
-gg<-ggplot(at_sum,aes(x=fct_reorder(Department,mean_attrit),y=mean_attrit))
-
-## Use bar plot geometry, height of bars set by level observed in dataset
-gg<-gg+geom_bar(stat="Identity")
-## Print
-gg
-```
-
-![](03-plot_means_files/figure-markdown_github/unnamed-chunk-10-2.png)
-
-``` r
-at_sum<-at%>%
-  group_by(Department)%>%
-  summarize(attr_avg=mean(attrit))
-
-at_sum
-```
-
-    ## # A tibble: 3 x 2
-    ##   Department             attr_avg
-    ##   <chr>                     <dbl>
-    ## 1 Human Resources           0.190
-    ## 2 Research & Development    0.138
-    ## 3 Sales                     0.206
-
-``` r
-gg<-ggplot(at_sum,aes(x=fct_reorder(Department,attr_avg),y=attr_avg))
-
-gg<-gg+geom_bar(stat="identity")
-
-## Labeling
-gg<-gg+xlab("Department")+ylab("Yearly Attrition")
-##Print
-gg
-```
-
-![](03-plot_means_files/figure-markdown_github/unnamed-chunk-11-1.png)
-
-A dot plot can be a good way of displaying conditional means as well. Many times dot plots are more easily understood if they are horizontal, so we'll use `coord_flip` to make it horizontal.
-
-``` r
-at_sum<-at%>%
-  group_by(BusinessTravel)%>%
-  summarize(attr_avg=mean(attrit))
-
-at_sum
-```
-
-    ## # A tibble: 3 x 2
-    ##   BusinessTravel    attr_avg
-    ##   <chr>                <dbl>
-    ## 1 Non-Travel           0.08 
-    ## 2 Travel_Frequently    0.249
-    ## 3 Travel_Rarely        0.150
-
-``` r
-## Now a dot plot
-gg<-ggplot(at_sum,aes(x=reorder(BusinessTravel,-attr_avg),y=attr_avg))
-gg<-gg+geom_point()
-gg<-gg+coord_flip()
-gg
-```
-
-![](03-plot_means_files/figure-markdown_github/unnamed-chunk-12-1.png)
-
-*Quick Exercise: Create a dot plot showing average attrition by department*
-
-Conditional means using two predictors
---------------------------------------
-
-We can use graphics to display conditonal means at multiple levels of predictor levels. There are a couple of ways to get this done. When using bar plots we've got two basic tools: location and color. In the first example, we're going to plot attrition by travel and gender, We'll use color to indicate gender, and location to indicate travel.
-
-``` r
-## Summarize attrition by travel AND gender
-at_sum<-at%>%
-  group_by(BusinessTravel,Gender)%>%
-  summarize(attr_avg=mean(attrit))
-
-## Get the results
-at_sum
-```
-
-    ## # A tibble: 6 x 3
-    ## # Groups:   BusinessTravel [?]
-    ##   BusinessTravel    Gender attr_avg
-    ##   <chr>             <chr>     <dbl>
-    ## 1 Non-Travel        Female   0.0612
-    ## 2 Non-Travel        Male     0.0891
-    ## 3 Travel_Frequently Female   0.256 
-    ## 4 Travel_Frequently Male     0.244 
-    ## 5 Travel_Rarely     Female   0.128 
-    ## 6 Travel_Rarely     Male     0.164
-
-``` r
-## PLot it using a bar plot
-gg<-ggplot(at_sum,aes(x=fct_reorder(BusinessTravel,attr_avg),y=attr_avg,color=Gender))
-gg<-gg+geom_bar(stat="identity",aes(fill=Gender),position="dodge")
-gg
-```
-
-![](03-plot_means_files/figure-markdown_github/unnamed-chunk-13-1.png)
-
-``` r
-gg<-gg+ylab("Pr(Attrition)")+xlab("Frequency of Travel")
-gg
-```
-
-![](03-plot_means_files/figure-markdown_github/unnamed-chunk-13-2.png)
-
-``` r
-ggsave(gg, file="~/Desktop/travel.png")
-```
-
-    ## Saving 7 x 5 in image
-
-``` r
-## Plot it using a dot plot
-gg<-ggplot(at_sum,aes(x=reorder(BusinessTravel,attr_avg),y=attr_avg),color=Gender)
-gg<-gg+geom_point(aes(color=Gender))
-gg<-gg+coord_flip()
-gg
-```
-
-![](03-plot_means_files/figure-markdown_github/unnamed-chunk-13-3.png)
-
-*Quick Exercise: Create either a bar plot or a dot plot showing attrition by department AND field of education*
-
-MOAR Variables: faceting
-------------------------
-
-We can continue this logic with three variables. Now we're going to summarize by Travel, Gender and Marital status. Here we're going to use an additional tool in our arsenal: Faceting. Faceting means making multiple graphs with the same structure. In the code below, we will arrange positions based on travel, color based on gender, and then split the graphic by marital status.
-
-``` r
-at_sum<-at%>%
-  group_by(BusinessTravel,Gender,MaritalStatus)%>%
-  summarize(attr_avg=mean(attrit))
-
-at_sum
-```
-
-    ## # A tibble: 18 x 4
-    ## # Groups:   BusinessTravel, Gender [?]
-    ##    BusinessTravel    Gender MaritalStatus attr_avg
-    ##    <chr>             <chr>  <chr>            <dbl>
-    ##  1 Non-Travel        Female Divorced        0     
-    ##  2 Non-Travel        Female Married         0     
-    ##  3 Non-Travel        Female Single          0.2   
-    ##  4 Non-Travel        Male   Divorced        0.0303
-    ##  5 Non-Travel        Male   Married         0.0833
-    ##  6 Non-Travel        Male   Single          0.156 
-    ##  7 Travel_Frequently Female Divorced        0.208 
-    ##  8 Travel_Frequently Female Married         0.136 
-    ##  9 Travel_Frequently Female Single          0.388 
-    ## 10 Travel_Frequently Male   Divorced        0.205 
-    ## 11 Travel_Frequently Male   Married         0.176 
-    ## 12 Travel_Frequently Male   Single          0.383 
-    ## 13 Travel_Rarely     Female Divorced        0.0488
-    ## 14 Travel_Rarely     Female Married         0.122 
-    ## 15 Travel_Rarely     Female Single          0.185 
-    ## 16 Travel_Rarely     Male   Divorced        0.109 
-    ## 17 Travel_Rarely     Male   Married         0.127 
-    ## 18 Travel_Rarely     Male   Single          0.260
-
-``` r
-gg<-ggplot(at_sum,aes(x=reorder(BusinessTravel,attr_avg),
-                      y=attr_avg,
-                      fill=Gender))
-## Bar plot, with unstacked (dodge)
- gg<-gg+geom_bar(stat="identity",position="dodge")
-## Separate out by Marital Status
-gg<-gg+facet_wrap(~MaritalStatus)
-## Change orientation to sideways
-gg<-gg+coord_flip()
-## Print
-gg
-```
-
-![](03-plot_means_files/figure-markdown_github/unnamed-chunk-14-1.png)
-
-``` r
- ggsave(gg,file="~/Desktop/travel.png")
-```
-
-    ## Saving 7 x 5 in image
+![](03-plot_means_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
 *Side* *Note*: Colors
 
-What if we want to change colors? This is a little tricky for most people at first. `ggplot` thinks in terms of palettes, so you need to associate a palette with a characteristics of the graphic. Below, I replace the default palette with my own ugly one.
+What if we want to change colors? This is a little tricky for most
+people at first. `ggplot` thinks in terms of palettes, so you need to
+associate a palette with a characteristics of the graphic. Below, I
+replace the default palette with my own ugly one.
 
 ``` r
 ## Changing Colors
 mypal<-c("lightblue","orange")
 
-gg<-gg+scale_fill_manual(values =mypal )
-## Print
-gg
+
+
+df%>%
+  group_by(control,preddeg,selective)%>%
+  summarize(mean_debt=mean(grad_debt_mdn,na.rm=TRUE))%>%
+  ggplot(aes(x=control,y=mean_debt,fill=preddeg))+
+  geom_bar(stat="identity",position="dodge")+
+  scale_fill_manual(values =mypal )+
+  facet_wrap(~selective)
 ```
 
-![](03-plot_means_files/figure-markdown_github/unnamed-chunk-15-1.png)
+    ## `summarise()` regrouping output by 'control', 'preddeg' (override with `.groups` argument)
 
-You can also use `RColorBrewer` which has a wide variety of palettes already built. Below I use the qualitative palette creatively named "Set1".
+![](03-plot_means_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+
+You can also use `RColorBrewer` which has a wide variety of palettes
+already built. Below I use the qualitative palette creatively named
+“Set1”.
 
 ``` r
-## Another way, using color brewer palettes: 
-gg<-gg+scale_fill_brewer(palette = "Set1")
+df%>%
+  group_by(control,preddeg,selective)%>%
+  summarize(mean_debt=mean(grad_debt_mdn,na.rm=TRUE))%>%
+  ggplot(aes(x=control,y=mean_debt,fill=preddeg))+
+  geom_bar(stat="identity",position="dodge")+
+  scale_fill_brewer(palette="Set1" )+
+  facet_wrap(~selective)
 ```
 
-    ## Scale for 'fill' is already present. Adding another scale for 'fill',
-    ## which will replace the existing scale.
+    ## `summarise()` regrouping output by 'control', 'preddeg' (override with `.groups` argument)
+
+![](03-plot_means_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+
+*Quick Exercise: Plot debt levels by *
+
+## Graphs with many levels
+
+If you have many levels it can be helpful to “flip” the graph to reflect
+that. Let’s plot all 50 states by public and private institutions.
 
 ``` r
-gg
+df%>%
+  group_by(stabbr)%>%
+  summarize(mean_debt=mean(grad_debt_mdn,na.rm=T))%>%
+  ggplot(aes(x=stabbr,y=mean_debt))+
+  geom_bar(stat="identity",position="dodge")
 ```
 
-![](03-plot_means_files/figure-markdown_github/unnamed-chunk-16-1.png)
+    ## `summarise()` ungrouping output (override with `.groups` argument)
 
-*Quick Exercise: Plot predicted attrition by Education Field, Department and Gender*
+![](03-plot_means_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
 
-Multiple Predictors for Conditional Means
------------------------------------------
-
-Once you get past three variables, things can get difficult. One solution is to create a new factor with one level for every single level of the predictor variables.
+It plotted it, but it doesn’t look very good! Let’s try flipping the
+coordinates
 
 ``` r
-##This gets a little nutty
-at_sum<-at%>%
-  group_by(BusinessTravel,Gender,MaritalStatus,WorkLifeBalance)%>%
-  summarize(attr_avg=mean(attrit))%>%
-  ungroup()%>%
-  arrange(attr_avg)
-
-at_sum
+df%>%
+  group_by(stabbr)%>%
+  summarize(mean_debt=mean(grad_debt_mdn,na.rm=T))%>%
+  ggplot(aes(x=stabbr,y=mean_debt))+
+  geom_bar(stat="identity",position="dodge")+
+  coord_flip()
 ```
 
-    ## # A tibble: 70 x 5
-    ##    BusinessTravel Gender MaritalStatus WorkLifeBalance attr_avg
-    ##    <chr>          <chr>  <chr>                   <int>    <dbl>
-    ##  1 Non-Travel     Female Divorced                    2        0
-    ##  2 Non-Travel     Female Divorced                    3        0
-    ##  3 Non-Travel     Female Divorced                    4        0
-    ##  4 Non-Travel     Female Married                     1        0
-    ##  5 Non-Travel     Female Married                     2        0
-    ##  6 Non-Travel     Female Married                     3        0
-    ##  7 Non-Travel     Female Married                     4        0
-    ##  8 Non-Travel     Female Single                      1        0
-    ##  9 Non-Travel     Female Single                      3        0
-    ## 10 Non-Travel     Male   Divorced                    2        0
-    ## # ... with 60 more rows
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+![](03-plot_means_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+
+Better, but still awful. We need to do a couple of things. First, we
+should sort by the level of debt. To do that, we need to reorder the
+states in the order of debt levels. To do that, we need to work with the
+state variable `stabbr` as a factor.
+
+This is fine, but it should really be in the order of the underlying
+variable. We can use `fct_reorder` to do this.
+
+*Side* *Note*
+
+What is a factor variable? In R, factor variables are used for
+categorical data. These are data elements that can take on one and only
+one value of a mutually exclusive and exhaustive list of elements.. We
+use factors when numbers won’t work– for characteristics like race or
+religion or political affiliation, or in this case, state.
 
 ``` r
-## One Solution: a new variable for every type of employee defined by travel, gender, marital status, and happiness with work/life
-
-at_sum$grouping<-paste0(at_sum$BusinessTravel,
-                       ", ",
-                       at_sum$Gender,
-                       ", ",
-                       at_sum$MaritalStatus,
-                       ", Work/Life:",
-                       at_sum$WorkLifeBalance)
-
-at_sum$grouping<-as.factor(at_sum$grouping)
-
-at_sum%>%select(grouping,attr_avg)
+df%>%
+  group_by(stabbr)%>%
+  summarize(mean_debt=mean(grad_debt_mdn,na.rm=T))%>%
+  mutate(stabbr=fct_reorder(stabbr,mean_debt))%>%
+  ggplot(aes(x=stabbr,y=mean_debt))+
+  geom_bar(stat="identity",position="dodge")+
+  coord_flip()
 ```
 
-    ## # A tibble: 70 x 2
-    ##    grouping                                  attr_avg
-    ##    <fct>                                        <dbl>
-    ##  1 Non-Travel, Female, Divorced, Work/Life:2        0
-    ##  2 Non-Travel, Female, Divorced, Work/Life:3        0
-    ##  3 Non-Travel, Female, Divorced, Work/Life:4        0
-    ##  4 Non-Travel, Female, Married, Work/Life:1         0
-    ##  5 Non-Travel, Female, Married, Work/Life:2         0
-    ##  6 Non-Travel, Female, Married, Work/Life:3         0
-    ##  7 Non-Travel, Female, Married, Work/Life:4         0
-    ##  8 Non-Travel, Female, Single, Work/Life:1          0
-    ##  9 Non-Travel, Female, Single, Work/Life:3          0
-    ## 10 Non-Travel, Male, Divorced, Work/Life:2          0
-    ## # ... with 60 more rows
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+![](03-plot_means_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+
+Okay, better! Let’s make the color scheme a function of the level of
+debt using \`scale\_fill\_fermenter’.
 
 ``` r
-## Drop the groups with 0 or very low attrition. 
-at_sum<-at_sum%>%filter(attr_avg>.01)
-
-gg<-ggplot(at_sum,aes(x=fct_reorder(grouping,attr_avg),y=attr_avg))
-gg<-gg+geom_bar(stat="identity",aes(fill=WorkLifeBalance))
-gg<-gg+coord_flip()
-gg
+df%>%
+  group_by(stabbr)%>%
+  summarize(mean_debt=mean(grad_debt_mdn,na.rm=T))%>%
+  mutate(stabbr=fct_reorder(stabbr,mean_debt))%>%
+  ggplot(aes(x=stabbr,y=mean_debt,fill=mean_debt))+
+  geom_bar(stat="identity",position="dodge")+
+  scale_fill_fermenter(palette="Set1")+
+  coord_flip()
 ```
 
-![](03-plot_means_files/figure-markdown_github/unnamed-chunk-17-1.png)
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+![](03-plot_means_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+
+We can also use facets when there are multiple groups, so for instance
+if we want to work across regions:
 
 ``` r
-##Cleaning up a bit
-
-gg<-ggplot(at_sum,aes(x=fct_reorder(grouping,attr_avg),y=attr_avg))
-gg<-gg+geom_bar(stat="identity",aes(fill=WorkLifeBalance))
-gg<-gg+ylab("Proportion of Employees Who Departed")+xlab("Category")
-gg<-gg+coord_flip()
-gg
+df%>%
+  group_by(region,control,preddeg)%>%
+  summarize(mean_debt=mean(grad_debt_mdn,na.rm=T))%>%
+  ggplot(aes(x=control,y=mean_debt,fill=preddeg))+
+  geom_bar(stat="identity",position="dodge")+
+  facet_wrap(~region,nrow=2)
 ```
 
-![](03-plot_means_files/figure-markdown_github/unnamed-chunk-17-2.png)
+    ## `summarise()` regrouping output by 'region', 'control' (override with `.groups` argument)
 
-The other solution is to use facets, or lots of little graphs, which show how the pattern varies across different groups. In this case, our groups will be defined by gender and work/life balance.
+![](03-plot_means_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
-![](03-plot_means_files/figure-markdown_github/unnamed-chunk-18-1.png)
-
-*Sort of Quick Exercise: Try and Replicate one of the above plots using performance review, department, education field and overtime. *
+*No so quick exercise: Plot debt levels for public and private four-year
+institutions (use `filter`) by whether or not they’re research
+institutions*

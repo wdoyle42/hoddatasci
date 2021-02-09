@@ -1,6 +1,8 @@
 ---
 title: "Conditional Means"
-output: github_document
+output:
+  word_document: default
+  html_document: default
 always_allow_html: yes
 ---
 
@@ -110,7 +112,7 @@ df%>%
   arrange(control)
 ```
 
-We can see that graduates of private instituitions have higher debt levels than graduates of public institutions. We'll follow the same steps as we did with the unconditional mean and add the conditional mean to the dataset as a predictor.
+We can see that graduates of private institutions have higher debt levels than graduates of public institutions. We'll follow the same steps as we did with the unconditional mean and add the conditional mean to the dataset as a predictor.
 
 ```{r}
 df<-df%>%
@@ -132,7 +134,7 @@ Using the predictor increased our predictive accuracy considerably, from `r roun
 
 ## Conditional Mean With Two Predictors
 
-It's also probably the case that the degree level for the institition matters. It takes longer to get a bachelor's degree than an associate degree, so we could expect that institutions that mostly give bachelor's degrees would have higher debt levels. To figure this out we need to group by control and predominant degree level.
+It's also probably the case that the degree level for the institution matters. It takes longer to get a bachelor's degree than an associate degree, so we could expect that institutions that mostly give bachelor's degrees would have higher debt levels. To figure this out we need to group by control and predominant degree level.
 
 Grouping with multiple predictors works exactly the same way as with one predictor. We just add the additional variable to the `group_by` command, like so:
 
@@ -156,6 +158,7 @@ df<-df%>%
 rmse_control_degree<-df%>%rmse(grad_debt_mdn,mean_debt_control_degree)
 rmse_control_degree
 ```
+
 
 Adding this variable has again improved our estimate.
 
@@ -190,6 +193,39 @@ rmse_control_degree_region
 ```
 
 This is a much better RMSE than what we started with. Is it good enough? Who knows? Again this depends on the context. But we can imagine the high school senior would have much more accurate information with which to make their decision.
+
+```{r}
+df%>%
+  group_by(stabbr)%>%
+  summarize(mean_debt_state=mean(grad_debt_mdn,na.rm=TRUE))%>%
+  arrange(mean_debt_state)%>%
+  ggplot(aes(x=fct_reorder(as_factor(stabbr),mean_debt_state),
+                           y=mean_debt_state,fill=stabbr))+
+  geom_bar(stat="identity")+
+  coord_flip()+
+  theme(legend.position="none")
+
+```
+
+```{r}
+df<-df%>%
+  group_by(stabbr,control,preddeg)%>%
+  mutate(mean_debt_state=mean(grad_debt_mdn,na.rm=TRUE))%>%
+  ungroup()
+```
+
+```{r}
+rmse_state<-df%>%rmse(grad_debt_mdn,mean_debt_state)
+rmse_state
+```
+
+
+```{r}
+df<-df%>%
+  select(-mean_debt_state)
+```
+
+
 
 ## Applications of the Conditional Mean
 
