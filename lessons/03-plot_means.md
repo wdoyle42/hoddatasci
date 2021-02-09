@@ -1,5 +1,5 @@
 
-\#Presenting Data 1: Plotting Conditional Means {\#plot\_means}
+# Presenting Data 1: Plotting Conditional Means
 
 The idea when plotting conditional means is to show how the outcome, or
 variable of interest, varies as a function of predictors.
@@ -14,11 +14,7 @@ We start with a standard set of setup commands. Today we’ll be working
 with `tidyverse`,us usual. To handle colors, we’ll need the package
 `RColorBrewer.`
 
-Next we load in the data, using the `readr` package. Note that this data
-is saved as comma separated or `csv.` This is an easy file format to
-recognize. When we use the `readr` package, it gives us some output that
-says how it interprets the data– is it a string variable, numeric
-(float), integer and so on.
+Next we load in the data.
 
 ## Loading Data
 
