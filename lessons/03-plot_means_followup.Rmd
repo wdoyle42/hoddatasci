@@ -1,0 +1,276 @@
+---
+output: github_document
+---
+# Presenting Data 1: Plotting Conditional Means
+
+The idea when plotting conditional means is to show how the outcome, or variable of interest, varies as a function of predictors. 
+
+Today we'll be working with the college scorecard dataset, returning to our idea of predicting debt levels as a function of the characteristics of the college. 
+
+## Setup for plotting conditional means
+
+We start with a standard set of setup commands. Today we'll be working with `tidyverse`,us usual. To handle colors, we'll need the package `RColorBrewer.`
+
+```{r  include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(RColorBrewer)
+```
+
+Next we load in the data. 
+
+## Loading Data 
+```{r}
+df<-readRDS("sc_debt.Rds")
+```
+
+Today, our primary outcome of interest will be student debt. We can quickly summarize this variable using `summarize` and functions like `mean` and `sd`.
+
+```{r}
+df%>%summarize(mean_debt=mean(grad_debt_mdn,na.rm=TRUE),
+               sd_debt=sd(grad_debt_mdn,na.rm=TRUE))
+```
+
+
+##Univariate Graphics
+
+Univariate graphics help us understand what individual variables look like-- how are they distributed across the sample? Here's a quick rundown on some univariate graphics. Say we wanted a quick count of public and private institutions. We can use geom_bar to get this done. 
+
+```{r}
+df%>%
+  group_by(control)%>%
+  count()%>%
+  ggplot(aes(x=control,y=n,fill=as_factor(control)))+
+  geom_bar(stat="identity")
+``` 
+
+The next univariate graphic you should know is for continuous variables. The first thing you generally want is a histogram. 
+
+```{r}
+df%>%
+  ggplot(aes(x=grad_debt_mdn))+
+  geom_histogram()
+
+``` 
+Density plots provide a continuous graphic of the distribution of a variable:
+```{r}
+df%>%
+  ggplot(aes(x=grad_debt_mdn))+
+  geom_density(fill="lightblue")
+```
+
+
+## Predicting Student Debt
+
+Our first prediction will calculate student debt as a function of control. 
+
+```{r}
+df%>%
+  group_by(control)%>%
+  summarize(mean_debt=mean(grad_debt_mdn,na.rm=TRUE))
+
+```
+
+We can then take those results and plot them: 
+
+```{r}
+df%>%
+  group_by(control)%>%
+  summarize(mean_debt=mean(grad_debt_mdn,na.rm=TRUE))%>%
+  ggplot(aes(x=control,y=mean_debt))+
+  geom_bar(stat="identity",position="dodge")
+```
+
+To make the bars in different colors we use the "fill" aesthetic:
+
+```{r}
+df%>%
+  group_by(control)%>%
+  summarize(mean_debt=mean(grad_debt_mdn,na.rm=TRUE))%>%
+  ggplot(aes(x=control,y=mean_debt,fill=control))+
+  geom_bar(stat="identity",position="dodge")
+
+```
+
+
+
+*Quick Exercise: Create a bar plot showing average debt level by degree (2yr/4yr) instead of control*
+
+
+```{r}
+df%>%
+  group_by(preddeg)%>%
+  summarize(mean_debt=mean(grad_debt_mdn,na.rm=TRUE))%>%
+  ggplot(aes(x=preddeg,y=mean_debt,fill=preddeg))+
+  geom_bar(stat="identity",position="dodge")
+```
+
+
+
+
+## Dot Plots
+
+A dot plot can be a good way of displaying conditional means as well. Many times dot plots are more easily understood if they are horizontal, so we'll use `coord_flip` to make it horizontal.
+
+```{r}
+df%>%
+  group_by(control)%>%
+  summarize(mean_debt=mean(grad_debt_mdn,na.rm=TRUE))%>%
+  ggplot(aes(x=control,y=mean_debt,color=control))+
+  geom_point(size=10)
+
+```
+
+*Quick Exercise: Create a dot plot showing average debt level by region*
+
+
+
+## Conditional means using two predictors
+
+We can use graphics to display conditional means at multiple levels of predictor levels. There are a couple of ways to get this done. When using bar plots we've got two basic tools: location and color. In the first example, we're going to plot debt as a function of control and the level of the college, 2 year or 4 year. We'll use position for control and color for the type of college. 
+
+
+```{r}
+df%>%
+  group_by(control,preddeg)%>%
+  summarize(mean_debt=mean(grad_debt_mdn,na.rm=TRUE))%>%
+  ggplot(aes(x=control,y=mean_debt,fill=preddeg))+
+  geom_bar(stat="identity",position="dodge")
+
+
+```
+
+
+*Quick Exercise: Create either a bar plot or a dot plot showing debt levels by region and control*
+
+## More Variables: faceting
+
+We can continue this logic with three variables. Now we're going to summarize by control and degree and selectivity. Here we're going to use an additional tool in our arsenal: Faceting. Faceting means making multiple graphs with the same structure. In the code below, we will arrange positions based on control, color based on degree type, and faceting by selectivity. 
+
+
+```{r}
+df%>%
+  group_by(control,preddeg,selective)%>%
+  summarize(mean_debt=mean(grad_debt_mdn,na.rm=TRUE))%>%
+  ggplot(aes(x=control,y=mean_debt,fill=preddeg))+
+  geom_bar(stat="identity",position="dodge")+
+  facet_wrap(~selective)
+
+
+
+
+```
+
+_Side_ _Note_: Colors
+
+What if we want to change colors? This is a little tricky for most people at first. `ggplot` thinks in terms of palettes, so you need to associate a palette with a characteristics of the graphic. Below, I replace the default palette with my own ugly one. 
+
+```{r}
+
+## Changing Colors
+mypal<-c("lightblue","orange")
+
+
+
+df%>%
+  group_by(control,preddeg,selective)%>%
+  summarize(mean_debt=mean(grad_debt_mdn,na.rm=TRUE))%>%
+  ggplot(aes(x=control,y=mean_debt,fill=preddeg))+
+  geom_bar(stat="identity",position="dodge")+
+  scale_fill_manual(values =mypal )+
+  facet_wrap(~selective)
+
+
+
+
+```
+
+You can also use `RColorBrewer` which has a wide variety of palettes already built. Below I use the qualitative palette creatively named "Set1".
+
+```{r}
+df%>%
+  group_by(control,preddeg,selective)%>%
+  summarize(mean_debt=mean(grad_debt_mdn,na.rm=TRUE))%>%
+  ggplot(aes(x=control,y=mean_debt,fill=preddeg))+
+  geom_bar(stat="identity",position="dodge")+
+  scale_fill_brewer(palette="Set1" )+
+  facet_wrap(~selective)
+
+```
+
+*Quick Exercise: Plot debt levels by *
+
+## Graphs with many levels
+
+If you have many levels it can be helpful to "flip" the graph to reflect that. Let's plot all 50 states by public and private institutions.
+
+```{r}
+df%>%
+  group_by(stabbr)%>%
+  summarize(mean_debt=mean(grad_debt_mdn,na.rm=T))%>%
+  ggplot(aes(x=stabbr,y=mean_debt))+
+  geom_bar(stat="identity",position="dodge")
+```
+
+It plotted it, but it doesn't look very good! Let's try flipping the coordinates
+
+```{r}
+df%>%
+  group_by(stabbr)%>%
+  summarize(mean_debt=mean(grad_debt_mdn,na.rm=T))%>%
+  ggplot(aes(x=stabbr,y=mean_debt))+
+  geom_bar(stat="identity",position="dodge")+
+  coord_flip()
+```
+
+Better, but still awful. We need to do a couple of things. First, we should sort by the level of debt. 
+To do that, we need to reorder the states in the order of debt levels. To do that, we need to work with the state variable `stabbr` as a factor.
+
+
+
+This is fine, but it should really be in the order of the underlying variable. We can use `fct_reorder` to do this. 
+
+_Side_ _Note_
+
+What is a factor variable? In R, factor variables are used for categorical data. These are data elements that can take on one and only one value of a mutually exclusive and exhaustive list of elements.. We use factors when numbers won't work-- for characteristics like race or religion or political affiliation, or in this case, state. 
+
+```{r}
+df%>%
+  group_by(stabbr)%>%
+  summarize(mean_debt=mean(grad_debt_mdn,na.rm=T))%>%
+  mutate(stabbr=fct_reorder(stabbr,mean_debt))%>%
+  ggplot(aes(x=stabbr,y=mean_debt))+
+  geom_bar(stat="identity",position="dodge")+
+  coord_flip()
+  
+```
+
+Okay, better! Let's make the color scheme a function of the level of debt using `scale_fill_fermenter'.
+
+```{r}
+df%>%
+  group_by(stabbr)%>%
+  summarize(mean_debt=mean(grad_debt_mdn,na.rm=T))%>%
+  mutate(stabbr=fct_reorder(stabbr,mean_debt))%>%
+  ggplot(aes(x=stabbr,y=mean_debt,fill=mean_debt))+
+  geom_bar(stat="identity",position="dodge")+
+  scale_fill_fermenter(palette="Set1")+
+  coord_flip()
+```
+
+
+We can also use facets when there are multiple groups, so for instance if we want to work across regions:
+
+```{r}
+df%>%
+  group_by(region,control,preddeg)%>%
+  summarize(mean_debt=mean(grad_debt_mdn,na.rm=T))%>%
+  ggplot(aes(x=control,y=mean_debt,fill=preddeg))+
+  geom_bar(stat="identity",position="dodge")+
+  facet_wrap(~region,nrow=2)
+
+```
+
+
+*No so quick exercise: Plot debt levels for public and private four-year institutions (use `filter`) by whether or not they're research institutions*
+
