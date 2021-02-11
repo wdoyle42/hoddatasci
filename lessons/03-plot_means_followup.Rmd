@@ -245,6 +245,8 @@ df%>%
   
 ```
 
+
+
 Okay, better! Let's make the color scheme a function of the level of debt using `scale_fill_fermenter'.
 
 ```{r}

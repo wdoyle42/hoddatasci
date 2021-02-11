@@ -1,3 +1,20 @@
+---
+title: "03-plot-means-inclass.Rmd"
+author: "Doyle"
+date: "2/11/2021"
+output: github_document
+---
+
+```{r}
+library(tidyverse)
+library(RColorBrewer)
+```
+
+```{r}
+df<-readRDS("sc_debt.Rds")
+```
+
+
 ## Plotting Means: In Class Work
 
 1. Using the student debt dataset, calculate and plot average SAT by region. Plot the result using a bar plot. Make it nicely labeled and beautiful in every way.
@@ -5,3 +22,4 @@
 3. Calculate and plot average SAT scores  by region  AND predominant degree type. Use a bar plot. 
 4. Change the color scheme of the above plot. 
 5. Calculate and plot SAT scores by region and predominant degree  with a separate plot (hint:facet_wrap) for 2 and 4 year institutions.  
+

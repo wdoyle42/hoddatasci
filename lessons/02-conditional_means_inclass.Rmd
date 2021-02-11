@@ -15,7 +15,7 @@ For today's class, I'd like for you to continue using the college-level dataset.
 df<-readRDS("sc_debt.Rds")
 ```
 
-* Calculate the mean of the outcome variable of retail sales: `df%>%summarize(mean_sat=mean(sat_avg,na.rm=TRUE))`
+* Calculate the mean of the outcome variable of average sat scores
 
 * Generate some tables of the conditional mean of the outcome variable by levels of the predictor variable. (hint: `group_by`, then `summarize`).
 
