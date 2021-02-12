@@ -18,8 +18,103 @@ df<-readRDS("sc_debt.Rds")
 ## Plotting Means: In Class Work
 
 1. Using the student debt dataset, calculate and plot average SAT by region. Plot the result using a bar plot. Make it nicely labeled and beautiful in every way.
+
+```{r}
+df%>%
+  group_by(region)%>%
+  summarize(mean_sat=mean(sat_avg,na.rm=TRUE))%>%
+  mutate(region=fct_reorder(region,mean_sat))%>%
+  ggplot(aes(x=region,y=mean_sat,fill=region))+
+  geom_bar(stat="identity",position="dodge")+
+  theme_minimal()+
+  theme(legend.position = "none")+
+  xlab("Region")+ylab("Mean SAT Scores")
+
+```
+
+
 2. Repeat the above plot, but use a dot plot and reverse the axes. 
+
+
+```{r}
+df%>%
+  group_by(region)%>%
+  summarize(mean_sat=mean(sat_avg,na.rm=TRUE))%>%
+  mutate(region=fct_reorder(region,mean_sat))%>%
+  ggplot(aes(x=region,y=mean_sat,color=region))+
+  geom_point(size=5)+
+  theme_minimal()+
+  theme(legend.position = "none")+
+  xlab("Region")+ylab("Mean SAT Scores")+
+  coord_flip()
+
+```
+
+
+
 3. Calculate and plot average SAT scores  by region  AND predominant degree type. Use a bar plot. 
+
+
+```{r}
+df%>%
+  group_by(region,preddeg)%>%
+  summarize(mean_sat=mean(sat_avg,na.rm=TRUE))%>%
+  mutate(region=fct_reorder(region,mean_sat))%>%
+  ggplot(aes(x=region,y=mean_sat,fill=preddeg))+
+  geom_bar(stat="identity",position="dodge")+
+  theme_minimal()+
+  theme(legend.position = "none")+
+  xlab("Region")+ylab("Mean SAT Scores")
+```
+
+
 4. Change the color scheme of the above plot. 
-5. Calculate and plot SAT scores by region and predominant degree  with a separate plot (hint:facet_wrap) for 2 and 4 year institutions.  
+
+Using RColorBrewer
+```{r}
+df%>%
+  group_by(region,preddeg)%>%
+  summarize(mean_sat=mean(sat_avg,na.rm=TRUE))%>%
+  mutate(region=fct_reorder(region,mean_sat))%>%
+  ggplot(aes(x=region,y=mean_sat,fill=preddeg))+
+  geom_bar(stat="identity",position="dodge")+
+  theme_minimal()+
+  xlab("Region")+ylab("Mean SAT Scores")+
+  scale_fill_brewer(palette = "Set3")+
+  labs(fill="Predominant Degree")
+```
+
+
+
+```{r}
+mypal=c("lightblue","orange")
+
+df%>%
+  group_by(region,preddeg)%>%
+  summarize(mean_sat=mean(sat_avg,na.rm=TRUE))%>%
+  mutate(region=fct_reorder(region,mean_sat))%>%
+  ggplot(aes(x=region,y=mean_sat,fill=preddeg))+
+  geom_bar(stat="identity",position="dodge")+
+  theme_minimal()+
+  xlab("Region")+ylab("Mean SAT Scores")+
+  scale_fill_manual(values=mypal)
+```
+
+
+5. Calculate and plot SAT scores by region and predominant degree with a separate plot (hint:facet_wrap) for public and private institutions.  
+```{r}
+df%>%
+  group_by(region,preddeg,control)%>%
+  summarize(mean_sat=mean(sat_avg,na.rm=TRUE))%>%
+  mutate(region=fct_reorder(region,mean_sat))%>%
+  ggplot(aes(x=region,y=mean_sat,fill=preddeg))+
+  geom_bar(stat="identity",position="dodge")+
+  theme_minimal()+
+  theme(legend.position = "none")+
+  xlab("Region")+ylab("Mean SAT Scores")+
+  facet_wrap(~control)
+```
+
+
+
 
