@@ -12,7 +12,7 @@ Introduction to Data Science
 William R. Doyle
 
 Office Hours: Wednesdays and Thursdays, 2:30-5
-(<https://wdoyle42.youcanbook.me>) or by appointment
+(<https://outlook.office365.com/owa/calendar/WillDoyle@Vanderbilt365.onmicrosoft.com/bookings/>) or by appointment
 
 Email: <w.doyle@vanderbilt.edu>
 
@@ -153,7 +153,7 @@ be collected and graded through GitHub as well.
 
 # Communication
 
-You can book my office hours at: <https://wdoyle42.youcanbook.me> If my
+You can book my office hours at: <https://outlook.office365.com/owa/calendar/WillDoyle@Vanderbilt365.onmicrosoft.com/bookings/> If my
 office hours don’t work for you, please make an appointment over email.
 Student communications, including emails are my priority. However, due
 to the volume of email I receive, I may miss your message. To help with
