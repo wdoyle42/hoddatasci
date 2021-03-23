@@ -1,27 +1,32 @@
 
 ## Schedule for Last Few Weeks
 
-Oct 29 Classiifcation
+March 23 Webscraping/APIs
 
-Oct 31 Classiifcation
+March 25 Webscrapinng/APIs
 
-Nov 5 Cross Validation
+March 28 Assignment 7 Due
 
-Nov 7 Cross Validation
+March 30 Classification
 
-Nov 12 Databases
+April 1 Classification: Third Progress Report Due
 
-Nov 14 Databases: CANCELLED
+April 4 Assignment 8 Due
 
-Nov 19 Unsupervised Learning: 
+April 6 Cross Validation
 
-Nov 21 Unsupervised Learning: in class work, Code-a-rama, 5-8 pm, location Payne 110
+April 8 Reading Day
 
-Nov 22 Progress Report 4 DUE 5 pm 
+April 13 Cross Validation
 
-Nove 26, 28 Thanksgiving break
+April 15 Plots for Classification
 
-Dec 3 Presentations Group 1 (Benjamin-Gimbel)
+April 18 Assignment 10 due
 
-Dec 5 Presentations Group 2 (Klinenberg-Uraih)
+April 20 Reports
 
+April 22 Reports: Fourth Progress Report due
+
+April 27: TBA
+
+April 29: TBA
