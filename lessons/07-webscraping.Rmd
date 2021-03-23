@@ -1,7 +1,9 @@
 ---
 title: "Web Scraping"
 author: "Will Doyle"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ## Introduction
@@ -40,7 +42,7 @@ We will use multiple new libraries today. Among the ones you'll need:
 
 * `noncensus` for various geographic information, particularly around zip codes. 
 
-
+* `tidycensus`
 
 ```{r}
 library(rvest)
@@ -83,7 +85,7 @@ r_home
 moby_url = url("http://www.gutenberg.org/files/2701/2701-h/2701-h.htm")
 # reading the content (first 500 lines)
 moby_dick = readLines(moby_url, n = 5000)
-moby_dick[1200:1210]
+moby_dick[1175:1210]
 ```
 
 
@@ -98,7 +100,7 @@ marathon_wiki = "https://en.wikipedia.org/wiki/Marathon_world_record_progression
 marathon <- read_html(marathon_wiki)%>%html_table(fill=TRUE)
 
 #Men's is the first table
-marathon<-tbl_df(data.frame(marathon[[2]]))
+marathon<-as_tibble(marathon[[2]])
 
 #Convert time to seconds
 marathon<-marathon%>%
@@ -116,12 +118,10 @@ marathon$date<-mdy(marathon$Date)
 
 ## Progression of World Record Marathon Speed in Meters/Second
 ```{r}
-
 marathon<-marathon%>%mutate(Nationality=fct_reorder(.f=as.factor(Nationality),
                                                     .x=-speed,fun = max))
-
 g1<-ggplot(data=marathon,
-           aes(y=speed,x=marathon$date,
+           aes(y=speed,x=date,
                #Reorder nationality by fastest times
                color=Nationality,
                text=paste(Name,Time))
@@ -151,7 +151,6 @@ I first plug the web page I'm interested in to a variable called url. This makes
 ## Web Page: could be lots of different things. 
 url<-"http://www.basketball-reference.com/leagues/NBA_2018_totals.html"
 
-#url<-"https://www.pro-football-reference.com/years/2017/#team_stats::none"
 ```
 
 The next step is to download that web page onto my computer. I call this `page` and I use the `read_html()` function to get it. 
@@ -218,11 +217,9 @@ simple_data<-simple_data%>%arrange(-points)
 simple_data
 ```
 
-*Quick Exercise: Add field goals to the above data frame*
-
 ## Putting it all together
 
-The code below takes the exact same steps, but expands in two directions. First, it repeats over the years 1993-2017 to get a 25 year dataset. Next, it includes all of the columnins in the table from the NBA reference website. 
+The code below takes the exact same steps, but expands in two directions. First, it repeats over the years 1993-2017 to get a 25 year dataset. Next, it includes all of the columnns in the table from the NBA reference website. 
 
 ```{r}
 ## Pulling from a "stats" website
@@ -244,7 +241,6 @@ for (year in year_list){
 
 ## Web Page: could be lots of different things. 
 url<-paste0("http://www.basketball-reference.com/leagues/NBA_",year,"_totals.html")
-
 
 nba_df<-url %>% 
       read_html() %>%                   # parse html
@@ -302,7 +298,7 @@ print(paste("Completed year", year))
 }#end year loop
 
 nba_df_all<-nba_df_all%>%
-  mutate_at(.funs=as.numeric,.vars=names(nba_df_all)[5:31]) %>% #convert all to numeric
+  mutate_at(.funs=as.numeric,.vars=names(nba_df_all)[6:31]) %>% #convert all to numeric
   filter(!(is.na(games))) #drop "marker" rows
   
 save(nba_df_all,file = "nba.Rdata")
@@ -319,7 +315,7 @@ Points per minute is one of the key measures of an NBA player's output. Players 
 ```{r}
 nba_df_all<-nba_df_all%>%mutate(pts_minute=pts/minutes_played)
 
-gg<-ggplot(filter(nba_df_all,pts>1000,year>1997),aes(y=pts_minute,x=three_pointers,
+gg<-ggplot(filter(nba_df_all,pts>1000,year>1992),aes(y=pts_minute,x=three_pointers,
                           text=player,
                           color=as.factor(year)))
 gg<-gg+geom_hline(yintercept=.6,linetype="dashed",alpha=.3)
@@ -328,11 +324,18 @@ gg<-gg+facet_wrap(~year)
 gg<-gg+theme(legend.position="none")+xlab("Three Pointers")+ylab("Pts/Minute")
 ggplotly(gg)
 
+nba_df_all%>%
+  filter(year==1998)%>%
+  lm(pts_minute~I(three_pointers/100),data=.)%>%
+  summary()
+
 #Predicting points per minute by three pointers, 1998
-nba_mod_1998<-lm(pts_minute~I(three_pointers/100),data=filter(nba_df_all,year==1998));summary(nba_mod_1998)
+nba_mod_1998<-lm(pts_minute~I(three_pointers/100),
+                 data=dplyr::filter(nba_df_all,year==1998));summary(nba_mod_1998)
 
 #Predicting same in 2017
-nba_mod_2018<-lm(pts_minute~I(three_pointers/100),data=filter(nba_df_all,year==2018));summary(nba_mod_2018)
+nba_mod_2018<-lm(pts_minute~I(three_pointers/100),
+                 data=dplyr::filter(nba_df_all,year==2018));summary(nba_mod_2018)
 ```
 
 
@@ -353,7 +356,7 @@ ggplotly(gg)
 
 ```{r}
 
-nfl_get_data<-TRUE
+nfl_get_data<-FALSE
 
 nfl_df_all<-NULL
 
@@ -526,20 +529,22 @@ Next, we'll turn to the American Community Survey. This includes a large number 
 
 The first step is to get the table from ACS. Below, I submit a request using my key to get table B15002, which contains information on education levels. 
 
-## An Alternative: Tidycensus
+## Using Tidycensus
 ```{r}
 my_acs_key<-readLines("~/hod_datasci_keys/my_acs_key.txt",warn = FALSE)
 
 acs_key<-my_acs_key
 
 # Or just paste it here.
-acs_key<-"<your_acs_key_here>"
+
+
+#acs_key<-"<your_acs_key_here>"
 
 census_api_key(acs_key)
 
-v17 <- load_variables(2017, "acs5", cache = TRUE)
+v19 <- load_variables(2019, "acs5", cache = TRUE)
 
-View(v17)
+View(v19)
 
 var_list<-paste0("B15002_",c("001",
                             "015",
@@ -554,15 +559,22 @@ var_list<-paste0("B15002_",c("001",
 educ<-get_acs("zcta",
                 variables=var_list,
                 output="wide",
-                geometry=TRUE
+                geometry=TRUE,
+              keep_geo_vars = TRUE,
+              year = 2016
                 )
 
 names(educ)<-tolower(names(educ))
 
-educ%>%filter(geoid%in%ziplist)->county_educ
+educ<-educ%>%
+  mutate(zip=str_sub(name,start=7,end=11))
 
-county_educ%>%
-  rename(zip=geoid)%>%
+
+county_educ<-educ%>%
+  filter(zip%in%ziplist)
+
+county_educ<-
+  county_educ%>%
   group_by(zip)%>%
   mutate(college_educ=((b15002_015e+
                          b15002_016e+
@@ -572,8 +584,8 @@ county_educ%>%
                          b15002_033e+
                          b15002_034e+
                          b15002_035e)/b15002_001e)*100) %>%
-    select(zip,college_educ)->
-    county_educ
+    select(zip,college_educ)
+
 
 ```
 
@@ -588,16 +600,22 @@ var_list<-paste0("B19001_",c("001",
 
 income<-get_acs("zcta",
                 variables=var_list,
-                output="wide"
+                output="wide",
+                year=2016
                 )
 
 names(income)<-tolower(names(income))
 
-income%>%filter(geoid%in%ziplist)->county_income
 
+income<-income%>%
+  mutate(zip=str_sub(name,start=7,end=11))
+
+
+county_income<-
+  income%>%
+  filter(zip%in%ziplist)
 
 county_income %>%
-  rename(zip = geoid)%>%
 group_by(zip) %>%
   mutate(
     income_75 = ((
@@ -615,20 +633,38 @@ group_by(zip) %>%
 
 ```{r}
 county_df<-geo_join(county_educ,county_income,by="zip")
+county_df<-geo_join(county_df,city_zip,by='zip')
 county_df%>%
-  select(zip,college_educ,income_75)%>%
+  select(city,zip,college_educ,income_75)%>%
   arrange(zip)->county_df
 ```
 
 
-#Map it
+
+_Quick Exercise_ Pull table B23001 "Sex by Age by Employment Status for the Population 16 and over" from ACS. 
+
+
+## Mapping
+
+The last set of code maps these zip codes. We will use two tools: `tigris` will help us to interact with the Census Bureau's `tiger` shapefile data, and `leaflet` will help us draw interactive maps.
+
+
+## Tigris library and shapefiles
+
+To map something, you need to get the shapefile that's associate with the geogrpahic units we're interested in. We've already got the shapefile associated with zip codes in TN. (Zip codes are tehcnically routes and not geographic areas, but shut up, geography nerds.) 
+
+For the map we're going to create, I want text to pop up that will show the characteristics of each Zip code in Davidson county. 
+
+#Mapping: simple(ish) leaflet map
 ```{r}
+county_df<-county_df%>%
+  st_collection_extract("LINESTRING")
 
 pal <- colorQuantile(palette = "viridis", 
                      domain = county_df$college_educ, n = 10)
 
 county_df%>%
-    st_transform(crs = "+init=epsg:4326") %>%
+    st_transform(crs = "+init=epsg:4326")%>%
     leaflet(width = "100%") %>%
     addProviderTiles(provider = "CartoDB.Positron") %>%
     addPolygons(popup = ~ zip, 
@@ -645,175 +681,10 @@ county_df%>%
 ```
 
 
-_Quick Exercise_ Pull table B23001 "Sex by Age by Employment Status for the Population 16 and over" from ACS. 
-
-# Housing Data from Zillow
-
-Now, we'll turn to the Zillow API. We'll interact with this API to get average levels of home prices and price per square foot in these zip codes. Notice that I don't download any  dataset if it already exists: this avoids getting too many calls to Zillow-- they won't take more than 1,000 a day (which actually isn't a lot).
-
-We're going to interact directly with the Zillow api, as opposed to using an R "wrapper" like "acs.R". This means we have to have a properly formatted request AND be able to interpret the results when they come back. 
-
-
-```{r}
-
-# Get your own key and save it as zillow_key.txt
-zwsid<-readLines("~/hod_datasci_keys/zillow_key.txt",warn=FALSE)
-
-#Or just paste it here
-#zwsid<-"<your_zillow_key_here"
-
-# List of zips for which XML file with Zillow demographic data is to be extracted
-
-get_zillow_data=TRUE
-
-if (get_zillow_data==TRUE){
-
-#Create a blank data frame
-zdemodata<- list(zip = list(as.character()),
-                medListPrice=list(as.numeric()),
-                medValSqFt=list(as.numeric())
-              )
-
-#repeat across all zip codes
-for (i in 1:length(ziplist)) {
-
-  # url needs zillow key and zip code
-  url=paste0("http://www.zillow.com/webservice/GetDemographics.htm?zws-id=",zwsid,"&zip=",ziplist[i])
-  
-  #send request and parse result
-  x=xmlInternalTreeParse(url)
-  
-  #Look for right element in xml file, pull it
-  x2=xpathApply(x,"//table[name = 'Affordability Data']/data/attribute[name = 'Median List Price']/values/zip/value",xmlValue)
-  
-  # add that element to the dataset
-  zdemodata$medListPrice[i]=x2[[1]][1]
-  
-  # And again, find element, pull it
-  x3=xpathApply(x,"//table[name = 'Affordability Data']/data/attribute[name = 'Median Value Per Sq Ft']/values/zip/value",xmlValue)
-  
-  # add element to dataset
-  zdemodata$medValSqFt[i]=x3[[1]][1]
-
-    
-  #Add zip code to null dataset
-  zdemodata$zip[i]=ziplist[i]
-  
-}
-
-#Convert to tiblle
-zdemodata2<-as_tibble(data.frame(
-                   as.character(unlist(zdemodata$zip)),
-                   as.character(unlist(zdemodata$medListPrice)),
-                   as.character(unlist(zdemodata$medValSqFt))
-                   ))
-                   
-names(zdemodata2)<-c("zip","medListPrice","medValSqFt")
-
-zdemodata2<-zdemodata2%>%mutate_at(c("medListPrice","medValSqFt"),as.character)
-
-#Change relevant variables to numeric
-zdemodata2<-zdemodata2%>%mutate_at(c("medListPrice","medValSqFt"),as.numeric)
-
-save(zdemodata2,file="zdemodata.RData")
-}else{
-  load("zdemodata.RData")
-}
-
-head(zdemodata2)
-```
-
-Now we merge these two datasets by zip code:
-```{r}
-#Merge two datasets
-county_df<-tigris::geo_join(county_df,zdemodata2,by="zip")
-
-# Add in city informtion from city_zip
-county_df<-left_join(county_df,city_zip,by="zip")
-
-#Only reliable data
-county_df<-county_df%>%
-  mutate(medListPrice=ifelse(medListPrice<100000,NA,medListPrice))%>%
-  mutate(medValSqFt=ifelse(medValSqFt<100,NA,medValSqFt))
-
-head(county_df)
-```
-
-First, we can show values of homes (per square foot) by zip code. 
-
-```{r}
-
-#Need to order zip codes for barplot
-county_df<-county_df%>%mutate(zipfactor=factor(as.character(zip)))
-county_df<-county_df%>%mutate(zipfactor=fct_reorder(.f = zipfactor,.x=medValSqFt))
-
-#Bar plot of value by zip code
-g6<-ggplot(data=filter(county_df,medValSqFt>55),
-           aes(x=zipfactor,y=medValSqFt,fill=medValSqFt,text=zip))
-
-g6<-g6+scale_fill_gradient(low="blue",high="red")
-
-g6<-g6+geom_bar(stat="identity")+coord_flip()
-
-g6<-g6+xlab("")+ylab("Median Value per Square Foot, Nashville Neighborhoods")
-
-g6<-g6+theme(legend.position="none")
-
-ggplotly(g6)
-```
-
-
-We can run a regression predicting value per square foot by income and education:
-
-```{r}
-
-#Predict square footage by income and education
-mod1<-lm(medValSqFt~college_educ+income_75,data=county_df);summary(mod1)
-
-```
-
-_Quick Exercise_ Predict total home price by the same factors. 
-
-We can also create a scatterplot that shows median value per square foot as a function of education. 
-
-## Home Prices in Davidson County, TN by Education Level
-```{r}
-#Plot
-g2<-ggplot(data=filter(county_df,medListPrice>0,medValSqFt>55),
-           aes(x=college_educ,y=medValSqFt))
-g2<-g2+geom_point()
-g2<-g2+xlab("Percent of Population With a College Degree")+ylab("Median Value per Square Foot")
-g2<-g2+geom_smooth(method=lm)
-g2<-g2+theme_igray()
-g2
-```
-
-
-*Quick Exercise: Create a scatterplot with income as the x variable.*
-
-# Mapping
-
-The last set of code maps these zip codes. We will use two tools: `tigris` will help us to interact with the Census Bureau's `tiger` shapefile data, and `leaflet` will help us draw interactive maps.
-
-
-## Tigris library and shapefiles
-
-To map something, you need to get the shapefile that's associate with the geogrpahic units we're interested in. We're going to grab the shapefile associated with zip codes in TN. (Zip codes are tehcnically routes and not geographic areas, but shut up, geography nerds.) The code below uses the `tigris` library, which uses yet another API to intereact with the US Census TIGER shapefiles, which contain shapes for a huge number of geographic divisions of the US, including states, counties, cities, census tracts and blocks, school districts and so on. The code below gets just ZCTAs (Zip code tabulation areas) for Tennessee (fips=37). It then subsets that down to just the zip codes associated with Davidson county. 
-
-The next step is to merge the geographic data with the Zillow and ACS data using `geo_join`. 
-
-For the map we're going to create, I want text to pop up that will show the characteristics of each Zip code in Davidson county. 
-
 ```{r}
 popup <- paste0("Zip: ", county_df$zip,
                 "<br>",
                  county_df$city,
-                "<br>",
-                "Median Value per Square Foot: ",
-                round(county_df$medValSqFt,2),
-                "<br>",
-                "Median Home Price: ",
-                prettyNum(county_df$medListPrice,big.mark = ","),
                 "<br>",
                 "Percent of Pop with A Bachelors: ",
                 round((county_df$college_educ),1),
@@ -826,19 +697,6 @@ popup <- paste0("Zip: ", county_df$zip,
 Next, we'll need a palette that will map to each of the scales. The `colorNumeric` palette function takes a "palette" from RColorBrewer and maps it to a domain defined by the varible. 
 
 ```{r}
-#Palette for Square  feet
-sqftpal <- colorNumeric(
-  palette = "YlGnBu",
-  domain = county_df$medValSqFt,
-  na.color="gray"
-)
-
-#Palette for home prices
-price_pal <- colorNumeric(
-  palette = "YlGnBu",
-  domain = county_df$medListPrice,
-    na.color="gray"
-)
 
 #Palette for Education
 educ_pal <- colorNumeric(
@@ -859,35 +717,15 @@ income_pal <- colorNumeric(
 
 Leaflet is a powerful tool based on Javascript. It's implemented in R via the leaflet library. The way this works is in layers, much like ggplot. Each `addPolygons` command maps each zip code according to its own palette. The `addProviderTiles` adds in the underlying roadmap, while the `addLayerControl` provides access to the interface for showing different layers. 
 
-
+## More complex leaflet map
 ```{r}
 county_df%>%
   st_transform(crs = "+init=epsg:4326")->county_df
 
-map<-
+
   leaflet() %>%
   # underlying map from Carto.DB
   addProviderTiles("CartoDB.Positron") %>%
-  # Values for median price per square foot
-  addPolygons(data = county_df, 
-              fillColor = ~sqftpal(medValSqFt), 
-              color = "#b2aeae", # you need to use hex colors
-              fillOpacity = 0.7, 
-              weight = 1, 
-              smoothFactor = 0.2,
-              popup = popup,
-              group="Price/ Sq Ft"
-              ) %>%
-  # Values for median home price  
-    addPolygons(data = county_df, 
-              fillColor = ~price_pal(medListPrice), 
-              color = "#b2aeae", # you need to use hex colors
-              fillOpacity = 0.7, 
-              weight = 1, 
-              smoothFactor = 0.2,
-              popup = popup,
-              group="Home Price"
-              ) %>%
   # Values for education  
     addPolygons(data = county_df, 
               fillColor = ~educ_pal(college_educ), 
@@ -908,14 +746,13 @@ map<-
               popup = popup,
               group="Income"
               ) %>%
-  #Hide everying but price per square foot to start
-    hideGroup(c("Home Price","Education","Income","Price/ Sq Ft"))%>%
+  #Hide everying but Education to start
+    hideGroup(c("Income"))%>%
   # Add layers control, so user can select different layers
     addLayersControl(
-    overlayGroups = c("Price/ Sq Ft","Home Price","Education","Income"),
+    overlayGroups = c("Education","Income"),
     options = layersControlOptions(collapsed = FALSE)
-  )->
-  map
+  )
 ```
 ## Nashville Neighborhoods
 ```{r}
@@ -927,15 +764,19 @@ Nashville is a city with very sharply demarcated neighborhoods. High income, hig
 
 
 ## OMDB Data
-The code below first gets the titles of every Studio Ghibli movie, then searches the OMDB for these movies. It uses the "map" function to avoid
+The code below first gets the titles of every Studio Ghibli movie, then searches the OMDB for these movies. It uses the "map" function to avoid loops
 
 ```{r}
 
-install.packages("devtools")
+#install.packages("devtools")
 
 devtools::install_github("hrbrmstr/omdbapi")
 
 library(omdbapi)
+mykey<-read_lines("~/hod_datasci_keys/omdb_key.txt")
+
+
+omdb_api_key(mykey)
 
 url<-"https://en.wikipedia.org/wiki/List_of_Studio_Ghibli_works"
 
@@ -968,46 +809,48 @@ mv_df$rating<-mv_df$Ratings%>%map(2)%>%as_vector()
 # 
 mv_df<-mv_df%>%
   filter(rate_source=="Rotten Tomatoes")%>%
-    mutate(rating=parse_number(rating),
-           BoxOffice=parse_number(BoxOffice),
-           imdbRating=parse_number(imdbRating))
+    mutate(rating=parse_number(rating))
 
 ```
 
 
 ```{r}
-gg<-ggplot(mv_df,aes(x=Year,y=imdbRating,text=Title))
-gg<-gg+geom_point()
+gg<-
+mv_df%>%
+ggplot(aes(x=Year,y=imdbRating,text=Title,color=Title))+
+geom_point()+
+  theme(legend.position = "none")
+
 ggplotly(gg)
 ```
 
 
 ```{r}
 
-url<-"https://en.wikipedia.org/wiki/2017_in_film"
-"
-url<-https://en.wikipedia.org/wiki/Academy_Award_for_Best_Picture
-"
-# Get the page, pull the tables via html_table
-titles<- read_html(url)%>%html_nodes('table')
-titles<-titles[[7]] %>%html_table(fill=TRUE)
-names(titles)[1]<-"opening2"
-titles<-titles%>%
-select(Title)%>%as_vector()
 
+
+url<-"https://en.wikipedia.org/wiki/Academy_Award_for_Best_Picture"
+
+# Get the page, pull the tables via html_table
+titles<- read_html(url)%>%
+  html_nodes('table')
+
+titles<-titles[[12]] %>%
+  html_table(fill=TRUE)%>%
+  mutate(Year=str_sub(Year,start=1,end=4))%>%
+  filter(Year>2010)%>%
+  select(Film)%>%as_vector()
 
 # Search IMDB for each title, add to data frame
 mv<-map_df(titles,search_by_title)%>%
   filter(Title%in%titles)%>%
-  filter(Type=="movie")%>%
-  filter(Year==2017)
+  filter(Type=="movie")
 
 # Keep just the first version of each movie (particular to this example) 
 mv<-mv%>%group_by(Title)%>%
   filter(row_number()==1)
 
 # Send request for these IDs to the omdb database
-possibly_find_by_id
 mv_df <- map_df(mv$imdbID, find_by_id,include_tomatoes=TRUE)
 
 # pull rating source
@@ -1028,27 +871,7 @@ mv_df<-mv_df%>%
 
 ```{r}
 gg<-ggplot(mv_df,aes(x=BoxOffice,y=rating,text=Title))
-gg<-gg+geom_point()
+gg<-gg+geom_point(aes(color=Year))
 gg<-gg+scale_x_continuous(trans="log",breaks=pretty_breaks())
 ggplotly(gg)
 ```
-
-```{r}
-install.packages("noncensus")
-library(noncensus)
-data("counties")
-View(counties)
-```
-
-```{r}
-my_names<-c("rank",
-         "games",
-         "points_for",
-         "yards",)
-
-names(NFL)<-my_names
-
-NFL<-slice(NFL,-c(33:35))
-
-```
-
