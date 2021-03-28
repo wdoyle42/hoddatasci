@@ -11,7 +11,7 @@ Assignment 7
 For this assignment, I want you to use the Census ACS API to download and plot data. Complete the following steps:
 
 1. Download data for all of the counties in Georgia on education levels. 
-2. Compute the proportion of the population in each county that has a bachelor's degree or above by zip code.
+2. Compute the proportion of the population in each county that has a bachelor's degree or above by county.
 3. Download data for all of counties in Georgia for family income. 
 4. Compute the proportion of the population in each county that has family income above 75,000. 
 5. Download data for all of the counties in Georgia on health insurance coverage status 
