@@ -23,9 +23,9 @@ load("cex.Rdata")
 
 
 ```{r}
-cex<-cex%>%mutate(any_cigs=ifelse(cigarettes>0,1,0))%>%
-  mutate(any_cigs=ifelse(is.na(cigarettes),0,any_cigs))
-
+cex<-cex%>%
+  mutate(any_cigs=ifelse(cigarettes>0,1,0))%>%
+  mutate(any_cigs=ifelse(is.na(cigarettes),0,any_cigs)) ## Recoded to 0 because NA=no spending
 ```
 
 
@@ -40,6 +40,16 @@ mod1<-lm(any_cigs~inc_rank+
 
 3. When you're done, write some comments regarding why you think this model is a good one (write this up in paragraph form, using your finely-honed writing skills). According to this model, who spends any money at all on cigarettes?
 
+```{r}
+cex%>%
+  ggplot(aes(x=educ_ref))+
+  geom_density()
+
+cex%>%
+  group_by(educ_ref)%>%
+  count()
+
+```
 
 
 4. Create a subset of the data that only includes people who spent something (more than 0) on cigarettes. 

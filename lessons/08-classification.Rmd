@@ -12,14 +12,13 @@ Today we'll be working with the pizza dataset, which comes from the subreddit ra
 
 ```{r libraries}
 library(knitr)
-library(caret)
-library(forcats)
+library(tidyverse)
 library(tidytext)
-library(stringr)
 library(textdata)
 library(probably)
+library(modelr)
+library(yardstick)
 library(tidymodels)
-library(tidyverse)
 ```
 
 ```{r data}
@@ -30,9 +29,9 @@ Below, I do some basic data wrangling, changing variable names and recoding a fe
 
 ```{r wrangling}
 #Recoding
-za%>%
+za<-za%>%
   mutate(got_pizza=ifelse(requester_received_pizza==TRUE,1,0))%>%
-  mutate(got_pizza_f=as_factor(ifelse(requester_received_pizza==TRUE,"Yes","No")))->za
+  mutate(got_pizza_f=as_factor(ifelse(requester_received_pizza==TRUE,"Yes","No")))
 
 ```
 
@@ -75,8 +74,6 @@ za<-za%>%mutate(student=ifelse(grepl(x=request_text,pattern="student",ignore.cas
 
 ## Raw count of words in post
 za$words<-str_count(za$request_text,"\\S+")
-
-
 
 # Binary variable: word "poor" in text
 
@@ -121,14 +118,6 @@ za_expand<-za_expand%>%anti_join(stop_words,by="word")
 
 ## What this looks like
 #za_expand%>%select(word)
-```
-
-```{r}
-za_unqiue_word%>%
-  group_by(request_id)%>%
-  mutate(unique_count=length(unique(word)))%>%
-  summarize()
-
 ```
 
 
@@ -206,6 +195,22 @@ za%>%
 So, about 75% of the sample didn't get pizza, about 25% did. 
 
 Next, we cross-tabulate receiving pizza with certain terms. First, if the request mentioned the word "student."
+
+## A brief digression: crosstabs, percents, and percentage points
+https://www.cdc.gov/mmwr/volumes/70/wr/mm7013e3.htm
+
+|-----|-----|----|
+|                 |  Positive   |  Negative  |
+| Unvaccinated   |  161    | 828   |
+|Vaccinated    |   3   |  2476  |
+|-----|-----|
+
+
+|-----|-----|----|
+|                 |  Positive   |  Negative  |
+| Unvaccinated   |  .16    | .84   |
+|Vaccinated    |   .001   | .999   |
+|-----|-----|
 
 ```{r}
 za%>%
@@ -301,12 +306,13 @@ za_formula<-as.formula("got_pizza_f~
 Now we're going to run the model. This approach is a little different than what we've been using up until now. We're going to create a `logit_class` object by fitting a logistic regression to our outcome. The `set_engine` function says what particular kind of logistic regression we want to fit, and the fit argument sets out the formula and the data. 
 
 ```{r}
-#Logisitic model
+#Logistic model
 
 logit_class<-logistic_reg(mode="classification")%>%
   set_engine("glm")%>%
   fit(za_formula,data=za_train)
 
+## Show coefficients
 logit_class$fit%>%summary()
 
 ```
@@ -372,12 +378,12 @@ As we vary the threshold from 0 to 1, the sensitivity will decrease, while the s
 
 ```{r}
 
-logit_class%>%
+th<-logit_class%>%
   predict(za_test,type="prob")%>%
   bind_cols(za_test)%>%
-  threshold_perf(truth=got_pizza_f,
+ threshold_perf(truth=got_pizza_f,
                  estimate=.pred_Yes,
-                 thresholds=seq(0,1,by=.1))->th
+                 thresholds=seq(0,1,by=.1),metrics=c("sens","spec"))
 
 ggplot(filter(th,.metric%in%c("sens","spec")),
        aes(x=.threshold,y=.estimate,color=.metric))+

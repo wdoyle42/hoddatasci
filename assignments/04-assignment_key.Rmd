@@ -7,39 +7,14 @@ Assignment 4
 
 For this assignment, you'll need to open up, clean and save the following datasets, using the tools we've gone over in class. For each dataset, make sure that when you're done you have a nice, neatly labeled dataset that would be easy for you or another analyst to open and analyze. Save the result in an `RData` file using the names provided. You need to turn in an R script named `04-assignment_<lastname>.Rmd` that cleanly creates all of the datasets requested (lower case only for your last name, please).  
 
-```{r}
-library(tidyverse)
-library(haven)
-library(readxl)
-```
-
 
 1. Panel data for OECD countries. Save as file name `oecd.RData` [http://www.wiley.com/legacy/wileychi/baltagi/supp/Gasoline.dat](http://www.wiley.com/legacy/wileychi/baltagi/supp/Gasoline.dat)
 
-```{r}
-download.file("http://www.wiley.com/legacy/wileychi/baltagi/supp/Gasoline.dat",
-              destfile="gasoline.dat")
 
-gas<-read_table("gasoline.dat")
-
-save(gas,file="oecd.RData")
-
-```
+2. U.S. National Election Survey data from 2004. Save as file name `nes.RData`.
+[https://www.cdc.gov/healthyyouth/data/shpps/data.htm]()
 
 
-2. U.S. National Election Survey data from 2004. Save as file name `nes.RData`. [http://www.uta.edu/faculty/story/DataSets.htm](http://www.uta.edu/faculty/story/DataSets.htm)
-
-
-
-```{r}
-download.file("http://www.uta.edu/faculty/story/DataSets/NES2004.sav",
-              destfile="NES2004.sav")
-
-nes<-read_spss("NES2004.sav")
-
-save(nes,file="nes.RData")
-
-```
 
 
 

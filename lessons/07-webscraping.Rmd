@@ -2,8 +2,8 @@
 title: "Web Scraping"
 author: "Will Doyle"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ## Introduction
@@ -131,7 +131,8 @@ g1<-g1+geom_point()+
            ylab("Meters/Second")+
            theme_igray()
 
-ggplotly(g1)
+g1
+##ggplotly(g1)
 
 ```
 
@@ -556,7 +557,8 @@ var_list<-paste0("B15002_",c("001",
                             "034",
                             "035"))
 
-educ<-get_acs("zcta",
+educ<-get_acs(geography="county",
+              state="CA",
                 variables=var_list,
                 output="wide",
                 geometry=TRUE,
@@ -775,6 +777,7 @@ devtools::install_github("hrbrmstr/omdbapi")
 library(omdbapi)
 mykey<-read_lines("~/hod_datasci_keys/omdb_key.txt")
 
+"bb6d7863"
 
 omdb_api_key(mykey)
 
@@ -827,8 +830,6 @@ ggplotly(gg)
 
 ```{r}
 
-
-
 url<-"https://en.wikipedia.org/wiki/Academy_Award_for_Best_Picture"
 
 # Get the page, pull the tables via html_table
@@ -872,6 +873,6 @@ mv_df<-mv_df%>%
 ```{r}
 gg<-ggplot(mv_df,aes(x=BoxOffice,y=rating,text=Title))
 gg<-gg+geom_point(aes(color=Year))
-gg<-gg+scale_x_continuous(trans="log",breaks=pretty_breaks())
+gg<-gg+scale_x_continuous(trans="log")
 ggplotly(gg)
 ```
