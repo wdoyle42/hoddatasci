@@ -4,10 +4,6 @@ author: "Will Doyle"
 output: github_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
 ## Introduction
 
 The essence of prediction is discovering the extent to which our models can predict outcomes for data that does not come from our sample. Many times this process is temporal. We fit a model to data from one time period, then take predictors from a subsequent time period to come up with a prediction in the future. For instance, we might use data on team performance to predict the likely winners and losers for upcoming soccer games. 
@@ -20,16 +16,16 @@ The data that is used to generate our predictions is known as
 That data that is used to validate our predictions is known as *testing* data. With testing data, we take our trained model and see how good it is at predicting outcomes using out of sample data. 
 
 One very simple approach to this would be to cut our data in half. This is what we've done so far.  We could then train our model on half the data, then test it on the other half. This would tell us whether our measure of model fit (e.g. rmse, auc) is similar or different when we apply our model to out of sample data. 
+
 But this would only be a "one-shot" approach. It would be better to do this multiple times, cutting the data into two parts: training and testing, then fitting the model to the training data, and then checking its predictions against the testing data. That way, we could generate a large number of rmse's to see how well the model fits on lots of different possible out-of-sample predictions. 
 
 This process is called *cross-fold validation*, and it involves two important decisions: first, how will the data be cut, and how many times will the validation run. 
 
-We start by getting a new package `modelr` which has nice facilities for creating cross fold validation-ready datasets. 
-
 ```{r}
 library(tidyverse)
 library(modelr)
-library(caret)
+library(tidymodels)
+library(glmnet)
 ```
 
 Next we load the quickfacts data, which contains county-by-county information. We're going to create a simple model that predicts median home values in the county as a function of education, home ownership and income. 
@@ -38,208 +34,220 @@ Next we load the quickfacts data, which contains county-by-county information. W
 load("pd.Rdata")
 pd<-pd%>%
   select(median_home_val,median_hh_inc,coll_grad_pc,homeown_rate,per_capita_inc)%>%
-  mutate_all(funs(as.numeric))%>%
-  mutate(home_rank=percent_rank(median_home_val))%>% 
-  tbl_df()
+  mutate_all(.funs=list(as.numeric)) ## change all to numeric% 
+
 ```
 
 A quick look at this outcome lets us know it needs to be logged. 
 ```{r}
-gg<-ggplot(pd, aes(x=coll_grad_pc,y=home_rank))
-gg<-gg+geom_point()
-gg
+pd%>%
+ggplot(aes(x=coll_grad_pc,y=median_home_val))+
+geom_point()
+
+
+pd%>%
+ggplot(aes(x=coll_grad_pc,y=median_home_val))+
+geom_point()+
+scale_y_continuous(trans="log")
+
 ```
 
 We can run this model on the full dataset, but we're not taking advantage of the idea of cross-validation. 
 
 ```{r}
 ## Define the model
-mod1_formula<-formula(home_rank~coll_grad_pc+
+lm_formula<-as.formula("median_home_val~
+                        coll_grad_pc+
                         per_capita_inc+
                         homeown_rate+
-                        median_hh_inc)
-## Run the model against all of the data
-basic.mod<-lm(mod1_formula,
-              data=pd); summary(basic.mod)
+                        median_hh_inc")
+```
+
+## Define a recipe
+
+```{r}
+lm_rec <- recipe(lm_formula, data = pd) %>%
+  step_log(all_outcomes())%>%
+  step_zv(all_numeric()) %>% # drop any zero variance
+  step_naomit(all_predictors()) ## drop any missing data
 
 ```
 
-The `crossv_kfold` command creates a list of datasets from our original dataset, each of which contains a testing and training dataset. The proportion of cases held out for testing is determined by the number of folds: 10 folds would indicate 1/10 of the data to be held out. 
-
+## Prep the recipe
 ```{r}
-pd_cf<-pd%>%
-  crossv_kfold(20)
-pd_cf
-```
-
-The `pd_cf` dataset is now a nested dataset, as described in (Chapter 25)[http://r4ds.had.co.nz/many-models.html] of the Wickham 4ds book. 
-
-The next bit of code is key. It starts by converting all of the individual training datasets to tibbles. Then the model is run on each training dataset. Then apply the predictions from the model to each testing dataset, and finally pull the rmse from each of the testing datasets. 
-
-
-```{r}
-rmse_mod1<-pd_cf %>% 
-  mutate(train = map(train, as_tibble)) %>% ## Convert to tibbles
-  mutate(model = map(train, ~ lm(mod1_formula,
-                                 data = .))) %>%
-  mutate(rmse = map2_dbl(model, test, rmse)) %>% ## apply model, get rmse
-  select(.id, rmse) ## pull just id and rmse 
-```
-
-The resulting dataset includes the id for the cross validation and the rmse. We can summarize and plot this new data frame to see what our likely range of rmse happens to be. 
-
-```{r}
-summary(rmse_mod1$rmse)
-
-gg<-ggplot(rmse_mod1,aes(rmse))
-gg<-gg+geom_density()
-gg
-```
-
-As this shows, the rmse for the crossfold validations goes from a minimum of 
-`r  round(summary(rmse_mod1$rmse)[1],2)` to a maximum of `r  round(summary(rmse_mod1$rmse)[6],2)`, with a median of `r  round(summary(rmse_mod1$rmse)[3],2)`. 
-
-*Quick Exercise* Run the crossfold command again, but this time only 5 times. Then run it again, but 20 times. What happens to the RMSE? 
-
-## Full Cross Validation
-
-The `crossv_mc` command provides for a generalization of the crossfold command. For this command, we can specify the proportion to be randomly held out in each iteration, via `test=p` where `p` is the proportion to be held out. 
-
-```{r}
-pd_cv<-pd%>%
-  crossv_mc(n=1000,test=.2)
-pd_cv
-```
-
-The `pd_cv` dataset is a dataset of 1000x2 datasets, with each row containing a training and testing dataset. The testing dataset is .2 of the sample, but it's different each time. 
-
-Now we use the same approach, but with the MUCH larger qf_cv dataset. This will take a bit of time. 
-
-```{r}
-mod1_rmse_cv<-pd_cv %>% 
-  mutate(train = map(train, as_tibble)) %>% ## Convert to tibbles
-  mutate(model = map(train, ~ lm(mod1_formula, data = .)))%>%
-  mutate(rmse = map2_dbl(model, test, rmse))%>% 
-  select(.id, rmse) ## pull just id and rmse 
-
-
-mod1_rmse_cv
+lm_rec%>%
+  prep()
 ```
 
 
+## Set the kind of model to run
+```{r}
+lm_fit <- 
+  linear_reg() %>% 
+  set_engine("lm")
+```
+
+## Specify the resampling: K fold resampling, K=10
+```{r}
+folds <- vfold_cv(pd, v = 10)
+```
+
 
 ```{r}
-summary(mod1_rmse_cv$rmse)
+lm_kfold<-
+  lm_fit%>%
+  fit_resamples(
+    lm_rec, ## Recipe: preps the data
+    folds, ##resampling plan
+    control=control_resamples(save_pred = TRUE)
+  )
+```
 
-gg<-ggplot(mod1_rmse_cv,aes(rmse))
-gg<-gg+geom_density(bins=50,fill="blue",alpha=.2)
-gg
+```{r}
+lm_kfold%>%
+  collect_metrics()
+```
 
+```{r}
+lm_kfold%>%
+  unnest(.metrics)
+```
+
+```{r}
+lm_kfold%>%
+  unnest(.metrics)%>%
+  filter(.metric=="rmse")%>%
+  ggplot(aes(x=.estimate))+
+  geom_density()
+```
+
+
+## Use bootstrap
+
+
+## Specify the resampling: bootstrap resampling
+```{r}
+boot <- bootstraps(pd,times = 100) ##1000 is usual minimum
+```
+
+
+## Fit Bootstrap Reasmpling
+```{r}
+lm_boot<-
+  lm_fit%>%
+  fit_resamples(
+    lm_rec, ## Recipe: preps the data
+    boot, ##resampling plan
+    control=control_resamples(save_pred = TRUE)
+  )
+```
+
+## Get Metrics
+```{r}
+lm_boot%>%
+  collect_metrics()
+```
+
+
+## Plot bootsrap resampling results
+```{r}
+lm_boot%>%
+  unnest(.metrics)%>%
+  filter(.metric=="rmse")%>%
+  ggplot(aes(x=.estimate))+
+  geom_density()
+```
+
+
+
+## Feature Selection
+
+Of course, we can also just let the computer choose a model from a set of candidate variables. Below, I use lasso regression, which involves proposing candidate variables and evaluating their ability to lower RMSE, as the basis for choosing a "best" model. 
+
+## Set Lasso Formula
+```{r}
+lasso_formula<-as.formula("median_home_val~.")
+```
+
+## Set Lasso Recipe
+```{r}
+lasso_rec <- recipe(lasso_formula, data = pd) %>%
+  step_log(all_outcomes())%>%
+  step_zv(all_numeric()) %>% # drop any zero variance
+  step_naomit(all_predictors()) ## drop any missing data
+```
+
+
+## Specify Lasso Model
+```{r}
+
+penalty_spec<-.1
+mixture_spec<-1
+
+lasso_fit<- 
+  linear_reg(penalty=penalty_spec,
+             mixture=mixture_spec) %>% 
+  set_engine("glmnet")
+
+```
+
+
+## Fit Bootstrap Resamples from Lasso
+```{r}
+lasso_boot<-
+  lasso_fit%>%
+  fit_resamples(
+    lasso_rec, ## Recipe: preps the data
+    boot, ##resampling plan
+    control=control_resamples(save_pred = TRUE)
+  )
+
+```
+
+
+```{r}
+lasso_boot%>%
+  unnest(.metrics)%>%
+  filter(.metric=="rmse")%>%
+  ggplot(aes(x=.estimate))+
+  geom_density()
 ```
 
 
 ## Comparing Performance of Models
 
-It's the comparison between two different cross-validated models that we're really interested in. We want to know which model will perform best in predicting the future. 
 ```{r}
-
-## Define the model
-mod2_formula<-formula("home_rank ~ 
-                      coll_grad_pc + 
-                      per_capita_inc+
-                      homeown_rate+
-                      median_hh_inc")
-
-
-mod2_rmse_cv<-pd_cv %>% 
-  mutate(train = map(train, as_tibble)) %>% ## Convert to tibbles
-  mutate(model = map(train, ~ lm(mod2_formula, data = .)))%>%
-  mutate(rmse = map2_dbl(model, test, rmse))%>% 
-  select(.id, rmse) ## pull just id and rmse 
-
-summary(mod2_rmse_cv$rmse)
-summary(mod1_rmse_cv$rmse)
-
-gg<-ggplot(mod2_rmse_cv,aes(x=rmse))
-gg<-gg+geom_density(fill="orange",alpha=.2)
-gg<-gg+geom_density(data=mod1_rmse_cv,aes(x=rmse),fill="blue",alpha=.2)
-gg
-
-
+lm_boot%>%
+  unnest(.metrics)%>%
+  mutate(model="lm")%>%
+  bind_rows(lasso_boot%>%
+              unnest(.metrics)%>%
+              mutate(model="lasso")
+              )%>%
+  filter(.metric=="rmse")%>%
+  ggplot(aes(x=.estimate,fill=model))+
+  geom_density(alpha=.5)
 ```
 
-This graphic gives us a sense of model performance: While model 2 (orange) generally has lower rmse for out-of-sample predictions, there's still overlap in the performance between the two models. 
-*Not So quick exercise* From the qf dataset, choose new variables to add to your model to predict median home values. Compare the distribution of rmse from your model to the ones I obtained. 
-
-## Model Tuning
-
-In model tuning, we try to find the best possible model among various candidates. There are two basic ways to acomplish this. One is using a model that the analyst has identified, either through theory or practice or both, as a good model to predict the outcome. This has been our basic perspective in this class. 
-
-## Machine Learning
-
-Of course, we can also just let the computer choose a model from a set of candidate variables. Below, I use stepwise regression, which involves proposing candidate variables and evaluating their ability to lower RMSE, as the basis for choosing a "best" model. 
-
-```{r}
-#Tuning model parameters
-
-fitControl<-trainControl(method="boot",
-                         p=.2)
-
-
-fit1<-train(home_rank~per_capita_inc+
-            coll_grad_pc,
-            method="lm",
-            data=pd,
-            trControl=fitControl)
-
-summary(fit1)
-fit1$results
-
-pd%>%select(-median_home_val)->pd
-
-fit2<-train(home_rank~.,
-            data=pd,
-            method="glmStepAIC",
-            trControl=fitControl)
-
-summary(fit2)
-fit2$results
-
-rmse_data<-tbl_df(data.frame(fit1$resample$RMSE,fit2$resample$RMSE))
-
-names(rmse_data)<-c("fit1","fit2")
-
-gg<-ggplot(rmse_data,aes(x=fit1))
-gg<-gg+geom_density(fill="orange",alpha=.2)
-gg<-gg+geom_density(aes(x=fit2),fill="blue",alpha=.2)
-gg
-```
-
-What this shows is that the second model---using stepwise regression--- has superior out-of-sample results to the first model. 
 
 ## Cross Validation for Classification
 
 ```{r}
-library(tidymodels)
-```
-
-
-```{r}
 load("za.RData")
+
+za<-za%>%
+  drop_na()%>%
+  mutate(got_pizza_f=fct_relevel(got_pizza_f,"Yes","No"))%>%
+  select(-got_pizza)
 ```
+
 
 ```{r}
-za%>%
-  drop_na()->za_fit
-```
-
-
-```{r linear_model}
 #  Model terms
 za_formula<-as.formula("got_pizza_f~
              age+
              karma+
-             log(total_posts+1)+
+             total_posts+
              raop_posts+
              student+
              grateful+
@@ -247,69 +255,114 @@ za_formula<-as.formula("got_pizza_f~
              score")
 ```
 
+## Prep Recipe
 ```{r}
-
-fitControl<-trainControl(method="boot",
-                         p=.2,
-                         n=1000,
-                         classProbs = TRUE,
-                         summaryFunction=twoClassSummary)
-
-
-```
-
-```{r}
-
-fit_logit<-train(za_formula,
-            method="glm",
-            family="binomial",
-            data=za_fit,
-            metric="ROC",
-            trControl=fitControl)
-
+logit_rec <- recipe(za_formula, data = za) %>%
+  step_zv(all_numeric()) %>% # drop any zero variance
+  step_dummy(all_nominal(),-all_outcomes())%>%
+  step_naomit(all_predictors(),all_outcomes()) 
 ```
 
 
+## Specify Model
 ```{r}
-summary(fit_logit$resample$ROC)
-
-fit_logit$resample%>%
-  summarize_at(vars(ROC),list(mean,sd))%>%
-  rename(mean=fn1,sd=fn2)
-
-logit_resample<-tbl_df(fit_logit$resample)
-
-gg<-ggplot(data=fit_logit$resample,aes(x=ROC))
-gg<-gg+geom_density(fill="blue",alpha=.2)
-gg
+logit_fit<-
+  logistic_reg(mode="classification")%>%
+  set_engine("glm")
 ```
 
-## Stewpise approach
+
+## Set Resampling
 ```{r}
-
-fit_step_logit<-train(za_formula,
-            method="glmStepAIC",
-            family="binomial",
-            data=za_fit,
-            metric="ROC",
-            trControl=fitControl)
-
+logit_boot_rs<-bootstraps(za,100)
 ```
 
 
 ```{r}
-summary(fit_logit$resample$ROC)
-
-fit_logit$resample%>%
-  summarize_at(vars(ROC),list(mean,sd))%>%
-  rename(mean=fn1,sd=fn2)
-
-logit_resample<-tbl_df(fit_logit$resample)
-
-gg<-ggplot(data=fit_logit$resample,aes(x=ROC))
-gg<-gg+geom_density(fill="blue",alpha=.2)
-gg
+logit_boot <- 
+  logit_fit%>%
+  fit_resamples(
+    logit_rec,
+    logit_boot_rs,
+    metrics = metric_set(roc_auc, sens, spec)
+  )
 ```
+
+
+```{r}
+logit_boot%>%
+  collect_metrics()
+```
+
+
+## Plot distribution of AUC
+```{r}
+logit_boot%>%
+  unnest(.metrics)%>%
+  filter(.metric=="roc_auc")%>%
+  ggplot(aes(x=.estimate))+
+  geom_density()
+```
+
+
+
+## Set Lasso Formula
+```{r}
+lasso_logit_formula<-as.formula("got_pizza_f~.")
+```
+
+## Set Lasso Recipe
+```{r}
+lasso_logit_rec <- recipe(lasso_logit_formula, data = za) %>%
+  step_zv(all_numeric()) %>% # drop any zero variance
+  step_dummy(all_nominal(),-all_outcomes())%>%
+  step_naomit(all_predictors(),all_outcomes())
+```
+
+
+## Specify Lasso Model
+```{r}
+penalty_spec<-.1
+mixture_spec<-1
+
+lasso_logit_fit<- 
+  logistic_reg(mode="classification",
+             penalty=penalty_spec,
+             mixture=mixture_spec) %>% 
+  set_engine("glmnet")
+
+```
+
+
+## Fit Bootstrap Resamples from Lasso
+```{r}
+lasso_logit_boot<-
+  lasso_logit_fit%>%
+  fit_resamples(
+    lasso_logit_rec, ## Recipe: preps the data
+    logit_boot_rs, ##resampling plan
+        metrics = metric_set(roc_auc, sens, spec)
+  )
+```
+
+
+
+
+## Comparing Performance of Models
+
+```{r}
+logit_boot%>%
+  unnest(.metrics)%>%
+  mutate(model="logit")%>%
+  bind_rows(lasso_logit_boot%>%
+              unnest(.metrics)%>%
+              mutate(model="lasso")
+              )%>%
+  filter(.metric=="roc_auc")%>%
+  ggplot(aes(x=.estimate,fill=model))+
+  geom_density(alpha=.5)
+```
+
 
 
 
