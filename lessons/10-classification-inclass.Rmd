@@ -1,0 +1,63 @@
+---
+title: "10-cross-validation"
+author: "Will Doyle"
+date: "4/20/2021"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+```
+
+```{r}
+load("at.Rdata")
+```
+
+## Cross Validation: In Class Work
+
+1. Fit a linear model predicting monthly wages using the attrition dataset (`at.Rdata`) and cross validate those results. Competition: lowest average RMSE wins, with bonus points for low sd.
+
+```{r}
+
+```
+
+
+## Set the kind of model to run
+```{r}
+lm_fit <- 
+  linear_reg() %>% 
+  set_engine("lm")
+```
+
+
+## Specify the resampling: bootstrap resampling
+```{r}
+boot <- bootstraps(pd,times = 100) ##1000 is usual minimum
+```
+
+
+## Fit Bootstrap Reasmpling
+```{r}
+lm_boot<-
+  lm_fit%>%
+  fit_resamples(
+    lm_rec, ## Recipe: preps the data
+    boot, ##resampling plan
+    control=control_resamples(save_pred = TRUE)
+  )
+```
+
+
+2. Fit a logistic regression predicting attrition using the attrition dataset (`at.Rdata`) and cross validate those results. Competition: highest average AUC wins, with bonus points for low sd. 
+
+
+## Specify Model
+```{r}
+logit_fit<-
+  logistic_reg(mode="classification")%>%
+  set_engine("glm")
+```
+
+
+

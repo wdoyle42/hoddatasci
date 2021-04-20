@@ -33,8 +33,8 @@ Next we load the quickfacts data, which contains county-by-county information. W
 ```{r}
 load("pd.Rdata")
 pd<-pd%>%
-  select(median_home_val,median_hh_inc,coll_grad_pc,homeown_rate,per_capita_inc)%>%
-  mutate_all(.funs=list(as.numeric)) ## change all to numeric% 
+  select(median_home_val,median_hh_inc,coll_grad_pc,homeown_rate,per_capita_inc,pop65p,retail_percap)%>%
+  mutate_all(.funs=list(as.numeric)) ## change all to numeric
 
 ```
 
@@ -43,13 +43,14 @@ A quick look at this outcome lets us know it needs to be logged.
 pd%>%
 ggplot(aes(x=coll_grad_pc,y=median_home_val))+
 geom_point()
+```
 
 
+```{r}
 pd%>%
 ggplot(aes(x=coll_grad_pc,y=median_home_val))+
 geom_point()+
 scale_y_continuous(trans="log")
-
 ```
 
 We can run this model on the full dataset, but we're not taking advantage of the idea of cross-validation. 
@@ -92,7 +93,7 @@ lm_fit <-
 folds <- vfold_cv(pd, v = 10)
 ```
 
-
+## Fit Model and Cross Validate
 ```{r}
 lm_kfold<-
   lm_fit%>%
@@ -157,7 +158,6 @@ lm_boot%>%
   ggplot(aes(x=.estimate))+
   geom_density()
 ```
-
 
 
 ## Feature Selection
@@ -305,7 +305,6 @@ logit_boot%>%
 ```
 
 
-
 ## Set Lasso Formula
 ```{r}
 lasso_logit_formula<-as.formula("got_pizza_f~.")
@@ -332,7 +331,6 @@ lasso_logit_fit<-
   set_engine("glmnet")
 
 ```
-
 
 ## Fit Bootstrap Resamples from Lasso
 ```{r}
@@ -362,8 +360,6 @@ logit_boot%>%
   ggplot(aes(x=.estimate,fill=model))+
   geom_density(alpha=.5)
 ```
-
-
 
 
 In different situations we may care more about WHY something predicts an outcome, and in other situations we care more about WHETHER something predicts an outcome. The key is to be clear with yourself about what you're interested in. Model selection via stepwise regression or other algorithms is not a panacea. 
