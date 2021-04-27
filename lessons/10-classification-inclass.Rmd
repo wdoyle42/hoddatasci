@@ -19,6 +19,29 @@ load("at.Rdata")
 1. Fit a linear model predicting monthly wages using the attrition dataset (`at.Rdata`) and cross validate those results. Competition: lowest average RMSE wins, with bonus points for low sd.
 
 ```{r}
+lm_formula<-as.formula("MonthlyIncome~
+                       Education+
+                       EducationField+
+                       Age+
+                       Department")
+
+```
+
+
+```{r}
+at%>%
+  ggplot(aes(x=MonthlyIncome))+
+  geom_density()
+```
+
+
+```{r}
+
+lm_rec <- recipe(lm_formula, data = at) %>%
+  step_log(all_outcomes())%>%
+  step_zv(all_numeric()) %>% # drop any zero variance
+  step_naomit(all_predictors())%>% ## drop any missing data
+  step_dummy(all_nominal()) 
 
 ```
 
@@ -33,7 +56,7 @@ lm_fit <-
 
 ## Specify the resampling: bootstrap resampling
 ```{r}
-boot <- bootstraps(pd,times = 100) ##1000 is usual minimum
+boot <- bootstraps(at,times = 100) ##1000 is usual minimum
 ```
 
 
@@ -48,8 +71,60 @@ lm_boot<-
   )
 ```
 
+```{r}
+lm_boot%>%
+  collect_metrics()
+```
+
+```{r}
+lm_boot%>%
+  unnest(.metrics)%>%
+  filter(.metric=="rmse")%>%
+  ggplot(aes(x=.estimate))+
+  geom_density()
+```
+
 
 2. Fit a logistic regression predicting attrition using the attrition dataset (`at.Rdata`) and cross validate those results. Competition: highest average AUC wins, with bonus points for low sd. 
+
+
+```{r}
+at<-at%>%
+  mutate(Attrition=as_factor(Attrition))
+```
+
+
+```{r}
+
+logit_formula<-as.formula("Attrition~
+                          MonthlyIncome+
+                         Education+
+                       EducationField+
+                       Age+
+                       Department")
+
+```
+
+
+```{r}
+
+logit_rec <- recipe(logit_formula, data = at) %>%
+  step_zv(all_numeric()) %>% # drop any zero variance
+  step_naomit(all_predictors())%>% ## drop any missing data
+  step_dummy(all_nominal(),-all_outcomes()) 
+
+```
+
+```{r}
+logit_rec%>%
+  prep()
+```
+
+
+
+```{r}
+logit_boot <- bootstraps(at,times = 100) ##1000 is usual minimum
+```
 
 
 ## Specify Model
@@ -57,6 +132,35 @@ lm_boot<-
 logit_fit<-
   logistic_reg(mode="classification")%>%
   set_engine("glm")
+```
+
+
+```{r}
+logit_boot <- 
+  logit_fit%>%
+  fit_resamples(
+    logit_rec,
+    logit_boot,
+    metrics = metric_set(roc_auc, sens, spec)
+  )
+```
+
+
+
+
+```{r}
+logit_boot%>%
+  collect_metrics()
+```
+
+
+## Plot distribution of AUC
+```{r}
+logit_boot%>%
+  unnest(.metrics)%>%
+  filter(.metric=="roc_auc")%>%
+  ggplot(aes(x=.estimate))+
+  geom_density()
 ```
 
 

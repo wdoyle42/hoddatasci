@@ -4,5 +4,7 @@
 
 (you can find table information here: https://www.census.gov/programs-surveys/acs/technical-documentation/table-shells.html
 )
-2. Calcuate the proportion of individuals who have commutes of more than one hour.
+2. Calculate the proportion of individuals who have commutes of more than one hour.
+
+
 3. Plot the results by zip code, ordered from highest proportion to lowest. 

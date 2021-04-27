@@ -1,0 +1,212 @@
+---
+title: "07-assignment"
+author: "Doyle"
+date: "3/30/2021"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(tidycensus)
+```
+
+
+For this assignment, I want you to use the Census ACS API to download and plot data. Complete the following steps:
+
+1. Download data for all of the counties in Georgia on education levels. 
+
+
+
+2. Compute the proportion of the population in each county that has a bachelor's degree or above by county.
+
+```{r}
+
+my_acs_key<-readLines("~/hod_datasci_keys/my_acs_key.txt",warn = FALSE)
+
+acs_key<-my_acs_key
+
+# Or just paste it here.
+
+#acs_key<-"<your_acs_key_here>"
+
+census_api_key(acs_key)
+
+v19 <- load_variables(2019, "acs5", cache = TRUE)
+
+
+```
+
+
+```{r}
+
+var_list<-paste0("B15002_",c("001",
+                            "015",
+                            "016",
+                            "017",
+                            "018",
+                            "032",
+                            "033",
+                            "034",
+                            "035"))
+
+educ<-get_acs(geography="county",
+              state="GA",
+                variables=var_list,
+                output="wide",
+              year = 2016
+                )
+
+names(educ)<-tolower(names(educ))
+
+educ<-
+  educ%>%
+  group_by(name)%>%
+  mutate(college_educ=((b15002_015ee+
+                         b15002_016e+
+                         b15002_017e+
+                         b15002_018e+
+                         b15002_032e+
+                         b15002_033e+
+                         b15002_034e+
+                         b15002_035e)/b15002_001e)*100) %>%
+    select(geoid,name,college_educ)
+```
+
+3. Download data for all of counties in Georgia for family income. 
+
+```{r}
+
+var_list<-paste0("B19001_",c("001",
+                             "013",
+                             "014",
+                            "015",
+                            "016",
+                            "017"
+                            ))
+
+income<-get_acs("county",
+                state="GA",
+                variables=var_list,
+                output="wide",
+                year=2016
+                )
+
+names(income)<-tolower(names(income))
+
+income<-income %>%
+  mutate(
+    income_75 = ((
+      b19001_013e +
+        b19001_014e +
+        b19001_015e +
+        b19001_016e +
+        b19001_017e 
+    ) / b19001_001e)*100
+  )%>%
+  select(geoid,name,income_75)
+
+
+```
+
+
+4. Compute the proportion of the population in each county that has family income above 75,000.
+
+5. Download data for all of the counties in Georgia on health insurance coverages status 
+
+```{r}
+
+var_list<-paste0("B27001_",c("001",
+                             "004",
+                             "007",
+                            "010",
+                            "013",
+                            "016",
+                            "019",
+                            "022",
+                            "025",
+                            "028",
+                            "032",
+                            "035",
+                            "038",
+                            "041",
+                            "044",
+                            "047",
+                            "041",
+                            "050",
+                            "053",
+                            "056"                                                                             ))
+
+health<-get_acs("county",
+                state="GA",
+                variables=var_list,
+                output="wide",
+                year=2016
+                )
+
+names(health)<-tolower(names(health))
+
+health<-health %>%
+  mutate(
+    insured = ((
+b27001_004e+
+  b27001_007e+
+  b27001_010e+
+  b27001_013e+
+  b27001_016e+
+  b27001_019e+
+  b27001_022e+
+  b27001_025e+
+  b27001_028e+
+  b27001_032e+
+  b27001_035e+
+  b27001_038e+
+  b27001_041e+
+  b27001_044e+
+  b27001_047e+
+  b27001_041e+
+  b27001_050e+
+  +b27001_053e+
+  b27001_056e
+    ) / b27001_001e)*100
+  )%>%
+  select(geoid,name,insured)
+```
+
+
+```{r}
+df<-left_join(income,educ,by=c("geoid","name"))
+df<-left_join(df,health,by=c("geoid","name"))
+```
+
+
+
+6. Calculate the proportion of the population in each county that is uninsured. 
+
+```{r}
+
+```
+
+
+7. Plot the proportion uninsured as a function of education, and then as a function of income. 
+
+```{r}
+df%>%
+  ggplot(aes(x=college_educ,y=insured))+
+  geom_point()
+
+
+df%>%
+  ggplot(aes(x=income_75,y=insured))+
+  geom_point()
+```
+
+
+8. Model the proportion uninsured as a function of education and income.
+
+
+```{r}
+df%>%
+  lm(insured~income_75+college_educ,data=.)%>%
+  summary()
+```
+

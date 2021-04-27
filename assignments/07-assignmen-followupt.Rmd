@@ -1,0 +1,35 @@
+---
+title: "07-assignment"
+author: "Doyle"
+date: "3/30/2021"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(tidycensus)
+```
+
+
+For this assignment, I want you to use the Census ACS API to download and plot data. Complete the following steps:
+
+1. Download data for all of the counties in Georgia on education levels. 
+
+
+
+2. Compute the proportion of the population in each county that has a bachelor's degree or above by county.
+
+```{r}
+
+```
+
+
+3. Download data for all of counties in Georgia for family income. 
+
+
+4. Compute the proportion of the population in each county that has family income above 75,000.
+
+5. Download data for all of the counties in Georgia on health insurance coverage status 
+6. Calculate the proportion of the population in each county that is uninsured. 
+7. Plot the proportion uninsured as a function of education, and then as a function of income. 
+8. Model the proportion uninsured as a function of education and income.

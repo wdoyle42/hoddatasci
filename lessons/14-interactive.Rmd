@@ -139,6 +139,7 @@ df%>%
   select(-income_75,-college_educ)%>%
   ggplot(aes(y=`Pct w/ Income>75k`,
              x=`Pct w/ Bachelor's`,
+             color=State,
              text=paste0(
                State,": ", 
                "<br>",
@@ -149,7 +150,6 @@ df%>%
                round(`Pct w/ Income>75k`,1)
                    )))+
   geom_point()+
-  scale_fill_gradient()+
   theme_minimal()+
   theme(legend.position = "none")->gg
 

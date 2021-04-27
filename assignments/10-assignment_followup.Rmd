@@ -39,7 +39,7 @@ lm_formula<-as.formula("median_hh_inc~
 
 lm_rec <- recipe(lm_formula, data = pd) %>%
   step_zv(all_numeric()) %>% # drop any zero variance
-  step_naomit(all_predictors()) ## drop any missing data
+  step_naomit(all_predictors())
 
 ```
 

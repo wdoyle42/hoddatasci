@@ -1,0 +1,61 @@
+---
+title: "In class work- webscraping"
+author: "Doyle"
+date: "3/25/2021"
+output: html_document
+---
+
+
+```{r}
+library(tidyverse)
+library(tidycensus)
+```
+
+```{r}
+
+
+my_acs_key<-readLines("~/hod_datasci_keys/my_acs_key.txt",warn = FALSE)
+
+acs_key<-my_acs_key
+
+# Or just paste it here.
+
+
+#acs_key<-"<your_acs_key_here>"
+
+census_api_key(acs_key,install=TRUE)
+
+v19 <- load_variables(2019, "acs5", cache = TRUE)
+
+View(v19)
+
+```
+
+
+```{r}
+var_list<-paste0("B08134_",c("001",
+                              "010"))
+
+transport<-get_acs(geography="county",
+              state="CA",
+                variables=var_list,
+                output="wide",
+                geometry=TRUE,
+              keep_geo_vars = TRUE,
+              year = 2016
+                )
+
+transport<-transport%>%
+  group_by(NAME.y)%>%
+  mutate(percent_over_hour=(B08134_010E/B08134_001E)*100)
+
+transport%>%
+  mutate(County=fct_reorder(.f=as.factor(NAME.x),.x=percent_over_hour))%>%
+  ggplot(aes(x=County,y=percent_over_hour))+
+  geom_point()+
+  coord_flip()
+
+
+```
+
+

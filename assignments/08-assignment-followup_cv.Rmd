@@ -1,0 +1,182 @@
+---
+title: "Assignment 8 Followup"
+author: "Will Doyle"
+date: "4/15/2021"
+output: html_document
+---
+
+
+For this assignment, you'll be using the lemons dataset, which is a subset of the dataset used for a Kaggle competition described here: 
+https://www.kaggle.com/c/DontGetKicked/data. Your job is to predict which cars are most likely to be lemons. Please note
+
+Complete the following steps.
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+```
+
+
+
+```{r}
+cv<-read_csv("training.csv")
+
+numeric_vars<-c("VehYear",
+                "VehicleAge",
+                "VehBCost")
+
+cv<-cv%>%
+  mutate(across(.cols=all_of(numeric_vars),as.numeric))%>%
+  select(-RefId)%>%
+  mutate(zip_f=as_factor(as.character(VNZIP1)))%>%
+  select(-VNZIP1)%>%
+  mutate(Make=fct_lump(as_factor(Make),p=.1))%>%
+  select(IsBadBuy,
+         Auction,
+         VehicleAge,
+         Make,
+         Color,
+         VehOdo,
+         VehBCost,
+         VNST,
+         IsOnlineSale,
+         WarrantyCost,
+         zip_f)
+
+
+
+```
+
+```{r}
+cv%>%
+  group_by(IsBadBuy)%>%
+  count()
+
+cv<-cv%>%
+  mutate(isbadbuy_f=ifelse(IsBadBuy==1,"Yes","No"))%>%
+  mutate(isbadbuy_f=as_factor(isbadbuy_f))%>%
+  mutate(isbadbuy_f=fct_relevel(isbadbuy_f,"Yes","No"))%>%
+  select(-IsBadBuy)
+  
+cv%>%
+  group_by(isbadbuy_f)%>%
+  count()
+
+
+```
+
+
+1. Calculate the proportion of lemons in the training dataset using the `IsBadBuy` variable. 
+
+```{r}
+cv%>%
+  summarize(prop_badbuy=mean(IsBadBuy))
+
+prop.table(table(cv$IsBadBuy))
+```
+
+
+
+
+2. Calculate the proportion of lemons by Make. 
+
+```{r}
+cv%>%
+  group_by(Make)%>%
+  summarize(prop_bad_buy=mean(IsBadBuy))%>%
+  arrange(-prop_bad_buy)%>%print(n=50)
+
+cv%>%
+  group_by(Make,IsBadBuy)%>%
+  count()
+```
+
+
+
+3. Now, predict the probability of being a lemon using a logistic regression, again using covariates of your choosing.  
+
+```{r}
+cv_formula<-as.formula("isbadbuy_f~.")
+```
+
+
+
+```{r}
+lasso_logit_rec <- recipe(cv_formula, data = cv) %>%
+  step_zv(all_numeric()) %>% # drop any zero variance
+  step_dummy(all_nominal(),-all_outcomes())%>%
+  step_naomit(all_predictors(),all_outcomes())
+```
+
+
+## Set Resampling
+```{r}
+logit_boot_rs<-bootstraps(cv,10)
+```
+
+
+```{r}
+penalty_spec<-.1
+mixture_spec<-1
+
+lasso_logit_fit<- 
+  logistic_reg(mode="classification",
+             penalty=penalty_spec,
+             mixture=mixture_spec) %>% 
+  set_engine("glmnet")
+
+```
+
+
+## Fit Bootstrap Resamples from Lasso
+```{r}
+lasso_logit_boot<-
+  lasso_logit_fit%>%
+  fit_resamples(
+    lasso_logit_rec, ## Recipe: preps the data
+    logit_boot_rs, ##resampling plan
+        metrics = metric_set(roc_auc, sens, spec)
+  )
+```
+
+
+```{r}
+
+lasso_logit_boot%>%
+  unnest(.metrics)%>%
+  filter(.metric=="roc_auc")%>%
+  ggplot(aes(x=.estimate))+
+  geom_density()
+```
+
+
+
+4. Make predictions from the logit model. Make sure these are probabilities. 
+
+```{r}
+logit_class%>%
+  predict(cv,type="prob")%>%
+  bind_cols(cv)
+```
+
+
+
+5. Calculate the AUC for the predictions from the ROC based on the logit model. 
+
+```{r}
+lasso_logit_boot%>%
+  predict(cv,type="prob")%>%
+  bind_cols(cv)%>%
+  roc_auc(truth=isbadbuy_f,.estimate=.pred_Yes,event_level="first")
+```
+
+
+```{r}
+logit_class%>%
+  predict(cv)%>%
+  bind_cols(cv)%>%
+  conf_mat(truth=isbadbuy_f,estimate=.pred_class)
+```
+
+
+6. (optional) submit your predictions from the testing dataset as a late submission to Kaggle and see how you do against real-wolrd competition. 
