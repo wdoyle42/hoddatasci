@@ -5,11 +5,11 @@ date: `r Sys.Date() `
 ---
 
 
-
 ```{r}
 library(tidyverse)
 library(tidycensus)
 library(sf)
+library(plotly)
 ```
 
 ```{r}
@@ -23,7 +23,7 @@ acs_key<-my_acs_key
 
 census_api_key(acs_key)
 
-v19 <- load_variables(2019, "acs5", cache = TRUE)
+#v19 <- load_variables(2019, "acs5", cache = TRUE)
 
 View(v19)
 
@@ -69,7 +69,6 @@ educ<-
 
 ```{r}
 
-
 var_list<-paste0("B19001_",c("001",
                              "013",
                              "014",
@@ -81,14 +80,12 @@ var_list<-paste0("B19001_",c("001",
 income<-get_acs(geography="state",
                 variables=var_list,
                 output="wide",
-                geometry=TRUE,
-              keep_geo_vars = TRUE,
               year = 2019)
 
 names(income)<-tolower(names(income))
 
 income<-income%>%
-  rename(State=name.x)
+  rename(State=name)
 
 income<-income %>%
 group_by(State) %>%
@@ -107,7 +104,56 @@ group_by(State) %>%
 ```
 
 ```{r}
-df<-st_join(educ,income,by="State")
+df<-educ%>%
+  as_tibble()%>%
+  left_join(income,by="State")
 ```
 
+```{r}
+df%>%
+  select(State,college_educ,income_75)%>%
+  mutate(`Pct w/ Bachelor's`=college_educ)%>%
+  mutate(`Pct w/ Income>75k`=income_75)%>%
+  select(-income_75,-college_educ)%>%
+  mutate(State=fct_reorder(as_factor(State),`Pct w/ Bachelor's`))%>%
+  ggplot(aes(x=State,
+             y=`Pct w/ Bachelor's`,
+             fill=`Pct w/ Bachelor's`,
+             text=paste0(
+               State,": ", round(`Pct w/ Bachelor's`,1)) 
+                   ) )+
+  geom_col()+
+  scale_fill_fermenter(palette="YlGnBu")+
+  coord_flip()+
+  theme_minimal()->gg
+
+ggplotly(gg,tooltip="text")
+  
+```
+
+```{r}
+df%>%
+  select(State,college_educ,income_75)%>%
+  mutate(`Pct w/ Bachelor's`=college_educ)%>%
+  mutate(`Pct w/ Income>75k`=income_75)%>%
+  select(-income_75,-college_educ)%>%
+  ggplot(aes(y=`Pct w/ Income>75k`,
+             x=`Pct w/ Bachelor's`,
+             text=paste0(
+               State,": ", 
+               "<br>",
+               "Pct w/ Bachelor's: ",
+               round(`Pct w/ Bachelor's`,1) ,
+               "<br>",
+               "Pct w/ Income >75k: ",
+               round(`Pct w/ Income>75k`,1)
+                   )))+
+  geom_point()+
+  scale_fill_gradient()+
+  theme_minimal()+
+  theme(legend.position = "none")->gg
+
+ggplotly(gg,tooltip="text")
+  
+```
 
