@@ -1,0 +1,128 @@
+---
+title: "Assignment 10"
+author: "Will Doyle"
+date: "4/20/2021"
+output: html_document
+---
+
+Complete the following steps:
+
+1. Using the counties dataset (`pd.Rdata`), create a model that predicts median household income (`median_hh_inc`).
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(glmnet)
+```
+
+```{r}
+load("../lessons/pd.RData")
+```
+
+```{r}
+pd%>%
+  ggplot(aes(x=median_hh_inc))+
+  geom_density()
+
+```
+
+
+```{r}
+## Define the model
+lm_formula<-as.formula("median_hh_inc~
+                        coll_grad_pc+
+                        per_capita_inc+
+                        homeown_rate")
+```
+
+
+```{r}
+
+lm_rec <- recipe(lm_formula, data = pd) %>%
+  step_zv(all_numeric()) %>% # drop any zero variance
+  step_naomit(all_predictors()) ## drop any missing data
+
+```
+
+
+## Set the kind of model to run
+```{r}
+lm_fit <- 
+  linear_reg() %>% 
+  set_engine("lm")
+```
+
+2. Provide the results of a 10-fold cross validation of your model. Describe what the results mean in a few clear sentences.
+
+
+## Specify the resampling: K fold resampling, K=10
+```{r}
+folds <- vfold_cv(pd, v = 10)
+```
+
+
+## Fit Model and Cross Validate
+```{r}
+lm_kfold<-
+  lm_fit%>%
+  fit_resamples(
+    lm_rec, ## Recipe: preps the data
+    folds, ##resampling plan
+    control=control_resamples(save_pred = TRUE)
+  )
+```
+
+
+```{r}
+lm_kfold%>%
+  collect_metrics()
+```
+
+
+```{r}
+lm_kfold%>%
+  unnest(.metrics)%>%
+  filter(.metric=="rmse")%>%
+  ggplot(aes(x=.estimate))+
+  geom_density()
+```
+
+```{r}
+
+```
+
+
+
+
+3. Provide the results of a 1000 cross fold validation with 10 percent (`p=.10`) leave out rate for the random partition. Describe what the results mean in a few clear sentences.
+
+
+## Specify the resampling: bootstrap resampling
+```{r}
+boot <- bootstraps(pd,times = 100) ##1000 is usual minimum
+```
+
+
+```{r}
+lm_boot<-
+  lm_fit%>%
+  fit_resamples(
+    lm_rec, ## Recipe: preps the data
+    boot, ##resampling plan
+    control=control_resamples(save_pred = TRUE)
+  )
+
+```
+
+```{r}
+lm_boot%>%
+  collect_metrics()
+```
+
+```{r}
+lm_boot%>%
+  unnest(.metrics)%>%
+  filter(.metric=="rmse")%>%
+  ggplot(aes(x=.estimate))+
+  geom_density()
+```
+
