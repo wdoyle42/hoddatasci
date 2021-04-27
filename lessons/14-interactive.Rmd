@@ -1,0 +1,113 @@
+---
+title: "Interactive Graphics"
+author: "Will Doyle
+date: `r Sys.Date() `
+---
+
+
+
+```{r}
+library(tidyverse)
+library(tidycensus)
+library(sf)
+```
+
+```{r}
+
+my_acs_key<-readLines("~/hod_datasci_keys/my_acs_key.txt",warn = FALSE)
+
+acs_key<-my_acs_key
+
+# Or just paste it here.
+#acs_key<-"<your_acs_key_here>"
+
+census_api_key(acs_key)
+
+v19 <- load_variables(2019, "acs5", cache = TRUE)
+
+View(v19)
+
+var_list<-paste0("B15002_",c("001",
+                            "015",
+                            "016",
+                            "017",
+                            "018",
+                            "032",
+                            "033",
+                            "034",
+                            "035"))
+
+educ<-get_acs(geography="state",
+                variables=var_list,
+                output="wide",
+                geometry=TRUE,
+              keep_geo_vars = TRUE,
+              year = 2019
+                )
+
+names(educ)<-tolower(names(educ))
+
+educ<-educ%>%
+  rename(State=name.x)
+
+educ<-
+  educ%>%
+  group_by(State)%>%
+  mutate(college_educ=((b15002_015e+
+                         b15002_016e+
+                         b15002_017e+
+                         b15002_018e+
+                         b15002_032e+
+                         b15002_033e+
+                         b15002_034e+
+                         b15002_035e)/b15002_001e)*100)%>%
+  select(State,college_educ,geometry)
+
+
+```
+
+
+```{r}
+
+
+var_list<-paste0("B19001_",c("001",
+                             "013",
+                             "014",
+                            "015",
+                            "016",
+                            "017"
+                            ))
+
+income<-get_acs(geography="state",
+                variables=var_list,
+                output="wide",
+                geometry=TRUE,
+              keep_geo_vars = TRUE,
+              year = 2019)
+
+names(income)<-tolower(names(income))
+
+income<-income%>%
+  rename(State=name.x)
+
+income<-income %>%
+group_by(State) %>%
+  mutate(
+    income_75 = ((
+      b19001_013e +
+        b19001_014e +
+        b19001_015e +
+        b19001_016e +
+        b19001_017e 
+    ) / b19001_001e)*100
+  )%>%
+  select(State,income_75)
+
+
+```
+
+```{r}
+df<-st_join(educ,income,by="State")
+```
+
+
