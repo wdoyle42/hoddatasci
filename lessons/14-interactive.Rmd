@@ -10,6 +10,7 @@ library(tidyverse)
 library(tidycensus)
 library(sf)
 library(plotly)
+library(leaflet)
 ```
 
 ```{r}
@@ -103,18 +104,89 @@ group_by(State) %>%
 
 ```
 
+
+```{r}
+
+var_list<-paste0("B27001_",c("001",
+                             "004",
+                             "007",
+                            "010",
+                            "013",
+                            "016",
+                            "019",
+                            "022",
+                            "025",
+                            "028",
+                            "032",
+                            "035",
+                            "038",
+                            "041",
+                            "044",
+                            "047",
+                            "041",
+                            "050",
+                            "053",
+                            "056"                                                                             ))
+
+health<-get_acs("state",
+                variables=var_list,
+                output="wide",
+                year=2019
+                )
+
+names(health)<-tolower(names(health))
+
+
+health<-health%>%
+  rename(State=name)
+
+health<-health %>%
+  mutate(
+    insured = ((
+b27001_004e+
+  b27001_007e+
+  b27001_010e+
+  b27001_013e+
+  b27001_016e+
+  b27001_019e+
+  b27001_022e+
+  b27001_025e+
+  b27001_028e+
+  b27001_032e+
+  b27001_035e+
+  b27001_038e+
+  b27001_041e+
+  b27001_044e+
+  b27001_047e+
+  b27001_041e+
+  b27001_050e+
+  +b27001_053e+
+  b27001_056e
+    ) / b27001_001e)*100
+  )%>%
+  select(State,insured)
+
+
+
+```
+
+
+
 ```{r}
 df<-educ%>%
   as_tibble()%>%
-  left_join(income,by="State")
+  left_join(income,by="State")%>%
+  left_join(health,by="State")%>%
+   mutate(`Pct w/ Bachelor's`=college_educ)%>%
+  mutate(`Pct w/ Income>75k`=income_75)%>%
+  mutate(`Pct w/ Health Insurance`=insured)%>%
+  select(-income_75,-college_educ,-insured)
+
+write_rds(df,"int_example.rds")
 ```
 
 ```{r}
 df%>%
-  select(State,college_educ,income_75)%>%
-  mutate(`Pct w/ Bachelor's`=college_educ)%>%
-  mutate(`Pct w/ Income>75k`=income_75)%>%
-  select(-income_75,-college_educ)%>%
   mutate(State=fct_reorder(as_factor(State),`Pct w/ Bachelor's`))%>%
   ggplot(aes(x=State,
              y=`Pct w/ Bachelor's`,
@@ -133,13 +205,9 @@ ggplotly(gg,tooltip="text")
 
 ```{r}
 df%>%
-  select(State,college_educ,income_75)%>%
-  mutate(`Pct w/ Bachelor's`=college_educ)%>%
-  mutate(`Pct w/ Income>75k`=income_75)%>%
-  select(-income_75,-college_educ)%>%
   ggplot(aes(y=`Pct w/ Income>75k`,
              x=`Pct w/ Bachelor's`,
-             color=State,
+             color=`Pct w/ Income>75k`,
              text=paste0(
                State,": ", 
                "<br>",
@@ -155,5 +223,86 @@ df%>%
 
 ggplotly(gg,tooltip="text")
   
+```
+
+
+```{r}
+df2<-educ%>%
+  left_join(income)%>%
+  left_join(health)
+```
+
+
+```{r}
+df2%>%
+  leaflet()%>%
+  addPolygons()
+
+```
+
+```{r}
+
+df2%>%
+    st_transform(crs = "+init=epsg:4326")%>%
+  leaflet()%>%
+  addPolygons()
+
+```
+
+
+```{r}
+
+df2%>%
+  filter(!(State%in%c("Alaska","Hawaii")))%>%
+    st_transform(crs = "+init=epsg:4326")%>%
+  leaflet()%>%
+  addProviderTiles(provider = "CartoDB.Positron") %>%
+  addPolygons()
+  
+
+```
+
+
+```{r}
+
+pal <- colorQuantile(palette = "viridis", 
+                     domain = df2$college_educ, n = 10)
+```
+
+
+```{r}
+
+
+df2%>%
+  filter(!(State%in%c("Alaska","Hawaii")))%>%
+    st_transform(crs = "+init=epsg:4326")%>%
+  leaflet()%>%
+  addProviderTiles(provider = "CartoDB.Positron") %>%
+  addPolygons(popup = ~ zip, 
+                stroke = FALSE,
+                smoothFactor = 0,
+                fillOpacity = 0.7,
+                color = ~ pal(college_educ)) 
+
+```
+
+
+```{r}
+
+df2%>%
+  filter(!(State%in%c("Alaska","Hawaii")))%>%
+    st_transform(crs = "+init=epsg:4326")%>%
+  leaflet()%>%
+  addProviderTiles(provider = "CartoDB.Positron") %>%
+  addPolygons(popup = ~ zip, 
+                stroke = FALSE,
+                smoothFactor = 0,
+                fillOpacity = 0.7,
+                color = ~ pal(college_educ)) %>%
+ addLegend("bottomright", 
+              pal = pal, 
+              values = ~ college_educ,
+              title = "Percent with a bachelor's degree",
+              opacity = 1)
 ```
 
